@@ -9,7 +9,8 @@ import TelemetryReporter from '@vscode/extension-telemetry';
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 //import { FormPanel } from "./research/form";
 import * as crypto from 'crypto';
-
+import * as assert from "assert";
+import { LabeledDOMWidgetModel } from "@jupyter-widgets/controls";
 
 const VERSION = "0.1.1";
 const STUDY = "revis";
@@ -24,13 +25,21 @@ const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
 let enableExt = true;
 
+let logDir: string | null = null;
+
 export function activate(context: vscode.ExtensionContext) {
   if (!vscode.workspace.workspaceFolders) {
     log.error("no workspace folders");
     return;
   }
 
-  const logDir = context.globalStorageUri.fsPath;
+  if (logDir === null) {
+    logDir = context.globalStorageUri.fsPath;
+    if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+    }
+    assert(logDir !== null);
+  }
 
   //have they given an answer to the current consent form?
   //if not, render it!
@@ -166,7 +175,7 @@ export function activate(context: vscode.ExtensionContext) {
           if (linecnt % SENDINTERVAL === 0){
             sendTelemetry(logPath, reporter);
             if (linecnt > NEWLOGINTERVAL){
-              [logPath, linecnt, stream] = openLog(logDir, uuid);
+              [logPath, linecnt, stream] = openLog(logDir!, uuid);
             }
           }
         }, 2000);
@@ -212,18 +221,16 @@ function renderSurvey(context: vscode.ExtensionContext){
     }
   );
 
-  panel.webview.html = fs.readFileSync(context.extensionPath + "/src/research/survey.html", 'utf8');
+  panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "research", "survey.html"), 'utf8');
 
   panel.webview.onDidReceiveMessage(
     message => {
-      console.log(message.text);
       context.globalState.update("survey", message.text);
       //write to latest log
-      const logDir = context.globalStorageUri.fsPath;
-      const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
-      const logPath = logDir + "/log" + fileCount + ".json";
+      const fileCount = fs.readdirSync(logDir!).filter(f => path.extname(f) === ".json").length;
+      const logPath = path.join(logDir!, `log${fileCount}.json`);
       fs.writeFileSync(logPath, JSON.stringify({survey: message.text}) + '\n', {flag: 'a'});
-      panel.webview.html = fs.readFileSync(context.extensionPath + "/src/research/survey.html", 'utf8');
+      panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "research" ,"thankyoumessage.html"), 'utf8');
     }
   );
 }
@@ -233,8 +240,6 @@ function renderSurvey(context: vscode.ExtensionContext){
  * determine if revis is activated or not
  */
 function initStudy(context: vscode.ExtensionContext){
-  const logDir = context.globalStorageUri.fsPath;
-
   //generate UUID
   const uuid = crypto.randomBytes(16).toString('hex');
   context.globalState.update("uuid", uuid);
