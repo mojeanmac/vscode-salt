@@ -3,6 +3,7 @@
   "publisher": "kale-lab",
   "displayName": "SALT",
   "icon": "assets/salt.png",
+  "galleryBanner.color": "#C8C9DA",
   "repository": {
     "type": "git",
     "url": "https://github.com/mojeanmac/vscode-salt"

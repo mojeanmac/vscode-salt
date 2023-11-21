@@ -1,6 +1,6 @@
 # SALT for Rust!
 
-![saltLogo](assets/salt.png)
+![saltLogo](https://github.com/mojeanmac/vscode-salt/blob/master/assets/salt.png?raw=true)
 
 ## Situationally Adaptive Language Tutor (SALT)
 Researchers at the University of California, San Diego are conducting a research study on Rust errors and how we can help make it easier to learn Rust. We have developed a free Visual Studio Code extension, SALT, which includes features that may be helpful while you’re learning Rust, such as REVIS, a borrowing and ownership error visualizer. If you grant permission, the extension can also send us data regarding the errors you’ve experienced while compiling Rust code; we plan to use that information to evaluate the impact of our extension as well as to give you feedback on your progress.
@@ -11,7 +11,7 @@ Researchers at the University of California, San Diego are conducting a research
 
 REVIS visualizes lifetime-related Rust compiler errors.
 This extension focuses on errors with a "timeline" that can be visualized.
-![example](assets/example597.png)
+![example](https://github.com/mojeanmac/vscode-salt/blob/master/assets/example597.png?raw=true)
 
 ### Error Logging
 
@@ -37,7 +37,7 @@ The configuration will be added to `.vscode/settings.json` under the project roo
 
 ## How to participate
 
-Anyone age 18 or older at any level of programming experience is encouraged to participate! The first time you open a Rust project, you will recieve the consent form in a Webview. After agreeing, you'll be asked to complete a short survey about your experience in programming. Both the consent form and the survey can be accessed at any time via the commands `salt.renderConsentForm` and `salt.renderSurvey`.
+Anyone age 18 or older at any level of programming experience may participate in this study, however participation is not necessary to use the tools in this extension. The first time you open a Rust project, you will recieve the consent form in a Webview. After agreeing, you'll be asked to complete a short survey about your experience in programming. Both the consent form and the survey can be accessed at any time via the commands `salt.renderConsentForm` and `salt.renderSurvey`.
 You may opt-out of the study by going to the extension settings and disabling `salt.errorLogging`. Re-enable it at any time to opt back in!
 
 ## How to use REVIS
@@ -50,3 +50,5 @@ To refresh the visualizations, save the current file.
 ## Note
 
 This extension is still in an early stage. Please file an issue or contact  Molly (mmaclaren@ucsd.edu) if you find any bugs/confusing points.
+
+> Twemoji graphics made by Twitter and other contributors, licensed under CC-BY 4.0: https://creativecommons.org/licenses/by/4.0/
