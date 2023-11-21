@@ -8,7 +8,7 @@ import * as path from "path";
 import TelemetryReporter from '@vscode/extension-telemetry';
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
-import * as assert from "assert";
+//import assert from "assert";
 
 const VERSION = "0.2.0";
 const STUDY = "revis";
@@ -33,16 +33,16 @@ export function activate(context: vscode.ExtensionContext) {
     return;
   }
 
+  //FOR TESTING
+  //context.globalState.update("participation", undefined);
+
   if (logDir === null) {
     logDir = context.globalStorageUri.fsPath;
-
-  //REMOVE THIS LATER
-  context.globalState.update("participation", undefined);
 
     if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true });
     }
-    assert(logDir !== null);
+    //assert(logDir !== null);
   }
 
   //have they given an answer to the current consent form?
@@ -52,7 +52,6 @@ export function activate(context: vscode.ExtensionContext) {
   }
   
   //if logging is enabled, initialize reporter, log file, and line count
-
   if (vscode.workspace.getConfiguration("salt").get("errorLogging")
       && context.globalState.get("participation") === true){
 
@@ -79,10 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     [logPath, linecnt, stream] = openLog("");
     output = vscode.window.createOutputChannel("SALT-logger", {log:true});
-    
-    if (typeof context.globalState.get("uuid") === "string"){
-      uuid = context.globalState.get("uuid") as string;
-    }
+    uuid = context.globalState.get("uuid") as string;
 
     //check if telemetry is enabled globally
     if (!vscode.env.isTelemetryEnabled){
@@ -122,7 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerTextEditorCommand("salt.toggleVisualization", toggleVisualization)
   );
 
-  //render consent form
+  //command to render consent form
   context.subscriptions.push(
     vscode.commands.registerCommand("salt.renderConsentForm",
       () => {
@@ -132,14 +128,14 @@ export function activate(context: vscode.ExtensionContext) {
             'SALT Study Consent Form',
             vscode.ViewColumn.One
           );
-          panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "consentform.html"), 'utf8');
+          panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "consentformCopy.html"), 'utf8');
         }
         else {
           renderConsentForm(context);
         }
     }));
 
-  //render survey
+  //command to render survey
   context.subscriptions.push(
     vscode.commands.registerCommand("salt.renderSurvey",
       () => {if (context.globalState.get("participation") === true){
@@ -173,13 +169,11 @@ export function activate(context: vscode.ExtensionContext) {
         timeoutHandle = setTimeout(() => {
           //log errors
           logError(stream, editor, time, output);
-
-          //increase the buildcount and check if divisible by some number
+          //increase the buildcount and check if divisible by interval
           linecnt++;
           if (linecnt % SENDINTERVAL === 0){
-            console.log("sending telemetry");
             sendTelemetry(logPath, reporter);
-            if (linecnt > NEWLOGINTERVAL){
+            if (linecnt >= NEWLOGINTERVAL){
               [logPath, linecnt, stream] = openLog(uuid);
             }
           }
@@ -211,13 +205,14 @@ function renderConsentForm(context: vscode.ExtensionContext){
         initStudy(context);
         renderSurvey(context);
 
-        //init telemetry reporter
+        //init telemetry reporter and other values
         reporter = new TelemetryReporter(key);
         if (context.globalState.get("disableRevis") === true){
           enableExt = false;
         }
         [logPath, linecnt, stream] = openLog("");
         output = vscode.window.createOutputChannel("SALT-logger", {log:true});
+        uuid = context.globalState.get("uuid") as string;
         if (!vscode.env.isTelemetryEnabled){
           vscode.window.showWarningMessage(
             "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
@@ -283,14 +278,13 @@ function initStudy(context: vscode.ExtensionContext){
 
 /**
  * Initializes a new log file
- * @param uuid if we are creating a new log file
+ * @param uuid if we are creating a new log file, "" otherwise
  * @returns path of current log, line count, and the stream
  */
 function openLog(uuid: string): [string, number, fs.WriteStream]{
   //find how many json files are in folder to determine current log #
   let fileCount = fs.readdirSync(logDir!)
     .filter(f => path.extname(f) === ".json").length;
-  
   //new logs must provide a UUID
   if (uuid !== ""){
     fileCount++;
@@ -303,9 +297,10 @@ function openLog(uuid: string): [string, number, fs.WriteStream]{
     fs.writeFileSync(logPath, JSON.stringify({extensionReload: {studyEnabled: enableExt}}) + '\n', {flag: 'a'});
   }
 
-  //count lines in current log
-  const linecnt = fs.readFileSync(logPath, 'utf-8').split('\n').length;
-
+  linecnt = 0;
+  if (uuid === ""){
+    const linecnt = fs.readFileSync(logPath, 'utf-8').split('\n').length;
+  }
   //create new stream
   const stream = fs.createWriteStream(logPath, {flags: 'a'});
 
