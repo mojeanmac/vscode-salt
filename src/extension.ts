@@ -24,6 +24,8 @@ let visToggled = false;
 let enableExt = true;
 
 let logDir: string | null = null;
+let reporter: TelemetryReporter, logPath: string, linecnt: number,
+stream: fs.WriteStream, output: vscode.LogOutputChannel, uuid: string;
 
 export function activate(context: vscode.ExtensionContext) {
   if (!vscode.workspace.workspaceFolders) {
@@ -35,8 +37,8 @@ export function activate(context: vscode.ExtensionContext) {
     logDir = context.globalStorageUri.fsPath;
 
   //REMOVE THIS LATER
-  // context.globalState.update("participation", undefined);
-  
+  context.globalState.update("participation", undefined);
+
     if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true });
     }
@@ -50,8 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
   }
   
   //if logging is enabled, initialize reporter, log file, and line count
-  let reporter: TelemetryReporter, logPath: string, linecnt: number,
-      stream: fs.WriteStream, output: vscode.LogOutputChannel, uuid: string;
+
   if (vscode.workspace.getConfiguration("salt").get("errorLogging")
       && context.globalState.get("participation") === true){
 
@@ -65,7 +66,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     //init telemetry reporter
     reporter = new TelemetryReporter(key);
-    context.subscriptions.push(reporter);
 
     //disable tool if still in study period
     if (context.globalState.get("disableRevis") !== undefined){
@@ -121,6 +121,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerTextEditorCommand("salt.toggleVisualization", toggleVisualization)
   );
+
   //render consent form
   context.subscriptions.push(
     vscode.commands.registerCommand("salt.renderConsentForm",
@@ -131,12 +132,13 @@ export function activate(context: vscode.ExtensionContext) {
             'SALT Study Consent Form',
             vscode.ViewColumn.One
           );
-          panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "survey.html"), 'utf8');
+          panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "consentform.html"), 'utf8');
         }
         else {
           renderConsentForm(context);
         }
     }));
+
   //render survey
   context.subscriptions.push(
     vscode.commands.registerCommand("salt.renderSurvey",
@@ -200,7 +202,7 @@ function renderConsentForm(context: vscode.ExtensionContext){
     }
   );
   
-  panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "survey.html"), 'utf8');
+  panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "consentform.html"), 'utf8');
 
   panel.webview.onDidReceiveMessage(
     message => {
@@ -208,6 +210,18 @@ function renderConsentForm(context: vscode.ExtensionContext){
         context.globalState.update("participation", true);
         initStudy(context);
         renderSurvey(context);
+
+        //init telemetry reporter
+        reporter = new TelemetryReporter(key);
+        if (context.globalState.get("disableRevis") === true){
+          enableExt = false;
+        }
+        [logPath, linecnt, stream] = openLog("");
+        output = vscode.window.createOutputChannel("SALT-logger", {log:true});
+        if (!vscode.env.isTelemetryEnabled){
+          vscode.window.showWarningMessage(
+            "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
+        }
       }
       else {
         context.globalState.update("participation", false);
