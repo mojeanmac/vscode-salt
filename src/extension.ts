@@ -10,6 +10,7 @@ import TelemetryReporter from '@vscode/extension-telemetry';
 //import { FormPanel } from "./research/form";
 import * as crypto from 'crypto';
 import * as assert from "assert";
+import { LabeledDOMWidgetModel } from "@jupyter-widgets/controls";
 
 const VERSION = "0.1.1";
 const STUDY = "revis";
@@ -220,17 +221,16 @@ function renderSurvey(context: vscode.ExtensionContext){
     }
   );
 
-  panel.webview.html = fs.readFileSync(context.extensionPath + "/src/research/survey.html", 'utf8');
+  panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "research", "survey.html"), 'utf8');
 
   panel.webview.onDidReceiveMessage(
     message => {
-      console.log(message.text);
       context.globalState.update("survey", message.text);
       //write to latest log
       const fileCount = fs.readdirSync(logDir!).filter(f => path.extname(f) === ".json").length;
-      const logPath = path.join(logDir!, "log", `${fileCount}.json`);
+      const logPath = path.join(logDir!, `log${fileCount}.json`);
       fs.writeFileSync(logPath, JSON.stringify({survey: message.text}) + '\n', {flag: 'a'});
-      panel.webview.html = fs.readFileSync(context.extensionPath + "/src/research/survey.html", 'utf8');
+      panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "research" ,"thankyoumessage.html"), 'utf8');
     }
   );
 }
