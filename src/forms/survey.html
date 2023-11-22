@@ -1,16 +1,22 @@
 <html>
+
 <head>
 
-<style>
-h1{text-align: center;}
-h2{text-align: center;}
+    <style>
+        h1 {
+            text-align: center;
+        }
 
-p{
-    text-align: left;
-    font-size: 16;
-}
+        h2 {
+            text-align: center;
+        }
 
-/* .questions {
+        p {
+            text-align: left;
+            font-size: 16;
+        }
+
+        /* .questions {
     text-align: left;
     font-size: 16;
 }
@@ -20,20 +26,19 @@ p{
     margin-right: 100px;
 } */
 
-body {
-    display: flex;
-    justify-content: center;
-    align-items: left;
-}
-#warn {
-    color: red;
-    text-align: center;
-}
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: left;
+        }
 
+        #warn {
+            color: red;
+            text-align: center;
+        }
+    </style>
 
-</style>
-
-<!-- <script type="text/javascript">
+    <!-- <script type="text/javascript">
     
     function checkvalueGender(val) {
         var element=document.getElementById('gender');
@@ -58,361 +63,357 @@ body {
 </head>
 
 <body>
-    
-<div id="container">
-<h1>Survey</h1>
-<h2>Experience Questions</h2>
-<p id="warn"></p>
-    <div class="questions">
-        <p>How many years of programming experience do you have?</p>
-        <input type="number" id="yearsOfExp" name="yearsOfExp"
-        min = "0"
-        max = "100"
-        value = "0"
-        >
+
+    <div id="container">
+        <h1>Survey</h1>
+        <h2>Experience Questions</h2>
+        <p id="warn"></p>
+        <div class="questions">
+            <p>How many years of programming experience do you have?</p>
+            <input type="number" id="yearsOfExp" name="yearsOfExp" min="0" max="100" value="0">
+        </div>
+
+        <div class="questions">
+            <p>How long have you been programming <b>in Rust</b>?</p>
+            <select name="rustExp" id="rustExp">
+                <option value=-1>Select</option>
+                <option value=0>&lt; 1 month</option>
+                <option value=1>1 year</option>
+                <option value=2>2 years</option>
+                <option value=3>3 years</option>
+                <option value=4>5+ years</option>
+            </select>
+        </div>
+
+        <div class="questions">
+            <p>Roughly, how many lines of code have you written in Rust?</p>
+            <select name="linesOfCode" id="linesOfCode">
+                <option value=-1>Select</option>
+                <option value=0>Less than 100</option>
+                <option value=1>101 - 1000</option>
+                <option value=2>1001 - 10000</option>
+                <option value=3>10001 - 100000</option>
+                <option value=4>More than 100000 lines</option>
+            </select>
+        </div>
+
+        <div class="questions">
+            <p>What is your experience level in the following languages?</p>
+            <h4>Java</h4>
+            <input type="radio" name="java" value="none" id="java">
+            <label for="javanone">None</label>
+            <br></br>
+            <input type="radio" name="java" value="novice">
+            <label for="javanovice">Novice</label>
+            <br></br>
+            <input type="radio" name="java" value="intermediate">
+            <label for="javainter">Intermediate</label>
+            <br></br>
+            <input type="radio" name="java" value="expert">
+            <label for="javaexpert">Expert</label>
+            <br></br><br>
+            <h4>JavaScript</h4>
+            <input type="radio" name="javascript" value="none" id="js">
+            <label for="jsnone">None</label>
+            <br></br>
+            <input type="radio" name="javascript" value="novice">
+            <label for="jsnovice">Novice</label>
+            <br></br>
+            <input type="radio" name="javascript" value="intermediate">
+            <label for="jsinter">Intermediate</label>
+            <br></br>
+            <input type="radio" name="javascript" value="expert">
+            <label for="jsexpert">Expert</label>
+            <br></br><br>
+            <h4>C</h4>
+            <input type="radio" name="clang" value="none" id="c">
+            <label for="cnone">None</label>
+            <br></br>
+            <input type="radio" name="clang" value="novice">
+            <label for="cnovice">Novice</label>
+            <br></br>
+            <input type="radio" name="clang" value="intermediate">
+            <label for="cinter">Intermediate</label>
+            <br></br>
+            <input type="radio" name="clang" value="expert">
+            <label for="cexpert">Expert</label>
+            <br></br><br>
+            <h4>Python</h4>
+            <input type="radio" name="python" value="none" id="python">
+            <label for="pythonnone">None</label>
+            <br></br>
+            <input type="radio" name="python" value="novice">
+            <label for="pythonnovice">Novice</label>
+            <br></br>
+            <input type="radio" name="python" value="intermediate">
+            <label for="pythoninter">Intermediate</label>
+            <br></br>
+            <input type="radio" name="python" value="expert">
+            <label for="pythonexpert">Expert</label>
+            <br></br>
+        </div>
+
+        <div class="questions">
+            <p>What resources have you used to learn Rust? &lpar;select all that apply&rpar;</p>
+
+            <input type="checkbox" name="resources1" value="RustTextbook" id="resources1">
+            <label for="resources1">The Rust Programming Language textbook</label>
+            <br></br>
+            <input type="checkbox" name="resources2" value="Youtube" id="resources2">
+            <label for="resources2">Youtube</label>
+            <br></br>
+            <input type="checkbox" name="resources3" value="StackOverflow" id="resources3">
+            <label for="resources3">Stack Overflow</label>
+            <br></br>
+            <input type="checkbox" name="resources4" value="Other" id="resources4">
+            <label for="resources4">Other</label>
+            <br></br>
+        </div>
+
+        </br></br>
+        <h2>Demographic Questions</h2>
+
+        <div class="questions">
+            <p>What industry do you work in?</p>
+            <select name="industry" id="industry">
+                <option value="">Select</option>
+                <option value="None">None</option>
+                <option value="Academia">Academia</option>
+                <option value="Industry">Industry</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <div class="questions">
+            <p>Please specify the gender with which you most closely identify:</p>
+            <select name="gender" id="gender">
+                <option value=-1>Select</option>
+                <option value=0>Woman</option>
+                <option value=1>Man</option>
+                <option value=2>Non-binary</option>
+                <option value=3>Prefer not to answer</option>
+            </select>
+            <br></br>
+        </div>
+
+        <div class="questions">
+            <p>What is your age?</p>
+            <select name="age" id="age">
+                <option value=-1>Select</option>
+                <option value=0>18-22</option>
+                <option value=1>23-30</option>
+                <option value=2>31-40</option>
+                <option value=3>41-50</option>
+                <option value=4>51-60</option>
+                <option value=5>Over 60</option>
+                <option value=6>Prefer not to answer</option>
+            </select>
+        </div>
+
+        <div class="questions">
+            <p>What is the highest degree or level of school you have completed?</p>
+            <select name="degree" id="degree">
+                <option value=-1>Select</option>
+                <option value=0>Some high school credit, no diploma or equivalent</option>
+                <option value=1>Less than high school degree</option>
+                <option value=2>High school graduate (high school diploma or equivalent including GED) </option>
+                <option value=3>Some college but no degree</option>
+                <option value=4>Associate's degree</option>
+                <option value=5>Bachelor's degree</option>
+                <option value=6>Advanced degree (e.g., Master's, doctorate)</option>
+                <option value=7>Prefer not to answer</option>
+            </select>
+        </div>
+
+        <br></br>
+        <p>Please answer all questions before submitting.</p>
+        <div style="text-align: center;">
+            <button type=button id="submit">Submit</button>
+        </div>
     </div>
 
-    <div class="questions">
-        <p>How long have you been programming <b>in Rust</b>?</p>
-        <select name = "rustExp" id = "rustExp">
-            <option value = -1>Select</option>
-            <option value = 0>&lt; 1 month</option>
-            <option value = 1>1 year</option>
-            <option value = 2>2 years</option>
-            <option value = 3>3 years</option>
-            <option value = 4>5+ years</option>
-        </select>
-    </div>
+    <script>
+        document.getElementById('submit').addEventListener("click", () => {
 
-    <div class="questions">
-        <p>Roughly, how many lines of code have you written in Rust?</p>
-        <select name = "linesOfCode" id = "linesOfCode">
-            <option value = -1>Select</option>
-            <option value = 0>Less than 100</option>
-            <option value = 1>101 - 1000</option>
-            <option value = 2>1001 - 10000</option>
-            <option value = 3>10001 - 100000</option>
-            <option value = 4>More than 100000 lines</option>
-        </select>
-    </div>
-
-    <div class="questions">
-        <p>What is your experience level in the following languages?</p>
-        <h4>Java</h4>
-        <input type="radio" name="java" value="none" id = "java">
-        <label for="javanone">None</label>
-        <br></br>
-        <input type="radio" name="java" value="novice">
-        <label for="javanovice">Novice</label>
-        <br></br>
-        <input type="radio" name="java" value="intermediate">
-        <label for="javainter">Intermediate</label>
-        <br></br>
-        <input type="radio" name="java" value="expert">
-        <label for="javaexpert">Expert</label>
-        <br></br><br>
-        <h4>JavaScript</h4>
-        <input type="radio" name="javascript" value="none" id = "js">
-        <label for="jsnone">None</label>
-        <br></br>
-        <input type="radio" name="javascript" value="novice">
-        <label for="jsnovice">Novice</label>
-        <br></br>
-        <input type="radio" name="javascript" value="intermediate">
-        <label for="jsinter">Intermediate</label>
-        <br></br>
-        <input type="radio" name="javascript" value="expert">
-        <label for="jsexpert">Expert</label>
-        <br></br><br>
-        <h4>C</h4>
-        <input type="radio" name="clang" value="none" id = "c">
-        <label for="cnone">None</label>
-        <br></br>
-        <input type="radio" name="clang" value="novice">
-        <label for="cnovice">Novice</label>
-        <br></br>
-        <input type="radio" name="clang" value="intermediate">
-        <label for="cinter">Intermediate</label>
-        <br></br>
-        <input type="radio" name="clang" value="expert">
-        <label for="cexpert">Expert</label>
-        <br></br><br>
-        <h4>Python</h4>
-        <input type="radio" name="python" value="none" id = "python">
-        <label for="pythonnone">None</label>
-        <br></br>
-        <input type="radio" name="python" value="novice">
-        <label for="pythonnovice">Novice</label>
-        <br></br>
-        <input type="radio" name="python" value="intermediate">
-        <label for="pythoninter">Intermediate</label>
-        <br></br>
-        <input type="radio" name="python" value="expert">
-        <label for="pythonexpert">Expert</label>
-        <br></br>
-    </div>
-        
-    <div class="questions">
-        <p>What resources have you used to learn Rust? &lpar;select all that apply&rpar;</p>
-        
-        <input type="checkbox" name="resources1" value="RustTextbook" id="resources1">
-        <label for="resources1">The Rust Programming Language textbook</label>
-        <br></br>
-        <input type="checkbox" name="resources2" value="Youtube" id="resources2">
-        <label for="resources2">Youtube</label>
-        <br></br>
-        <input type="checkbox" name="resources3" value="StackOverflow" id="resources3">
-        <label for="resources3">Stack Overflow</label>
-        <br></br>
-        <input type="checkbox" name="resources4" value="Other" id="resources4">
-        <label for="resources4">Other</label>
-        <br></br>
-    </div>
-
-</br></br>
-<h2>Demographic Questions</h2>
-
-    <div class="questions">
-        <p>What industry do you work in?</p>
-        <select name = "industry" id = "industry">
-            <option value="">Select</option>
-            <option value="None">None</option>
-            <option value="Academia">Academia</option>
-            <option value="Industry">Industry</option>
-            <option value="Other">Other</option>
-        </select>
-    </div>
-
-    <div class="questions">
-        <p>Please specify the gender with which you most closely identify:</p>
-        <select name = "gender" id = "gender">
-            <option value = -1>Select</option>
-            <option value = 0>Woman</option>
-            <option value = 1>Man</option>
-            <option value = 2>Non-binary</option>
-            <option value = 3>Prefer not to answer</option>
-        </select>
-        <br></br>
-    </div>
-
-    <div class="questions">
-        <p>What is your age?</p>
-        <select name = "age" id = "age">
-            <option value = -1>Select</option>
-            <option value = 0>18-22</option>
-            <option value = 1>23-30</option>
-            <option value = 2>31-40</option>
-            <option value = 3>41-50</option>
-            <option value = 4>51-60</option>
-            <option value = 5>Over 60</option>
-            <option value = 6>Prefer not to answer</option>
-        </select>
-    </div>
-
-    <div class="questions">
-        <p>What is the highest degree or level of school you have completed?</p>
-        <select name = "degree" id = "degree">
-            <option value = -1>Select</option>
-            <option value = 0>Some high school credit, no diploma or equivalent</option>
-            <option value = 1>Less than high school degree</option>
-            <option value = 2>High school graduate (high school diploma or equivalent including GED)  </option>
-            <option value = 3>Some college but no degree</option>
-            <option value = 4>Associate's degree</option>
-            <option value = 5>Bachelor's degree</option>
-            <option value = 6>Advanced degree (e.g., Master's, doctorate)</option>
-            <option value = 7>Prefer not to answer</option>
-        </select>
-    </div>
-
-    <br></br>
-    <p>Please answer all questions before submitting.</p>
-    <div style="text-align: center;">
-        <button type = button id = "submit">Submit</button>
-    </div>
-</div>
-
-<script>
-    document.getElementById('submit').addEventListener("click", () => {
-
-        let yearsOfExp = document.getElementById("yearsOfExp").value;
-        let rustExp = document.getElementById("rustExp").value;
-        if (rustExp == -1) {
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("rustExp").focus();
-            return;
-        }
-        let linesOfCode = document.getElementById("linesOfCode").value;
-        if (linesOfCode == -1) {
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("linesOfCode").focus();
-            return;
-        }
-
-        let java = document.querySelectorAll('input[name="java"]');
-        let javaExp = '';
-        for (const rb of java) {
-            if (rb.checked) {
-                javaExp = rb.value;
-                break;
+            let yearsOfExp = document.getElementById("yearsOfExp").value;
+            let rustExp = document.getElementById("rustExp").value;
+            if (rustExp == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("rustExp").focus();
+                return;
             }
-        }
-        if (javaExp == '') {
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("java").focus();
-            return;
-        }
-
-        let javascript = document.querySelectorAll('input[name="javascript"]');
-        let jsExp = '';
-        for (const rb of javascript) {
-            if (rb.checked) {
-                jsExp = rb.value;
-                break;
+            let linesOfCode = document.getElementById("linesOfCode").value;
+            if (linesOfCode == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("linesOfCode").focus();
+                return;
             }
-        }
-        if (jsExp == ''){
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("js").focus();
-            return;
-        }
 
-        let clang = document.querySelectorAll('input[name="clang"]');
-        let cExp = '';
-        for (const rb of clang) {
-            if (rb.checked) {
-                cExp = rb.value;
-                break;
+            let java = document.querySelectorAll('input[name="java"]');
+            let javaExp = '';
+            for (const rb of java) {
+                if (rb.checked) {
+                    javaExp = rb.value;
+                    break;
+                }
             }
-        }
-        if (cExp == ''){
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("c").focus();
-            return;
-        }
-
-        let python = document.querySelectorAll('input[name="python"]');
-        let pythonExp = '';
-        for (const rb of python) {
-            if (rb.checked) {
-                pythonExp = rb.value;
-                break;
+            if (javaExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("java").focus();
+                return;
             }
-        }
-        if (pythonExp == ''){
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("python").focus();
-            return;
-        }
 
-        let rustBook = document.getElementById("resources1").checked;
-        let youtube = document.getElementById("resources2").checked;
-        let stackOverflow = document.getElementById("resources3").checked;
-        let other = document.getElementById("resources4").checked;
-
-        let industry = document.getElementById("industry").value;
-        if (industry == ""){
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("industry").focus();
-            return;
-        }
-        let gender = document.getElementById("gender").value;
-        if (gender == -1){
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("gender").focus();
-            return;
-        }
-        let age = document.getElementById("age").value;
-        if (age == -1){
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("age").focus();
-            return;
-        }
-        let degree = document.getElementById("degree").value;
-        if (degree == -1){
-            document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-            document.getElementById("degree").focus();
-            return;
-        }
-
-        // //checking rustExp - how long they've been programming in Rust
-        // if(document.getElementById("rustExp").value==-1){
-        //     window.alert("Please tell us how long you've been programming in Rust.");
-        // }
-        // //checking java, javascript, clang, and python - what programming languages they have experience in
-        // else if(document.querySelector('input[name="java"]:checked')==null
-        // || document.querySelector('input[name="javascript"]:checked')==null
-        // || document.querySelector('input[name="clang"]:checked')==null
-        // || document.querySelector('input[name="python"]:checked')==null){
-        //     window.alert("Please tell us what programming languages you have experience in.");
-        // }
-        // //checking resources - what resources they used to learn Rust
-        // else if(!(document.getElementById("resources1").checked
-        // ||document.getElementById("resources2").checked
-        // ||document.getElementById("resources3").checked
-        // ||document.getElementById("resources4").checked)) {
-        //     window.alert("Please tell us how you learned Rust.");
-        // }
-        // //checking linesOfCode - how many lines of code they have written
-        // else if(document.getElementById("linesOfCode").value==-1){
-        //     window.alert("Please tell us how many lines of code you've written in Rust.");
-        // }
-        // //checking industry
-        // else if(document.getElementById("industry").value=="Select"){
-        //     window.alert("Please select your industry.");
-        // }
-        // //checking gender
-        // else if(document.getElementById("gender").value==-1){
-        //     window.alert("Please select your gender.");
-        // }
-        // //checking age
-        // else if(document.getElementById("age").value==-1){
-        //     window.alert("Please select your age.");
-        // }
-        // //checking degree
-        // else if(document.getElementById("degree").value==-1){
-        //     window.alert("Please select your level of education.");
-        // }
-        // else{
-        //     //close webview, move onto thank you page
-        //     window.location.replace("thankyoumessage.html");
-        // }
-
-        
-        let results = {
-            "experience":{
-                "codingExp":yearsOfExp,
-                "rustExp":rustExp,
-                "linesOfCode":linesOfCode,
-            },
-            "languages":{
-                "java":javaExp,
-                "javascript":jsExp,
-                "c":cExp,
-                "python":pythonExp,
-            },
-            "resources":{
-                "rustBook":rustBook,
-                "youtube":youtube,
-                "stackOverflow":stackOverflow,
-                "other":other,
-            },
-
-            "demographics":{
-                "industry":industry,
-                "gender":gender,
-                "age":age,
-                "degree":degree
+            let javascript = document.querySelectorAll('input[name="javascript"]');
+            let jsExp = '';
+            for (const rb of javascript) {
+                if (rb.checked) {
+                    jsExp = rb.value;
+                    break;
+                }
             }
-        }
-        console.log(results);
+            if (jsExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("js").focus();
+                return;
+            }
 
-        //Send a message to the extension with the form data
-        const vscode = acquireVsCodeApi();
-        vscode.postMessage({
-            command: 'submitSurvey',
-            text: results
+            let clang = document.querySelectorAll('input[name="clang"]');
+            let cExp = '';
+            for (const rb of clang) {
+                if (rb.checked) {
+                    cExp = rb.value;
+                    break;
+                }
+            }
+            if (cExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("c").focus();
+                return;
+            }
+
+            let python = document.querySelectorAll('input[name="python"]');
+            let pythonExp = '';
+            for (const rb of python) {
+                if (rb.checked) {
+                    pythonExp = rb.value;
+                    break;
+                }
+            }
+            if (pythonExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("python").focus();
+                return;
+            }
+
+            let rustBook = document.getElementById("resources1").checked;
+            let youtube = document.getElementById("resources2").checked;
+            let stackOverflow = document.getElementById("resources3").checked;
+            let other = document.getElementById("resources4").checked;
+
+            let industry = document.getElementById("industry").value;
+            if (industry == "") {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("industry").focus();
+                return;
+            }
+            let gender = document.getElementById("gender").value;
+            if (gender == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("gender").focus();
+                return;
+            }
+            let age = document.getElementById("age").value;
+            if (age == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("age").focus();
+                return;
+            }
+            let degree = document.getElementById("degree").value;
+            if (degree == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("degree").focus();
+                return;
+            }
+
+            // //checking rustExp - how long they've been programming in Rust
+            // if(document.getElementById("rustExp").value==-1){
+            //     window.alert("Please tell us how long you've been programming in Rust.");
+            // }
+            // //checking java, javascript, clang, and python - what programming languages they have experience in
+            // else if(document.querySelector('input[name="java"]:checked')==null
+            // || document.querySelector('input[name="javascript"]:checked')==null
+            // || document.querySelector('input[name="clang"]:checked')==null
+            // || document.querySelector('input[name="python"]:checked')==null){
+            //     window.alert("Please tell us what programming languages you have experience in.");
+            // }
+            // //checking resources - what resources they used to learn Rust
+            // else if(!(document.getElementById("resources1").checked
+            // ||document.getElementById("resources2").checked
+            // ||document.getElementById("resources3").checked
+            // ||document.getElementById("resources4").checked)) {
+            //     window.alert("Please tell us how you learned Rust.");
+            // }
+            // //checking linesOfCode - how many lines of code they have written
+            // else if(document.getElementById("linesOfCode").value==-1){
+            //     window.alert("Please tell us how many lines of code you've written in Rust.");
+            // }
+            // //checking industry
+            // else if(document.getElementById("industry").value=="Select"){
+            //     window.alert("Please select your industry.");
+            // }
+            // //checking gender
+            // else if(document.getElementById("gender").value==-1){
+            //     window.alert("Please select your gender.");
+            // }
+            // //checking age
+            // else if(document.getElementById("age").value==-1){
+            //     window.alert("Please select your age.");
+            // }
+            // //checking degree
+            // else if(document.getElementById("degree").value==-1){
+            //     window.alert("Please select your level of education.");
+            // }
+            // else{
+            //     //close webview, move onto thank you page
+            //     window.location.replace("thankyoumessage.html");
+            // }
+
+
+            let results = {
+                "experience": {
+                    "codingExp": yearsOfExp,
+                    "rustExp": rustExp,
+                    "linesOfCode": linesOfCode,
+                },
+                "languages": {
+                    "java": javaExp,
+                    "javascript": jsExp,
+                    "c": cExp,
+                    "python": pythonExp,
+                },
+                "resources": {
+                    "rustBook": rustBook,
+                    "youtube": youtube,
+                    "stackOverflow": stackOverflow,
+                    "other": other,
+                },
+
+                "demographics": {
+                    "industry": industry,
+                    "gender": gender,
+                    "age": age,
+                    "degree": degree
+                }
+            }
+            console.log(results);
+
+            //Send a message to the extension with the form data
+            const vscode = acquireVsCodeApi();
+            vscode.postMessage({
+                command: 'submitSurvey',
+                text: results
+            });
         });
-    });
-</script>
+    </script>
 
 </html>
