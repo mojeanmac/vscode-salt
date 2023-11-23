@@ -63,172 +63,234 @@
 </head>
 
 <body>
-
     <div id="container">
         <h1>Survey</h1>
-        <h2>Experience Questions</h2>
-        <p id="warn"></p>
-        <div class="questions">
-            <p>How many years of programming experience do you have?</p>
-            <input type="number" id="yearsOfExp" name="yearsOfExp" min="0" max="100" value="0">
-        </div>
 
-        <div class="questions">
-            <p>How long have you been programming <b>in Rust</b>?</p>
-            <select name="rustExp" id="rustExp">
-                <option value=-1>Select</option>
-                <option value=0>&lt; 1 month</option>
-                <option value=1>1 year</option>
-                <option value=2>2 years</option>
-                <option value=3>3 years</option>
-                <option value=4>5+ years</option>
-            </select>
-        </div>
+        <section>
+            <h2>Experience Questions</h2>
+            <p id="warn"></p>
+            <div class="questions">
+                <p>How many years of programming experience do you have?</p>
+                <input type="number" id="yearsOfExp" name="yearsOfExp" min="0" max="100" value="0">
+            </div>
 
-        <div class="questions">
-            <p>Roughly, how many lines of code have you written in Rust?</p>
-            <select name="linesOfCode" id="linesOfCode">
-                <option value=-1>Select</option>
-                <option value=0>Less than 100</option>
-                <option value=1>101 - 1000</option>
-                <option value=2>1001 - 10000</option>
-                <option value=3>10001 - 100000</option>
-                <option value=4>More than 100000 lines</option>
-            </select>
-        </div>
+            <div class="questions">
+                <p>How long have you been programming <b>in Rust</b>?</p>
+                <select name="rustExp" id="rustExp">
+                    <option value=-1>Select</option>
+                    <option value=0>&lt; 1 month</option>
+                    <option value=1>1 year</option>
+                    <option value=2>2 years</option>
+                    <option value=3>3 years</option>
+                    <option value=4>5+ years</option>
+                </select>
+            </div>
 
-        <div class="questions">
-            <p>What is your experience level in the following languages?</p>
-            <h4>Java</h4>
-            <input type="radio" name="java" value="none" id="java-none">
-            <label for="java-none">None</label>
-            <br />
-            <input type="radio" name="java" value="novice" id="java-novice">
-            <label for="java-novice">Novice</label>
-            <br />
-            <input type="radio" name="java" value="intermediate" id="java-inter">
-            <label for="java-inter">Intermediate</label>
-            <br />
-            <input type="radio" name="java" value="expert" id="java-expert">
-            <label for="java-expert">Expert</label>
-            <br /><br />
-            <h4>JavaScript</h4>
-            <input type="radio" name="javascript" value="none" id="js-none">
-            <label for="js-none">None</label>
-            <br />
-            <input type="radio" name="javascript" value="novice" id="js-novice">
-            <label for="js-novice">Novice</label>
-            <br />
-            <input type="radio" name="javascript" value="intermediate" id="js-inter">
-            <label for="js-inter">Intermediate</label>
-            <br />
-            <input type="radio" name="javascript" value="expert" id="js-expert">
-            <label for="js-expert">Expert</label>
-            <br /><br />
-            <h4>C</h4>
-            <input type="radio" name="clang" value="none" id="c-none">
-            <label for="c-none">None</label>
-            <br />
-            <input type="radio" name="clang" value="novice" id="c-novice">
-            <label for="c-novice">Novice</label>
-            <br />
-            <input type="radio" name="clang" value="intermediate" id="c-inter">
-            <label for="c-inter">Intermediate</label>
-            <br />
-            <input type="radio" name="clang" value="expert" id="c-expert">
-            <label for="c-expert">Expert</label>
-            <br /><br />
-            <h4>Python</h4>
-            <input type="radio" name="python" value="none" id="python-none">
-            <label for="python-none">None</label>
-            <br />
-            <input type="radio" name="python" value="novice" id="python-novice">
-            <label for="python-novice">Novice</label>
-            <br />
-            <input type="radio" name="python" value="intermediate" id="python-inter">
-            <label for="python-inter">Intermediate</label>
-            <br />
-            <input type="radio" name="python" value="expert" id="python-expert">
-            <label for="python-expert">Expert</label>
-            <br />
-        </div>
+            <div class="questions">
+                <p>Roughly, how many lines of code have you written in Rust?</p>
+                <select name="linesOfCode" id="linesOfCode">
+                    <option value=-1>Select</option>
+                    <option value=0>Less than 100</option>
+                    <option value=1>101 - 1000</option>
+                    <option value=2>1001 - 10000</option>
+                    <option value=3>10001 - 100000</option>
+                    <option value=4>More than 100000 lines</option>
+                </select>
+            </div>
 
-        <div class="questions">
-            <p>What resources have you used to learn Rust? &lpar;select all that apply&rpar;</p>
+            <div class="questions">
+                <p>What is your experience level in the following languages?</p>
 
-            <input type="checkbox" name="resources1" value="RustTextbook" id="resources1">
-            <label for="resources1">The Rust Programming Language textbook</label>
+                <h4>Java</h4>
+                <div>
+                    <label>
+                        <input type="radio" name="java" value="none">
+                        None
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="java" value="novice">
+                        Novice
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="java" value="intermediate">
+                        Intermediate
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="java" value="expert">
+                        Expert
+                    </label>
+                </div>
+
+                <br /><br />
+                
+                <h4>JavaScript</h4>
+                <div>
+                    <label>
+                        <input type="radio" name="javascript" value="none">
+                        None
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="javascript" value="novice">
+                        Novice
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="javascript" value="intermediate">
+                        Intermediate
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="javascript" value="expert">
+                        Expert
+                    </label>
+                </div>
+
+                <br /><br />
+                
+                <h4>C</h4>
+                <div>
+                    <label>
+                        <input type="radio" name="clang" value="none">
+                        None
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="clang" value="novice">
+                        Novice
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="clang" value="intermediate">
+                        Intermediate
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="clang" value="expert">
+                        Expert
+                    </label>
+                </div>
+
+                <br /><br />
+                
+                <h4>Python</h4>
+                <div>
+                    <label>
+                        <input type="radio" name="python" value="none">
+                        None
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="python" value="novice">
+                        Novice
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="python" value="intermediate">
+                        Intermediate
+                    </label>
+                    <br />
+                    <label>
+                        <input type="radio" name="python" value="expert">
+                        Expert
+                    </label>
+                </div>
+            </div>
+
             <br />
-            <input type="checkbox" name="resources2" value="Youtube" id="resources2">
-            <label for="resources2">Youtube</label>
-            <br />
-            <input type="checkbox" name="resources3" value="StackOverflow" id="resources3">
-            <label for="resources3">Stack Overflow</label>
-            <br />
-            <input type="checkbox" name="resources4" value="Other" id="resources4">
-            <label for="resources4">Other</label>
-            <br />
-        </div>
+
+            <div class="questions">
+                <p>What resources have you used to learn Rust? &lpar;select all that apply&rpar;</p>
+
+                <div>
+                    <label>
+                        <input type="checkbox" name="resources1" value="RustTextbook">
+                        The Rust Programming Language textbook
+                    </label>
+                    <br />
+                    <label>
+                        <input type="checkbox" name="resources2" value="Youtube">
+                        Youtube
+                    </label>
+                    <br />
+                    <label>
+                        <input type="checkbox" name="resources3" value="StackOverflow">
+                        Stack Overflow
+                    </label>
+                    <br />
+                    <label>
+                        <input type="checkbox" name="resources4" value="Other">
+                        Other
+                    </label>
+                </div>
+            </div>
+        </section>
 
         <br /><br />
-        <h2>Demographic Questions</h2>
 
-        <div class="questions">
-            <p>What industry do you work in?</p>
-            <select name="industry" id="industry">
-                <option value="">Select</option>
-                <option value="None">None</option>
-                <option value="Academia">Academia</option>
-                <option value="Industry">Industry</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
+        <section>
+            <h2>Demographic Questions</h2>
 
-        <div class="questions">
-            <p>Please specify the gender with which you most closely identify:</p>
-            <select name="gender" id="gender">
-                <option value=-1>Select</option>
-                <option value=0>Woman</option>
-                <option value=1>Man</option>
-                <option value=2>Non-binary</option>
-                <option value=3>Prefer not to answer</option>
-            </select>
-            <br />
-        </div>
+            <div class="questions">
+                <p>What industry do you work in?</p>
+                <select name="industry" id="industry">
+                    <option value="">Select</option>
+                    <option value="None">None</option>
+                    <option value="Academia">Academia</option>
+                    <option value="Industry">Industry</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
-        <div class="questions">
-            <p>What is your age?</p>
-            <select name="age" id="age">
-                <option value=-1>Select</option>
-                <option value=0>18-22</option>
-                <option value=1>23-30</option>
-                <option value=2>31-40</option>
-                <option value=3>41-50</option>
-                <option value=4>51-60</option>
-                <option value=5>Over 60</option>
-                <option value=6>Prefer not to answer</option>
-            </select>
-        </div>
+            <div class="questions">
+                <p>Please specify the gender with which you most closely identify:</p>
+                <select name="gender" id="gender">
+                    <option value=-1>Select</option>
+                    <option value=0>Woman</option>
+                    <option value=1>Man</option>
+                    <option value=2>Non-binary</option>
+                    <option value=3>Prefer not to answer</option>
+                </select>
+                <br />
+            </div>
 
-        <div class="questions">
-            <p>What is the highest degree or level of school you have completed?</p>
-            <select name="degree" id="degree">
-                <option value=-1>Select</option>
-                <option value=0>Some high school credit, no diploma or equivalent</option>
-                <option value=1>Less than high school degree</option>
-                <option value=2>High school graduate (high school diploma or equivalent including GED) </option>
-                <option value=3>Some college but no degree</option>
-                <option value=4>Associate's degree</option>
-                <option value=5>Bachelor's degree</option>
-                <option value=6>Advanced degree (e.g., Master's, doctorate)</option>
-                <option value=7>Prefer not to answer</option>
-            </select>
-        </div>
+            <div class="questions">
+                <p>What is your age?</p>
+                <select name="age" id="age">
+                    <option value=-1>Select</option>
+                    <option value=0>18-22</option>
+                    <option value=1>23-30</option>
+                    <option value=2>31-40</option>
+                    <option value=3>41-50</option>
+                    <option value=4>51-60</option>
+                    <option value=5>Over 60</option>
+                    <option value=6>Prefer not to answer</option>
+                </select>
+            </div>
+
+            <div class="questions">
+                <p>What is the highest degree or level of school you have completed?</p>
+                <select name="degree" id="degree">
+                    <option value=-1>Select</option>
+                    <option value=0>Some high school credit, no diploma or equivalent</option>
+                    <option value=1>Less than high school degree</option>
+                    <option value=2>High school graduate (high school diploma or equivalent including GED) </option>
+                    <option value=3>Some college but no degree</option>
+                    <option value=4>Associate's degree</option>
+                    <option value=5>Bachelor's degree</option>
+                    <option value=6>Advanced degree (e.g., Master's, doctorate)</option>
+                    <option value=7>Prefer not to answer</option>
+                </select>
+            </div>
+        </section>
 
         <br />
         <p>Please answer all questions before submitting.</p>
         <div style="text-align: center;">
-            <button type=button id="submit">Submit</button>
+            <button type="button" id="submit">Submit</button>
         </div>
     </div>
 
