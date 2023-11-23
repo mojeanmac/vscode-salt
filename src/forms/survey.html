@@ -36,6 +36,12 @@
             color: red;
             text-align: center;
         }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
     </style>
 
     <!-- <script type="text/javascript">
@@ -102,97 +108,79 @@
                 <p>What is your experience level in the following languages?</p>
 
                 <h4>Java</h4>
-                <div>
+                <div class="input-group">
                     <label>
                         <input type="radio" name="java" value="none">
                         None
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="java" value="novice">
                         Novice
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="java" value="intermediate">
                         Intermediate
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="java" value="expert">
                         Expert
                     </label>
                 </div>
-
-                <br /><br />
                 
                 <h4>JavaScript</h4>
-                <div>
+                <div class="input-group">
                     <label>
                         <input type="radio" name="javascript" value="none">
                         None
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="javascript" value="novice">
                         Novice
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="javascript" value="intermediate">
                         Intermediate
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="javascript" value="expert">
                         Expert
                     </label>
                 </div>
-
-                <br /><br />
                 
                 <h4>C</h4>
-                <div>
+                <div class="input-group">
                     <label>
                         <input type="radio" name="clang" value="none">
                         None
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="clang" value="novice">
                         Novice
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="clang" value="intermediate">
                         Intermediate
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="clang" value="expert">
                         Expert
                     </label>
                 </div>
-
-                <br /><br />
                 
                 <h4>Python</h4>
-                <div>
+                <div class="input-group">
                     <label>
                         <input type="radio" name="python" value="none">
                         None
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="python" value="novice">
                         Novice
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="python" value="intermediate">
                         Intermediate
                     </label>
-                    <br />
                     <label>
                         <input type="radio" name="python" value="expert">
                         Expert
@@ -205,22 +193,19 @@
             <div class="questions">
                 <p>What resources have you used to learn Rust? &lpar;select all that apply&rpar;</p>
 
-                <div>
+                <div class="input-group">
                     <label>
                         <input type="checkbox" name="resources1" value="RustTextbook">
                         The Rust Programming Language textbook
                     </label>
-                    <br />
                     <label>
                         <input type="checkbox" name="resources2" value="Youtube">
                         Youtube
                     </label>
-                    <br />
                     <label>
                         <input type="checkbox" name="resources3" value="StackOverflow">
                         Stack Overflow
                     </label>
-                    <br />
                     <label>
                         <input type="checkbox" name="resources4" value="Other">
                         Other
@@ -229,7 +214,7 @@
             </div>
         </section>
 
-        <br /><br />
+        <br />
 
         <section>
             <h2>Demographic Questions</h2>
@@ -254,7 +239,6 @@
                     <option value=2>Non-binary</option>
                     <option value=3>Prefer not to answer</option>
                 </select>
-                <br />
             </div>
 
             <div class="questions">
