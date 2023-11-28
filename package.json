@@ -9,7 +9,7 @@
     "url": "https://github.com/mojeanmac/vscode-salt"
   },
   "description": "Learn from your Rust ownership errors and participate in academic research",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "license": "MIT",
   "engines": {
     "vscode": "^1.73.0"
@@ -55,7 +55,7 @@
         "salt.errorLogging": {
           "type": "boolean",
           "default": "false",
-          "description": "Enable the recording and sending of error logs for academic research. You must agree to the consent form for it to go into effect. Disabling this will opt you out of the study."
+          "description": "Enable the recording and sending of error logs for academic research. You must agree to the consent form for it to go into effect. Disabling this will opt you out of the study on reload."
         }
       }
     }

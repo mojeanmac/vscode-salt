@@ -9,9 +9,7 @@ import * as path from "path";
 import TelemetryReporter from '@vscode/extension-telemetry';
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
-//import assert from "assert";
 
-const VERSION = "0.2.0";
 const STUDY = "revis";
 let intervalHandle: number | null = null;
 
@@ -43,7 +41,6 @@ export function activate(context: vscode.ExtensionContext) {
     if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true });
     }
-    //assert(logDir !== null);
   }
 
   //have they given an answer to the current consent form?
@@ -67,13 +64,14 @@ export function activate(context: vscode.ExtensionContext) {
     //init telemetry reporter
     reporter = new TelemetryReporter(key);
 
-    //disable tool if still in study period
-    if (context.globalState.get("disableRevis") !== undefined){
-      if (typeof startDate === 'number' && initialStamp < startDate + TWO_WEEKS){
-        enableExt = false;
+    //if 2 weeks have passed, re-enable tool
+    //otherwise set enabled = false
+    if (context.globalState.get("enableRevis") === false){
+      if (typeof startDate === 'number' && (initialStamp > startDate + TWO_WEEKS)){
+        context.globalState.update("enableRevis", true);
       }
       else {
-        context.globalState.update("disableRevis", undefined);
+        enableExt = false;
       }
     }
 
@@ -110,9 +108,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (e === undefined) {
         return;
       }
-      if (enableExt){
-        saveDiagnostics(e);
-      }
+      saveDiagnostics(e);
     })
   );
   context.subscriptions.push(
@@ -140,9 +136,17 @@ export function activate(context: vscode.ExtensionContext) {
   //command to render survey
   context.subscriptions.push(
     vscode.commands.registerCommand("salt.renderSurvey",
-      () => {if (context.globalState.get("participation") === true){
-        renderSurvey(context);
-      }}));
+      () => {
+        if (context.globalState.get("participation") === true){
+          renderSurvey(context);
+        }
+        else{
+          vscode.window
+          .showInformationMessage(
+            "You may only view the survey after agreeing to the consent form.",
+          );
+        }
+      }));
   context.subscriptions.push(
     vscode.commands.registerTextEditorCommand(
       "salt.clearAllVisualizations",
@@ -209,9 +213,6 @@ function renderConsentForm(context: vscode.ExtensionContext){
 
         //init telemetry reporter and other values
         reporter = new TelemetryReporter(key);
-        if (context.globalState.get("disableRevis") === true){
-          enableExt = false;
-        }
         [logPath, linecnt, stream] = openLog("");
         output = vscode.window.createOutputChannel("SALT-logger", {log:true});
         uuid = context.globalState.get("uuid") as string;
@@ -264,13 +265,18 @@ function initStudy(context: vscode.ExtensionContext){
   context.globalState.update("uuid", uuid);
 
   //generate 50/50 chance of revis being active
-  const rand = Math.floor(Math.random());
+  const rand = Math.random();
   if (rand < 0.5){
-    //deactivate revis, set date to reactivate 2 weeks from now
-    context.globalState.update("disableRevis", true);
+    //deactivate revis
+    context.globalState.update("enableRevis", false);
+    enableExt = false;
+  }
+  else {
+    context.globalState.update("enableRevis", true);
+    enableExt = true;
   }
 
-  context.globalState.update("startDate", Math.floor(Date.now() / 1000).toString());
+  context.globalState.update("startDate", Math.floor(Date.now() / 1000));
 
   //generate first log file
   fs.writeFileSync(path.join(logDir!, "log1.json"), JSON.stringify({uuid: uuid, logCount: 1, studyEnabled: enableExt}) + '\n', {flag: 'a'});
@@ -398,6 +404,9 @@ function hashString(input: string): string {
 }
 
 function saveDiagnostics(editor: vscode.TextEditor) {
+  if (!enableExt){
+    return;
+  }
   const doc = editor.document;
   if (doc.languageId !== "rust") {
     // only supports rust
