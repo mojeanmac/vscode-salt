@@ -10,6 +10,9 @@ import TelemetryReporter from '@vscode/extension-telemetry';
 import * as crypto from 'crypto';
 //import assert from "assert";
 
+import consentForm from './forms/consentform.html';
+import consentFormAfterConsent from './forms/consentformCopy.html';
+
 const VERSION = "0.2.0";
 const STUDY = "revis";
 let intervalHandle: number | null = null;
@@ -128,7 +131,8 @@ export function activate(context: vscode.ExtensionContext) {
             'SALT Study Consent Form',
             vscode.ViewColumn.One
           );
-          panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "consentformCopy.html"), 'utf8');
+          
+          panel.webview.html = consentForm;
         }
         else {
           renderConsentForm(context);
@@ -196,7 +200,7 @@ function renderConsentForm(context: vscode.ExtensionContext){
     }
   );
   
-  panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "consentform.html"), 'utf8');
+  panel.webview.html = consentFormAfterConsent;
 
   panel.webview.onDidReceiveMessage(
     message => {

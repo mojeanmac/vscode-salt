@@ -67,7 +67,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --loader:.html=text",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "test-compile": "tsc -p ./"
@@ -76,6 +76,7 @@
     "@types/glob": "^8.0.0",
     "@types/jsdom": "^21.1.0",
     "@types/mocha": "^10.0.0",
+
     "@types/node": "^16.18.38",
     "@types/sharp": "^0.31.1",
     "@types/vscode": "^1.73.0",
