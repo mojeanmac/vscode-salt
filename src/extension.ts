@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { consentForm, consentFormPersonal, survey, thankYou } from "./forms";
 import { languages } from "vscode";
 import * as errorviz from "./errorviz";
 import { log } from "./util";
@@ -9,9 +10,6 @@ import TelemetryReporter from '@vscode/extension-telemetry';
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
 //import assert from "assert";
-
-import consentForm from './forms/consentform.html';
-import consentFormAfterConsent from './forms/consentformCopy.html';
 
 const VERSION = "0.2.0";
 const STUDY = "revis";
@@ -131,8 +129,8 @@ export function activate(context: vscode.ExtensionContext) {
             'SALT Study Consent Form',
             vscode.ViewColumn.One
           );
-          
-          panel.webview.html = consentForm;
+          //if already participated, render personal copy
+          panel.webview.html = consentFormPersonal;
         }
         else {
           renderConsentForm(context);
@@ -200,7 +198,7 @@ function renderConsentForm(context: vscode.ExtensionContext){
     }
   );
   
-  panel.webview.html = consentFormAfterConsent;
+  panel.webview.html = consentForm;
 
   panel.webview.onDidReceiveMessage(
     message => {
@@ -243,7 +241,7 @@ function renderSurvey(context: vscode.ExtensionContext){
     }
   );
 
-  panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms", "survey.html"), 'utf8');
+  panel.webview.html = survey;
 
   panel.webview.onDidReceiveMessage(
     message => {
@@ -252,7 +250,7 @@ function renderSurvey(context: vscode.ExtensionContext){
       const fileCount = fs.readdirSync(logDir!).filter(f => path.extname(f) === ".json").length;
       const logPath = path.join(logDir!, `log${fileCount}.json`);
       fs.writeFileSync(logPath, JSON.stringify({survey: message.text}) + '\n', {flag: 'a'});
-      panel.webview.html = fs.readFileSync(path.join(context.extensionPath, "src", "forms" ,"thankyoumessage.html"), 'utf8');
+      panel.webview.html = thankYou;
     }
   );
 }
