@@ -263,6 +263,8 @@ function initStudy(context: vscode.ExtensionContext){
   //generate UUID
   const uuid = crypto.randomBytes(16).toString('hex');
   context.globalState.update("uuid", uuid);
+  //store uuid in text file for easy access
+  fs.writeFileSync(path.join(logDir!, "uuid.txt"), uuid + '\n', {flag: 'a'});
 
   //generate 50/50 chance of revis being active
   const rand = Math.random();
