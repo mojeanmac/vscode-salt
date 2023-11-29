@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/mojeanmac/vscode-salt"
   },
-  "description": "Learn from your Rust ownership errors and participate in academic research",
+  "description": "Fix Rust ownership errors and Participate in academic research",
   "version": "0.2.3",
   "license": "MIT",
   "engines": {
