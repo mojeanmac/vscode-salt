@@ -13,7 +13,7 @@ import * as crypto from 'crypto';
 const STUDY = "revis";
 let intervalHandle: number | null = null;
 
-const SENDINTERVAL = 10;
+const SENDINTERVAL = 25;
 const NEWLOGINTERVAL = 1000;
 const TWO_WEEKS = 1209600;
 const YEAR = 31536000;
@@ -22,6 +22,7 @@ const key = "cdf9fbe6-bfd3-438a-a2f6-9eed10994c4e"; //use this key for developme
 const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
 let enableExt = true;
+let noErrors = false;
 
 let logDir: string | null = null;
 let reporter: TelemetryReporter, logPath: string, linecnt: number,
@@ -155,6 +156,23 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
+  context.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument((_: vscode.TextDocument) => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor === undefined) {
+        return;
+      }
+      let doc = editor.document;
+      if (vscode.workspace.getConfiguration("salt").get("errorLogging")
+          && context.globalState.get("participation") === true && stream !== undefined){
+        let savedAt = JSON.stringify({file: hashString(doc.fileName), savedAt: ((Date.now() / 1000) - initialStamp).toFixed(3)}) + "\n";
+        stream.write(savedAt);
+        output.append(savedAt);
+        linecnt++;
+      }
+    })
+  );
+
   let timeoutHandle: NodeJS.Timeout | null = null;
   context.subscriptions.push(
     languages.onDidChangeDiagnostics((_: vscode.DiagnosticChangeEvent) => {
@@ -162,22 +180,26 @@ export function activate(context: vscode.ExtensionContext) {
       if (editor === undefined) {
         return;
       }
+      let doc = editor.document;
+      //filter for only rust errors
+      if (doc.languageId !== "rust") {
+        return;
+      }
       if (timeoutHandle !== null) {
         clearTimeout(timeoutHandle);
       }
-      timeoutHandle = setTimeout(() => {
+      setTimeout(() => {
         saveDiagnostics(editor);
       }, 200);
 
       if (vscode.workspace.getConfiguration("salt").get("errorLogging")
           && context.globalState.get("participation") === true && stream !== undefined){
         //if logging is enabled, wait for diagnostics to load in
-        let time = Math.floor(Date.now() / 1000);
+        let time = ((Date.now() / 1000) - initialStamp).toFixed(3);
         timeoutHandle = setTimeout(() => {
           //log errors
-          logError(stream, editor, time, output);
-          //increase the buildcount and check if divisible by interval
-          linecnt++;
+          logError(doc, time);
+          //check if divisible by interval
           if (linecnt % SENDINTERVAL === 0){
             sendTelemetry(logPath, reporter);
             if (linecnt >= NEWLOGINTERVAL){
@@ -330,18 +352,10 @@ function sendTelemetry(logPath: string, reporter: TelemetryReporter){
 
 /**
  * Creates a JSON object for each build and writes it to the log file
- * @param stream the log file writestream
- * @param editor contains the current rust document
+ * @param doc contains the current rust document
  * @param time to be subtracted from initial time
  */
-function logError(stream: fs.WriteStream, editor: vscode.TextEditor, time: number, output: vscode.LogOutputChannel){
-
-  let doc = editor.document;
-  //filter for only rust errors
-  if (doc.languageId !== "rust") {
-    stream.write(JSON.stringify({error: "not editing rust"}) + "\n");
-    return;
-  }
+function logError(doc: vscode.TextDocument, time: string){
 
   let diagnostics = languages
             .getDiagnostics(doc.uri)
@@ -353,23 +367,33 @@ function logError(stream: fs.WriteStream, editor: vscode.TextEditor, time: numbe
               );
             });
 
-  //if there are errors but none are rustc, return
-  if (diagnostics.length !== 0 && !diagnostics.some(e => e.source === 'rustc')){
-    if (vscode.workspace.getConfiguration("rust-analyzer").get<boolean>("diagnostics.useRustcErrorCode")){
-      stream.write(JSON.stringify({error: "rustc errors not found"}) + "\n");
+  if (diagnostics.length === 0){
+    //if duplicate successful build, return
+    if (noErrors){
+      return;
     }
-    else {
-      stream.write(JSON.stringify({error: "rustc error codes not enabled"}) + "\n");
-    }
-    return;
+    noErrors = true;
   }
+  else {
+    noErrors = false;
+  }
+          
+  //if there are errors but none are rustc, return
+  // if (diagnostics.length !== 0 && !diagnostics.some(e => e.source === 'rustc')){
+  //   if (vscode.workspace.getConfiguration("rust-analyzer").get<boolean>("diagnostics.useRustcErrorCode")){
+  //     stream.write(JSON.stringify({error: "rustc errors not found"}) + "\n");
+  //   }
+  //   else {
+  //     stream.write(JSON.stringify({error: "rustc error codes not enabled"}) + "\n");
+  //   }
+  //   return;
+  // }
 
   //for every error create a JSON object in the errors list
   let errors = [];
   for (const diag of diagnostics) {
     if (diag.code === undefined || typeof diag.code === "number" || typeof diag.code === "string") {
       log.error("unexpected diag.code type", typeof diag.code);
-      stream.write(JSON.stringify({error: "unexpected diag.code type"}) + "\n");
       return;
     }
     let code = diag.code.value;
@@ -394,12 +418,13 @@ function logError(stream: fs.WriteStream, editor: vscode.TextEditor, time: numbe
   //write to file
   const entry = JSON.stringify({
     file: hashString(doc.fileName),
-    seconds: (time - initialStamp),
+    seconds: time,
     revis: visToggled, 
     errors: errors
   }) + '\n';
   stream.write(entry);
   output.append(entry);
+  linecnt++;
   visToggled = false;
 }
 
