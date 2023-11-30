@@ -32,7 +32,7 @@ entry: {
         source: [rustc or rust-analyzer],
         range: {
             start: [starting line num],
-            ende: [ending line num]
+            end: [ending line num]
         }
     }
 }
