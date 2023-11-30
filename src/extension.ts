@@ -339,6 +339,7 @@ function logError(stream: fs.WriteStream, editor: vscode.TextEditor, time: numbe
   let doc = editor.document;
   //filter for only rust errors
   if (doc.languageId !== "rust") {
+    stream.write(JSON.stringify({error: "not editing rust"}) + "\n");
     return;
   }
 
@@ -354,6 +355,12 @@ function logError(stream: fs.WriteStream, editor: vscode.TextEditor, time: numbe
 
   //if there are errors but none are rustc, return
   if (diagnostics.length !== 0 && !diagnostics.some(e => e.source === 'rustc')){
+    if (vscode.workspace.getConfiguration("rust-analyzer").get<boolean>("diagnostics.useRustcErrorCode")){
+      stream.write(JSON.stringify({error: "rustc errors not found"}) + "\n");
+    }
+    else {
+      stream.write(JSON.stringify({error: "rustc error codes not enabled"}) + "\n");
+    }
     return;
   }
 
@@ -362,6 +369,7 @@ function logError(stream: fs.WriteStream, editor: vscode.TextEditor, time: numbe
   for (const diag of diagnostics) {
     if (diag.code === undefined || typeof diag.code === "number" || typeof diag.code === "string") {
       log.error("unexpected diag.code type", typeof diag.code);
+      stream.write(JSON.stringify({error: "unexpected diag.code type"}) + "\n");
       return;
     }
     let code = diag.code.value;

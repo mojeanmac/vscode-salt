@@ -20,10 +20,25 @@ This extension focuses on errors with a "timeline" that can be visualized.
 
 Custom error logs are generated to minimize privacy concern and only start after you provide consent. A live trace of errors being logged can be viewed in the `SALT-logger` Output Channel.
 
-A log entry is created every time the program is built, consisting of a hash representing the current file, seconds since the extension initialized, whether REVIS was used, and a list of error data.
-Each element in the list represents a single error containing the error code, a hash representing the error message, whether it came from rust-analyzer or rustc, and the start and end line numbers.
+A log entry is created every time a Rust project is built, following the JSON object format of:
+```
+entry: {
+    file: [hashed file name],
+    seconds: [time since initialization],
+    revis: [boolean if REVIS was toggled on], 
+    errors: {
+        code: [error code],
+        msg: [hashed message],
+        source: [rustc or rust-analyzer],
+        range: {
+            start: [starting line num],
+            ende: [ending line num]
+        }
+    }
+}
+```
 
-Logs are stored locally and are sent in intervals for analysis. After enough data has been gathered, we intend to provide users with evaluations of their progress in encountering and debugging errors!
+Logs are stored locally and are sent in intervals for analysis. After enough data has been gathered, we plan to provide users with evaluations of their progress in encountering and debugging errors!
 
 ## Requirements
 
