@@ -18,7 +18,10 @@
 		},
 		{
 			"type": "npm",
-			"script": "esbuild-watch",
+			// this is kinda hacky.
+			// not sure why but directly using esbuild-watch may make esbuild `define` empty (e.g. for process.env substitution).
+			// so first run esbuild regular, then watch for changes.
+			"script": "esbuild-build-and-watch",
 			"isBackground": true,
 			"presentation": {
 				"reveal": "never",
@@ -28,7 +31,6 @@
 				// "isDefault": true,
 			},
 			"label": "esbuild watch",
-			"detail": "npm run esbuild-base -- --sourcemap --watch",
 
 			// https://stackoverflow.com/a/54017304
 			// This task is run before some debug tasks.

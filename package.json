@@ -70,6 +70,7 @@
     "esbuild-base": "node ./esbuild.mjs",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "esbuild-build-and-watch": "npm run esbuild && npm run esbuild-watch",
     "package": "vsce package",
     "test-compile": "tsc -p ./"
   },
