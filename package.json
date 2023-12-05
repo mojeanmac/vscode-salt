@@ -67,7 +67,7 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --loader:.html=text",
+    "esbuild-base": "node ./esbuild.mjs",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "package": "vsce package",
