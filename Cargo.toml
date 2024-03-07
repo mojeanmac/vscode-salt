@@ -1,0 +1,8 @@
+[workspace]
+members = ["crates/*"]
+exclude = ["src/tests/mock_project", "crates/salt/test-crate", "test-project"]
+resolver = "2"
+
+[workspace.dependencies]
+rustc_plugin = "0.9.0-nightly-2024-01-24"
+rustc_utils = "0.9.0-nightly-2024-01-24"
