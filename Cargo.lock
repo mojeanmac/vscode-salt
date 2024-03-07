@@ -339,6 +339,7 @@ dependencies = [
  "rustc_plugin",
  "rustc_utils",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

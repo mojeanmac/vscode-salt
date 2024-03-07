@@ -93,16 +93,33 @@ impl rustc_driver::Callbacks for PrintAllItemsCallbacks {
 // are relevant to whatever task you have.
 fn print_all_items(tcx: TyCtxt, args: &PrintAllItemsPluginArgs) {
   let hir = tcx.hir();
-  for item_id in hir.items() {
-    let item = hir.item(item_id);
-    let mut msg = format!(
-      "There is an item \"{}\" of type \"{}\"",
-      item.ident,
-      item.kind.descr()
-    );
-    if args.allcaps {
-      msg = msg.to_uppercase();
+  
+  // for item_id in hir.items() {
+  //   let item = hir.item(item_id);
+  //   let mut msg = format!(
+  //     "There is an item \"{}\" of type \"{}\"",
+  //     item.ident,
+  //     item.kind.descr()
+  //   );
+  //   if args.allcaps {
+  //     msg = msg.to_uppercase();
+  //   }
+  //   println!("{msg}");
+  // }
+
+  let items: Vec<Item> = hir.items().map(|id| hir.item(id).into()).collect();
+  let json_items = serde_json::to_string(&items).unwrap_or("asdf".to_string());
+  println!("{json_items}");
+}
+
+#[derive(Serialize, Deserialize)]
+struct Item {
+  name: String, // rustc_span::symbol::Ident,
+  ty: &'static str,
+}
+
+impl From<&rustc_hir::Item<'_>> for Item {
+    fn from(item: &rustc_hir::Item<'_>) -> Self {
+        Self { name: format!("{}", item.ident), ty: item.kind.descr() }
     }
-    println!("{msg}");
-  }
 }
