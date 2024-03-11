@@ -7,6 +7,7 @@ import { codeFuncMap } from "./visualizations";
 import * as fs from "fs";
 import * as path from "path";
 import TelemetryReporter from '@vscode/extension-telemetry';
+import { printAllItems } from "./printRust";
 import { openNewLog, openExistingLog, sendTelemetry, newReporter } from "./telemetry";
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
@@ -155,6 +156,9 @@ export function activate(context: vscode.ExtensionContext) {
       if (editor === undefined) {
         return;
       }
+
+      printAllItems(context);
+
       let doc = editor.document;
       if (vscode.workspace.getConfiguration("salt").get("errorLogging")
           && context.globalState.get("participation") === true && stream !== undefined){
