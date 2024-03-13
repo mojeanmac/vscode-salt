@@ -5,6 +5,7 @@ import * as fs from "fs";
 export { openNewLog, openExistingLog, sendTelemetry, newReporter };
 const key = "cdf9fbe6-bfd3-438a-a2f6-9eed10994c4e"; //use this key for development
 //const key = "0cddc2d3-b3f6-4be5-ba35-dcadf125535c";
+
   
 //launches a telemetry reporter
 function newReporter(): TelemetryReporter{
@@ -57,3 +58,52 @@ function sendTelemetry(logPath: string, reporter: TelemetryReporter){
     const data = fs.readFileSync(logPath, 'utf-8');
     reporter.sendTelemetryEvent('errorLog', {'data': data});
 }
+
+/**
+ * EXAMPLE REQUEST PAYLOAD
+ {
+  "routeKey": "PUT",
+
+  "requestContext": {
+    "apiId": "<urlid>",
+    "authentication": null,
+    "domainName": "<url-id>.lambda-url.us-west-2.on.aws",
+    "domainPrefix": "<url-id>",
+    "requestId": "id",
+    "routeKey": "PUT",
+    "time": "12/Mar/2020:19:03:58 +0000",
+    "timeEpoch": 1583348638390
+  },
+  "body": "{\"PID\": 1, \"file\": \"fileName\", \"seconds\": 20, \"revis\": true, \"errors\": {\"error1\": \"bad\", \"error2\": \"also bad\"}}"
+}
+ */
+
+// declares payload type for setupPayload
+
+type RequestContext = {
+    apiId: string;
+    authentication: null;
+    domainName: string;
+    domainPrefix: string;
+    requestId: string;
+    routeKey: string;
+    time: string;
+    timeEpoch: string;
+
+};
+
+type Payload = {
+    routeKey: string;
+    requestContext: RequestContext;
+    body: string;
+
+};
+// setup payload for lamdba request
+function setupPayload(){
+
+};
+
+// call payload function and invoke function url for lambda
+function sendPayload(){
+
+};
