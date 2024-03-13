@@ -100,7 +100,22 @@ type Payload = {
 };
 // setup payload for lamdba request
 function setupPayload(){
-
+    //TODO: fill these all in
+    const newRequestContext: RequestContext{
+        apiId: string;
+        authentication: null;
+        domainName: string;
+        domainPrefix: string;
+        requestId: string;
+        routeKey: string;
+        time: string;
+        timeEpoch: string;
+    }
+    const newPayload: Payload{
+        routeKey: string;
+        requestContext: newRequestContext;
+        body: string;
+    }
 };
 
 // call payload function and invoke function url for lambda
