@@ -5,10 +5,52 @@ import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 
+// declare const TOOLCHAIN: {
+//   channel: string;
+//   components: string[];
+// };
+const TOOLCHAINCHANNEL = "nightly-2024-01-24";
+type Result<T> = { Ok: T } | { Err: String };
+
+/* eslint no-undef: "off" */
+const LIBRARY_PATHS: Partial<Record<NodeJS.Platform, string>> = {
+  darwin: "DYLD_LIBRARY_PATH",
+  win32: "LIB",
+};
+
 // from flowistry
 export let cargo_bin = () => {
   let cargo_home = process.env.CARGO_HOME || path.join(os.homedir(), ".cargo");
   return path.join(cargo_home, "bin");
+};
+
+export const get_flowistry_opts = async (cwd: string) => {
+  const rustc_path = await exec_notify(
+    "rustup",
+    ["which", "--toolchain", TOOLCHAINCHANNEL, "rustc"],
+    "Waiting for rustc..."
+  );
+  const target_info = await exec_notify(
+    rustc_path,
+    ["--print", "target-libdir", "--print", "sysroot"],
+    "Waiting for rustc..."
+  );
+
+  const [target_libdir, sysroot] = target_info.split("\n");
+  // console.log("Target libdir:", target_libdir);
+  // console.log("Sysroot: ", sysroot);
+
+  const library_path = LIBRARY_PATHS[process.platform] || "LD_LIBRARY_PATH";
+
+  const PATH = cargo_bin() + ";" + process.env.PATH;
+
+  return {
+    cwd,
+    [library_path]: target_libdir,
+    SYSROOT: sysroot,
+    RUST_BACKTRACE: "1",
+    PATH,
+  };
 };
 
 let exec_notify_binary = async (
@@ -62,11 +104,6 @@ export let exec_notify = async (
   return text.trimEnd();
 };
 
-
-
-
-
-
 export async function printAllItems(context: vscode.ExtensionContext) {
   // get current project directory
   let folders = vscode.workspace.workspaceFolders;
@@ -86,48 +123,31 @@ export async function printAllItems(context: vscode.ExtensionContext) {
       ["install","--path", "./crates/salt"],
       "Installing crates...");
   }
-  let output;
-  try {
-    // cargo print-all-items on current project
-    exec_notify(
-      "cargo",
-      ["salt",
-      "-- --manifest-path",
-      path.join(projectPath, "Cargo.toml")],
-      "Printing all items...");
+
+  let flowistry_opts = await get_flowistry_opts(projectPath);
+
+    let output;
+    try {
+      exec_notify(
+        "cd",
+        [projectPath],
+        "Changing directory to project..."
+      );
+      output = await exec_notify(
+        "cargo",
+        ["salt"],
+        "Printing all items...",
+        flowistry_opts
+      );
       console.log(output);
-
-  } catch (e: any) {
-    context.workspaceState.update("err_log", e);
-
-    return {
-      type: "BuildError",
-      error: e,
-    };
-  }
-
-  //   if (no_output) {
-  //     return {
-  //       type: "output",
-  //       value: undefined as any,
-  //     };
-  //   }
-
-  //   let output_typed: String;
-  //   try {
-  //     let output_bytes = Buffer.from(output.toString("utf8"), "base64");
-  //     //let output_decompressed = zlib.gunzipSync(output_bytes);
-  //     let output_str = output_bytes.toString("utf8");
-  //     let output_typed = JSON.parse(output_str);
-  //   } catch (e: any) {
-  //     return {
-  //       type: "AnalysisError",
-  //       error: e.toString()
-  //     };
-  //   }
-
-  //     return {
-  //       type: "output",
-  //       value: output_typed
-  //     };
+      return output;
+    } catch (e: any) {
+      console.log(e);
+      return e;
+    }
 }
+//TODO:
+//locate cargo.toml, can't assume it's in project root
+//improve error handling
+//zip the data in our rust binary and unzip it here (like flowistry?)
+//call cargo salt with a path parameter so we don't have to cd

@@ -78,7 +78,7 @@ impl rustc_driver::Callbacks for PrintAllItemsCallbacks {
     queries
       .global_ctxt()
       .unwrap()
-      .enter(|tcx| print_all_items(tcx, &self.args));
+      .enter(|tcx| print_all_items(tcx));
 
     // Note that you should generally allow compilation to continue. If
     // your plugin is being invoked on a dependency, then you need to ensure
@@ -91,7 +91,7 @@ impl rustc_driver::Callbacks for PrintAllItemsCallbacks {
 // The core of our analysis. It doesn't do much, just access some methods on the `TyCtxt`.
 // I recommend reading the Rustc Development Guide to better understand which compiler APIs
 // are relevant to whatever task you have.
-fn print_all_items(tcx: TyCtxt, args: &PrintAllItemsPluginArgs) {
+fn print_all_items(tcx: TyCtxt) {
   let hir = tcx.hir();
   
   // for item_id in hir.items() {
