@@ -15,6 +15,44 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"type": "npm",
+			// this is kinda hacky.
+			// not sure why but directly using esbuild-watch may make esbuild `define` empty (e.g. for process.env substitution).
+			// so first run esbuild regular, then watch for changes.
+			"script": "esbuild-build-and-watch",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never",
+			},
+			"group": {
+				"kind": "build",
+				// "isDefault": true,
+			},
+			"label": "esbuild watch",
+
+			// https://stackoverflow.com/a/54017304
+			// This task is run before some debug tasks.
+      // Problem is, it's a watch script, and since it never exits, VSCode
+      // complains. All this is needed so VSCode just lets it run.
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": ".",
+          }
+        }
+      ],
 		}
 	]
 }
