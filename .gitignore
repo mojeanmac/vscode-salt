@@ -4,6 +4,13 @@ node_modules
 .vscode-test/
 test-project/
 *.vsix
+
+# macos
 .DS_Store
 
+# env file
 .env
+
+# rust build
+target
+

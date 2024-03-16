@@ -7,18 +7,18 @@ import { codeFuncMap } from "./visualizations";
 import * as fs from "fs";
 import * as path from "path";
 import TelemetryReporter from '@vscode/extension-telemetry';
+import { printAllItems } from "./printRust";
+import { openNewLog, openExistingLog, sendTelemetry, newReporter } from "./telemetry";
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
 
-const STUDY = "revis";
 let intervalHandle: number | null = null;
 
 const SENDINTERVAL = 25;
 const NEWLOGINTERVAL = 1000;
 const TWO_WEEKS = 1209600;
 const YEAR = 31536000;
-const key = "cdf9fbe6-bfd3-438a-a2f6-9eed10994c4e"; //use this key for development
-//const key = "0cddc2d3-b3f6-4be5-ba35-dcadf125535c";
+
 const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
 let enableExt = true;
@@ -35,7 +35,12 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   //FOR TESTING
-  //context.globalState.update("participation", undefined);
+  // context.globalState.update("participation", undefined);
+  // context.globalState.update("startDate", undefined);
+  // context.globalState.update("enableRevis", undefined);
+  // context.globalState.update("uuid", undefined);
+  // context.globalState.update("survey", undefined);
+
 
   if (logDir === null) {
     logDir = context.globalStorageUri.fsPath;
@@ -56,20 +61,20 @@ export function activate(context: vscode.ExtensionContext) {
       && context.globalState.get("participation") === true){
 
     //if a year has passed, disable logging
-    let startDate = context.globalState.get("startDate");
-    if (typeof startDate === 'number' && initialStamp > startDate + YEAR){
+    let startDate = context.globalState.get("startDate") as number;
+    if (initialStamp > startDate + YEAR){
       vscode.workspace.getConfiguration("salt").update("errorLogging", false);
       context.globalState.update("participation", undefined);
       return;
     }
 
     //init telemetry reporter
-    reporter = new TelemetryReporter(key);
+    reporter = newReporter();
 
     //if 2 weeks have passed, re-enable tool
     //otherwise set enabled = false
     if (context.globalState.get("enableRevis") === false){
-      if (typeof startDate === 'number' && (initialStamp > startDate + TWO_WEEKS)){
+      if (initialStamp > startDate + TWO_WEEKS){
         context.globalState.update("enableRevis", true);
       }
       else {
@@ -77,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
 
-    [logPath, linecnt, stream] = openLog("");
+    [logPath, linecnt, stream] = openExistingLog(logDir, enableExt, initialStamp - startDate);
     output = vscode.window.createOutputChannel("SALT-logger", {log:true});
     uuid = context.globalState.get("uuid") as string;
 
@@ -121,18 +126,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("salt.renderConsentForm",
       () => {
-        if (context.globalState.get("participation") === true){
-          const panel = vscode.window.createWebviewPanel(
-            'form',
-            'SALT Study Consent Form',
-            vscode.ViewColumn.One
-          );
-          //if already participated, render personal copy
-          panel.webview.html = consentFormPersonal;
-        }
-        else {
-          renderConsentForm(context);
-        }
+        renderConsentForm(context);
     }));
 
   //command to render survey
@@ -162,6 +156,9 @@ export function activate(context: vscode.ExtensionContext) {
       if (editor === undefined) {
         return;
       }
+
+      printAllItems(context);
+
       let doc = editor.document;
       if (vscode.workspace.getConfiguration("salt").get("errorLogging")
           && context.globalState.get("participation") === true && stream !== undefined){
@@ -203,7 +200,7 @@ export function activate(context: vscode.ExtensionContext) {
           if (linecnt % SENDINTERVAL === 0){
             sendTelemetry(logPath, reporter);
             if (linecnt >= NEWLOGINTERVAL){
-              [logPath, linecnt, stream] = openLog(uuid);
+              [logPath, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
             }
           }
         }, 2000);
@@ -216,40 +213,51 @@ export function activate(context: vscode.ExtensionContext) {
   * Renders the consent form
   */
 function renderConsentForm(context: vscode.ExtensionContext){
-  const panel = vscode.window.createWebviewPanel(
-    'form',
-    'SALT Study Consent Form',
-    vscode.ViewColumn.One,
-    {
-      enableScripts: true
-    }
-  );
+  if (context.globalState.get("participation") === undefined
+      || context.globalState.get("participation") === false){
+    const panel = vscode.window.createWebviewPanel(
+      'form',
+      'SALT Study Consent Form',
+      vscode.ViewColumn.One,
+      {
+        enableScripts: true
+      }
+    );
+    panel.webview.html = consentForm;
   
-  panel.webview.html = consentForm;
-
-  panel.webview.onDidReceiveMessage(
-    message => {
-      if (message.text === "yes"){
-        context.globalState.update("participation", true);
-        initStudy(context);
-        renderSurvey(context);
-
-        //init telemetry reporter and other values
-        reporter = new TelemetryReporter(key);
-        [logPath, linecnt, stream] = openLog("");
-        output = vscode.window.createOutputChannel("SALT-logger", {log:true});
-        uuid = context.globalState.get("uuid") as string;
-        if (!vscode.env.isTelemetryEnabled){
-          vscode.window.showWarningMessage(
-            "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
+    panel.webview.onDidReceiveMessage(
+      message => {
+        if (message.text === "yes"){
+          context.globalState.update("participation", true);
+          initStudy(context);
+          renderSurvey(context);
+  
+          //init telemetry reporter and other values
+          reporter = newReporter();
+          [logPath, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
+          output = vscode.window.createOutputChannel("SALT-logger", {log:true});
+          uuid = context.globalState.get("uuid") as string;
+          if (!vscode.env.isTelemetryEnabled){
+            vscode.window.showWarningMessage(
+              "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
+          }
         }
+        else {
+          context.globalState.update("participation", false);
+        }
+        panel.dispose();
       }
-      else {
-        context.globalState.update("participation", false);
-      }
-      panel.dispose();
-    }
-  );
+    );
+  }
+  else {
+    //if already participating, render personal copy
+    const panel = vscode.window.createWebviewPanel(
+      'form',
+      'SALT Study Consent Form',
+      vscode.ViewColumn.One
+    );
+    panel.webview.html = consentFormPersonal;
+  }
 }
 
 /**
@@ -303,51 +311,8 @@ function initStudy(context: vscode.ExtensionContext){
 
   context.globalState.update("startDate", Math.floor(Date.now() / 1000));
 
-  //generate first log file
-  fs.writeFileSync(path.join(logDir!, "log1.json"), JSON.stringify({uuid: uuid, logCount: 1, studyEnabled: enableExt}) + '\n', {flag: 'a'});
   //set config to enable logging
   vscode.workspace.getConfiguration("salt").update("errorLogging", true);
-}
-
-/**
- * Initializes a new log file
- * @param uuid if we are creating a new log file, "" otherwise
- * @returns path of current log, line count, and the stream
- */
-function openLog(uuid: string): [string, number, fs.WriteStream]{
-  //find how many json files are in folder to determine current log #
-  let fileCount = fs.readdirSync(logDir!)
-    .filter(f => path.extname(f) === ".json").length;
-  //new logs must provide a UUID
-  if (uuid !== ""){
-    fileCount++;
-  }
-  const logPath = path.join(logDir!, `log${fileCount}.json`);
-  if (uuid !== ""){
-    fs.writeFileSync(logPath, JSON.stringify({uuid: uuid, logCount: fileCount, studyEnabled: enableExt}) + '\n', {flag: 'a'});
-  }
-  else{
-    fs.writeFileSync(logPath, JSON.stringify({extensionReload: {studyEnabled: enableExt}}) + '\n', {flag: 'a'});
-  }
-
-  linecnt = 0;
-  if (uuid === ""){
-    const linecnt = fs.readFileSync(logPath, 'utf-8').split('\n').length;
-  }
-  //create new stream
-  const stream = fs.createWriteStream(logPath, {flags: 'a'});
-
-  return [logPath, linecnt, stream];
-}
-
-/**
- * Sends the log file to the server
- * @param logPath path of log file
- * @param reporter telemetry reporter
- */
-function sendTelemetry(logPath: string, reporter: TelemetryReporter){
-  const data = fs.readFileSync(logPath, 'utf-8');
-  reporter.sendTelemetryEvent('errorLog', {'data': data});
 }
 
 /**
@@ -377,17 +342,6 @@ function logError(doc: vscode.TextDocument, time: string){
   else {
     noErrors = false;
   }
-          
-  //if there are errors but none are rustc, return
-  // if (diagnostics.length !== 0 && !diagnostics.some(e => e.source === 'rustc')){
-  //   if (vscode.workspace.getConfiguration("rust-analyzer").get<boolean>("diagnostics.useRustcErrorCode")){
-  //     stream.write(JSON.stringify({error: "rustc errors not found"}) + "\n");
-  //   }
-  //   else {
-  //     stream.write(JSON.stringify({error: "rustc error codes not enabled"}) + "\n");
-  //   }
-  //   return;
-  // }
 
   //for every error create a JSON object in the errors list
   let errors = [];
@@ -419,7 +373,8 @@ function logError(doc: vscode.TextDocument, time: string){
   const entry = JSON.stringify({
     file: hashString(doc.fileName),
     seconds: time,
-    revis: visToggled, 
+    revis: visToggled,
+    length: doc.lineCount, 
     errors: errors
   }) + '\n';
   stream.write(entry);
