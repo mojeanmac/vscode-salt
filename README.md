@@ -65,6 +65,9 @@ To display/hide the visualization, **move the text cursor to the line** with the
 To clear all visualizations, execute command `salt.clearAllVisualizations`.
 To refresh the visualizations, save the current file.
 
+### Installations Needed
+Axios: use `npm install axios`
+
 ## Note
 
 This extension is still in an early stage. Please file an issue or contact  Molly (mmaclaren@ucsd.edu) if you find any bugs/confusing points.

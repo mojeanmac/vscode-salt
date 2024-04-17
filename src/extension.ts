@@ -7,7 +7,7 @@ import { codeFuncMap } from "./visualizations";
 import * as fs from "fs";
 import * as path from "path";
 import TelemetryReporter from '@vscode/extension-telemetry';
-import { openNewLog, openExistingLog, sendTelemetry, newReporter } from "./telemetry";
+import { openNewLog, openExistingLog, sendTelemetry, newReporter, sendPayload } from "./telemetry";
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
 
@@ -194,7 +194,9 @@ export function activate(context: vscode.ExtensionContext) {
           logError(doc, time);
           //check if divisible by interval
           if (linecnt % SENDINTERVAL === 0){
-            sendTelemetry(logPath, reporter);
+            //EDITED THIS
+            //sendTelemetry(logPath, reporter);
+            sendPayload(logPath);
             if (linecnt >= NEWLOGINTERVAL){
               [logPath, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
             }

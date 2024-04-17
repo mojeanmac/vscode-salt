@@ -76,7 +76,6 @@
     "@types/glob": "^8.0.0",
     "@types/jsdom": "^21.1.0",
     "@types/mocha": "^10.0.0",
-
     "@types/node": "^16.18.38",
     "@types/sharp": "^0.31.1",
     "@types/vscode": "^1.73.0",
@@ -94,6 +93,7 @@
     "@svgdotjs/svg.js": "^3.1.2",
     "@vscode/extension-telemetry": "^0.8.5",
     "@vscode/webview-ui-toolkit": "^1.2.2",
+    "axios": "^1.6.8",
     "svgdom": "^0.1.13",
     "vscode-languageclient": "^8.1.0",
     "vscode-uri": "^3.0.7"
