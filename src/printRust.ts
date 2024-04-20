@@ -24,7 +24,7 @@ export let cargo_bin = () => {
   return path.join(cargo_home, "bin");
 };
 
-export const get_flowistry_opts = async (cwd: string) => {
+export const get_opts = async (cwd: string) => {
   const rustc_path = await exec_notify(
     "rustup",
     ["which", "--toolchain", TOOLCHAINCHANNEL, "rustc"],
@@ -113,7 +113,7 @@ export async function printAllItems(context: vscode.ExtensionContext) {
   }
 
   // want to replace with a func like findWorkspaceRoot
-  let projectPath = folders[0].uri.fsPath; 
+  let projectPath = folders[0].uri.fsPath;
 
   //check if binary is installed first!
   if(!fs.existsSync(path.join(cargo_bin(), "cargo-salt"))){
@@ -124,20 +124,15 @@ export async function printAllItems(context: vscode.ExtensionContext) {
       "Installing crates...");
   }
 
-  let flowistry_opts = await get_flowistry_opts(projectPath);
+  let opts = await get_opts(projectPath);
 
     let output;
     try {
-      exec_notify(
-        "cd",
-        [projectPath],
-        "Changing directory to project..."
-      );
       output = await exec_notify(
         "cargo",
         ["salt"],
         "Printing all items...",
-        flowistry_opts
+        opts
       );
       console.log(output);
       return output;
@@ -149,5 +144,3 @@ export async function printAllItems(context: vscode.ExtensionContext) {
 //TODO:
 //locate cargo.toml, can't assume it's in project root
 //improve error handling
-//zip the data in our rust binary and unzip it here (like flowistry?)
-//call cargo salt with a path parameter so we don't have to cd
