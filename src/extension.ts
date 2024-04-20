@@ -18,6 +18,18 @@ const SENDINTERVAL = 25;
 const NEWLOGINTERVAL = 1000;
 const TWO_WEEKS = 1209600;
 const YEAR = 31536000;
+const suggestions = [
+  /consider adding a leading/,
+  /consider dereferencing here/,
+  /consider removing deref here/,
+  /consider dereferencing/,
+  /consider borrowing here/,
+  /consider .+borrowing here/,
+  /consider removing the/,
+  /unboxing the value/,
+  /dereferencing the borrow/,
+  /dereferencing the type/,
+];
 
 const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
@@ -34,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
     return;
   }
 
-  //FOR TESTING
+  //FOR TESTING - reset all states
   // context.globalState.update("participation", undefined);
   // context.globalState.update("startDate", undefined);
   // context.globalState.update("enableRevis", undefined);
@@ -157,7 +169,7 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      printAllItems(context);
+      // printAllItems(context);
 
       let doc = editor.document;
       if (vscode.workspace.getConfiguration("salt").get("errorLogging")
@@ -188,7 +200,6 @@ export function activate(context: vscode.ExtensionContext) {
       setTimeout(() => {
         saveDiagnostics(editor);
       }, 200);
-
       if (vscode.workspace.getConfiguration("salt").get("errorLogging")
           && context.globalState.get("participation") === true && stream !== undefined){
         //if logging is enabled, wait for diagnostics to load in
@@ -321,7 +332,6 @@ function initStudy(context: vscode.ExtensionContext){
  * @param time to be subtracted from initial time
  */
 function logError(doc: vscode.TextDocument, time: string){
-
   let diagnostics = languages
             .getDiagnostics(doc.uri)
             .filter((d) => {
@@ -331,7 +341,7 @@ function logError(doc: vscode.TextDocument, time: string){
                 typeof d.code.value === "string"
               );
             });
-
+  console.log(diagnostics);
   if (diagnostics.length === 0){
     //if duplicate successful build, return
     if (noErrors){
@@ -357,11 +367,23 @@ function logError(doc: vscode.TextDocument, time: string){
       code = "Syntax";
     }
 
+    let hint = "";
+    if (diag.relatedInformation !== undefined){
+      diag.relatedInformation.forEach((info) => {
+        suggestions.forEach((suggestion) => {
+          if (suggestion.test(info.message)){
+            hint = info.message;
+          }
+        });
+      });
+    }
+
     //add error data to list
     errors.push({
       code: code,
       msg: hashString(diag.message),
       source: diag.source,
+      hint: hint,
       range:{
         start: diag.range.start.line,
         end: diag.range.end.line
