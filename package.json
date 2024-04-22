@@ -61,16 +61,15 @@
     }
   },
   "scripts": {
-    "compile": "npm run esbuild",
-    "watch": "npm run esbuild-watch",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
-    "esbuild-base": "node ./esbuild.mjs",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --loader:.html=text",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
-    "esbuild-build-and-watch": "npm run esbuild && npm run esbuild-watch",
     "package": "vsce package",
     "test-compile": "tsc -p ./"
   },
@@ -84,7 +83,6 @@
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
     "@vscode/test-electron": "^2.2.0",
-    "dotenv": "^16.3.1",
     "esbuild": "^0.17.12",
     "eslint": "^8.26.0",
     "glob": "^8.0.3",
