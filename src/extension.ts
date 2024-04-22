@@ -7,7 +7,7 @@ import { codeFuncMap } from "./visualizations";
 import * as fs from "fs";
 import * as path from "path";
 import TelemetryReporter from '@vscode/extension-telemetry';
-import { printAllItems } from "./printRust";
+// import { printAllItems } from "./printRust";
 import { openNewLog, openExistingLog, sendTelemetry, newReporter } from "./telemetry";
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
@@ -45,8 +45,8 @@ export function activate(context: vscode.ExtensionContext) {
     log.error("no workspace folders");
     return;
   }
-
   //FOR TESTING - reset all states
+  // fs.rmSync(context.globalStorageUri.fsPath, {recursive: true});
   // context.globalState.update("participation", undefined);
   // context.globalState.update("startDate", undefined);
   // context.globalState.update("enableRevis", undefined);
@@ -69,8 +69,8 @@ export function activate(context: vscode.ExtensionContext) {
   }
   
   //if logging is enabled, initialize reporter, log file, and line count
-  if (vscode.workspace.getConfiguration("salt").get("errorLogging")
-      && context.globalState.get("participation") === true){
+  if (/*vscode.workspace.getConfiguration("salt").get("errorLogging")
+      &&*/ context.globalState.get("participation") === true){
 
     //if a year has passed, disable logging
     let startDate = context.globalState.get("startDate") as number;
@@ -172,8 +172,8 @@ export function activate(context: vscode.ExtensionContext) {
       // printAllItems(context);
 
       let doc = editor.document;
-      if (vscode.workspace.getConfiguration("salt").get("errorLogging")
-          && context.globalState.get("participation") === true && stream !== undefined){
+      if (/*vscode.workspace.getConfiguration("salt").get("errorLogging")
+          &&*/ context.globalState.get("participation") === true && stream !== undefined){
         let savedAt = JSON.stringify({file: hashString(doc.fileName), savedAt: ((Date.now() / 1000) - initialStamp).toFixed(3)}) + "\n";
         stream.write(savedAt);
         output.append(savedAt);
@@ -200,8 +200,8 @@ export function activate(context: vscode.ExtensionContext) {
       setTimeout(() => {
         saveDiagnostics(editor);
       }, 200);
-      if (vscode.workspace.getConfiguration("salt").get("errorLogging")
-          && context.globalState.get("participation") === true && stream !== undefined){
+      if (/*vscode.workspace.getConfiguration("salt").get("errorLogging")
+          &&*/ context.globalState.get("participation") === true && stream !== undefined){
         //if logging is enabled, wait for diagnostics to load in
         let time = ((Date.now() / 1000) - initialStamp).toFixed(3);
         timeoutHandle = setTimeout(() => {
@@ -341,7 +341,6 @@ function logError(doc: vscode.TextDocument, time: string){
                 typeof d.code.value === "string"
               );
             });
-  console.log(diagnostics);
   if (diagnostics.length === 0){
     //if duplicate successful build, return
     if (noErrors){
@@ -367,6 +366,7 @@ function logError(doc: vscode.TextDocument, time: string){
       code = "Syntax";
     }
 
+    //do any of the hints match our ref/deref patterns?
     let hint = "";
     if (diag.relatedInformation !== undefined){
       diag.relatedInformation.forEach((info) => {
@@ -390,19 +390,40 @@ function logError(doc: vscode.TextDocument, time: string){
       }
     });
   }
+  //get linecount of codebase
+  countrs().then((count) => {
+    //write to file
+    const entry = JSON.stringify({
+      file: hashString(doc.fileName),
+      workspace: hashString(vscode.workspace.name!),
+      seconds: time,
+      revis: visToggled,
+      length: doc.lineCount,
+      numfiles: count,
+      errors: errors
+    }) + '\n';
+    stream.write(entry);
+    output.append(entry);
+    linecnt++;
+    visToggled = false;
+  });
+}
 
-  //write to file
-  const entry = JSON.stringify({
-    file: hashString(doc.fileName),
-    seconds: time,
-    revis: visToggled,
-    length: doc.lineCount, 
-    errors: errors
-  }) + '\n';
-  stream.write(entry);
-  output.append(entry);
-  linecnt++;
-  visToggled = false;
+async function countrs(): Promise<number> {
+  //get all Rust files in the workspace
+  const files = await vscode.workspace.findFiles('**/*.rs');
+
+  // let totalLines = 0;
+
+  // //iterate through each file
+  // for (const file of files) {
+  //     const document = await vscode.workspace.openTextDocument(file);
+  //     const lines = document.lineCount;
+  //     totalLines += lines;
+  // }
+
+  // return totalLines;
+  return files.length;
 }
 
 /**
