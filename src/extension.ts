@@ -69,8 +69,8 @@ export function activate(context: vscode.ExtensionContext) {
   }
   
   //if logging is enabled, initialize reporter, log file, and line count
-  if (/*vscode.workspace.getConfiguration("salt").get("errorLogging")
-      &&*/ context.globalState.get("participation") === true){
+  if (vscode.workspace.getConfiguration("salt").get("errorLogging")
+      && context.globalState.get("participation") === true){
 
     //if a year has passed, disable logging
     let startDate = context.globalState.get("startDate") as number;
@@ -172,8 +172,8 @@ export function activate(context: vscode.ExtensionContext) {
       // printAllItems(context);
 
       let doc = editor.document;
-      if (/*vscode.workspace.getConfiguration("salt").get("errorLogging")
-          &&*/ context.globalState.get("participation") === true && stream !== undefined){
+      if (vscode.workspace.getConfiguration("salt").get("errorLogging")
+          && context.globalState.get("participation") === true && stream !== undefined){
         let savedAt = JSON.stringify({file: hashString(doc.fileName), savedAt: ((Date.now() / 1000) - initialStamp).toFixed(3)}) + "\n";
         stream.write(savedAt);
         output.append(savedAt);
@@ -200,8 +200,8 @@ export function activate(context: vscode.ExtensionContext) {
       setTimeout(() => {
         saveDiagnostics(editor);
       }, 200);
-      if (/*vscode.workspace.getConfiguration("salt").get("errorLogging")
-          &&*/ context.globalState.get("participation") === true && stream !== undefined){
+      if (vscode.workspace.getConfiguration("salt").get("errorLogging")
+          && context.globalState.get("participation") === true && stream !== undefined){
         //if logging is enabled, wait for diagnostics to load in
         let time = ((Date.now() / 1000) - initialStamp).toFixed(3);
         timeoutHandle = setTimeout(() => {
@@ -323,7 +323,7 @@ function initStudy(context: vscode.ExtensionContext){
   context.globalState.update("startDate", Math.floor(Date.now() / 1000));
 
   //set config to enable logging
-  vscode.workspace.getConfiguration("salt").update("errorLogging", true);
+  vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
 }
 
 /**
