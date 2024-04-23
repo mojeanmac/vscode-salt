@@ -24,12 +24,16 @@ A log entry is created every time a Rust project is built, following the JSON ob
 ```
 entry: {
     file: [hashed file name],
+    workspace: [hashed workspace name],
     seconds: [time since initialization],
     revis: [boolean if REVIS was toggled on], 
+    length: [lines in the current file],
+    numfiles: [number of .rs files in workspace],
     errors: {
         code: [error code],
         msg: [hashed message],
         source: [rustc or rust-analyzer],
+        hint: [optional if matches pattern]
         range: {
             start: [starting line num],
             end: [ending line num]
