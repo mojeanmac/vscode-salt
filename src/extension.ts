@@ -67,6 +67,12 @@ export function activate(context: vscode.ExtensionContext) {
   if (context.globalState.get("participation") === undefined){
     renderConsentForm(context);
   }
+
+  //fixing mistake from last release - if participating, enable logging just once by setting a state
+  if (context.globalState.get("participation") === true && context.globalState.get("globalEnable") === undefined){
+    vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
+    context.globalState.update("globalEnable", true);
+  }
   
   //if logging is enabled, initialize reporter, log file, and line count
   if (vscode.workspace.getConfiguration("salt").get("errorLogging")
