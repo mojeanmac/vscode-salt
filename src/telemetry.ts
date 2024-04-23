@@ -3,8 +3,8 @@ import TelemetryReporter from '@vscode/extension-telemetry';
 import * as fs from "fs";
 
 export { openNewLog, openExistingLog, sendTelemetry, newReporter };
-const key = "cdf9fbe6-bfd3-438a-a2f6-9eed10994c4e"; //use this key for development
-//const key = "0cddc2d3-b3f6-4be5-ba35-dcadf125535c";
+//const key = "cdf9fbe6-bfd3-438a-a2f6-9eed10994c4e"; //use this key for development
+const key = "0cddc2d3-b3f6-4be5-ba35-dcadf125535c";
   
 //launches a telemetry reporter
 function newReporter(): TelemetryReporter{
