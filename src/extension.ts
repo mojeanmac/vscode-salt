@@ -184,6 +184,12 @@ export function activate(context: vscode.ExtensionContext) {
         stream.write(savedAt);
         output.append(savedAt);
         linecnt++;
+        if (linecnt % SENDINTERVAL === 0){
+          sendTelemetry(logPath, reporter);
+          if (linecnt >= NEWLOGINTERVAL){
+            [logPath, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
+          }
+        }
       }
     })
   );
