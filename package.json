@@ -8,8 +8,8 @@
     "type": "git",
     "url": "https://github.com/mojeanmac/vscode-salt"
   },
-  "description": "Fix Rust ownership errors and Participate in academic research",
-  "version": "0.2.6",
+  "description": "Fix Rust ownership errors and participate in academic research",
+  "version": "0.2.7",
   "license": "MIT",
   "engines": {
     "vscode": "^1.73.0"

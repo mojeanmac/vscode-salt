@@ -330,6 +330,7 @@ function initStudy(context: vscode.ExtensionContext){
 
   //set config to enable logging
   vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
+  context.globalState.update("globalEnable", true);
 }
 
 /**
