@@ -16,12 +16,6 @@ export function newSvg(width: number, height: number): Svg {
   return (<Svg>SVG(document.documentElement)).size(width, height);
 }
 
-export function minmax(...args: number[]): [number, number] {
-  const min = Math.min(...args);
-  const max = Math.max(...args);
-  return [min, max];
-}
-
 const TRIANGLE_SIDE_LEN = 9;
 /**
  * Triangle for Shown visualization. Pointing down.
@@ -41,11 +35,6 @@ export function triangleAvail(): Svg {
   const sign = newSvg(SL, SL);
   sign.path(`M0,0 L${SL},${SL / 2} L0,${SL}`).fill("#ff3300");
   return sign;
-}
-
-/** Generates an array of numbers in the interval [from, to) */
-export function range(from: number, to: number): ReadonlyArray<number> {
-  return [...Array(to - from).keys()].map((i) => i + from);
 }
 
 export const log = new (class {

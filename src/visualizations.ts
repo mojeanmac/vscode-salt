@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { Svg, G as Group } from "@svgdotjs/svg.js";
-import { range, log, svg2uri, newSvg, minmax } from "./util";
+import { log, svg2uri, newSvg } from "./util";
+import { range, minmax } from "./utils/math";
 import { CONFIG } from "./errorviz";
 
 /**
