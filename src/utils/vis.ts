@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-//@ts-ignore
 import { createSVGWindow } from "svgdom";
 import { SVG, registerWindow, Svg } from "@svgdotjs/svg.js";
 
@@ -9,10 +8,10 @@ export function svg2uri(svg: Svg): vscode.Uri {
 }
 
 export function newSvg(width: number, height: number): Svg {
-  const window = createSVGWindow();
-  const document = window.document;
-  registerWindow(window, document);
-  return (<Svg>SVG(document.documentElement)).size(width, height);
+  const win = createSVGWindow();
+  const doc = win.document;
+  registerWindow(win, doc);
+  return (<Svg>SVG(doc.documentElement)).size(width, height);
 }
 
 const TRIANGLE_SIDE_LEN = 9;
