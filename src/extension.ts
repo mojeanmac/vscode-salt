@@ -346,7 +346,7 @@ function logError(doc: vscode.TextDocument, time: string){
             });
 
   //for every error create a JSON object in the errors list
-  let errors = [];
+  let errors: $TSFIXME[] = [];
   for (const diag of diagnostics) {
     if (diag.code === undefined || typeof diag.code === "number" || typeof diag.code === "string") {
       log.error("unexpected diag.code type", typeof diag.code);
