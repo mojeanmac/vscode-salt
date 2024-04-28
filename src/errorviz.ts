@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { svg2uri, triangleAvail, triangleShown } from "./util";
 import { log } from "./utils/log";
+import { svg2uri, triangleAvail, triangleShown } from "./utils/vis";
 import { imageByCode } from "./visualizations";
 
 function newDecorationType(): vscode.TextEditorDecorationType {
