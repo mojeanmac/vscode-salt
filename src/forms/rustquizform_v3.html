@@ -1,7 +1,10 @@
 <html>
 
 <head>
-
+    <title>Rust Knowledge Quiz</title>
+    <!--importing prism-->
+    <link href="prism.css" rel="stylesheet"/>
+    
     <style>
         h1 {
             text-align: center;
@@ -17,9 +20,18 @@
         }
 
         code {
-            text-align: left;
+            /*text-align: left;
             font-size: 16px;
             font-family: 'Courier New', Courier, monospace;
+            */
+            
+            /*make it so people can't copy paste*/
+            
+            user-select: none; /*disable text selection*/
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            pointer-events: none; /*disable mouse events */
         }
 
         /* .questions {
@@ -50,29 +62,7 @@
         }
     </style>
 
-    <script type="text/javascript">
-    
-    /*
-    function checkQ1NeedsInput(val) {
-        var element=document.getElementById('q1');
-        if(val=="1")
-            element.style.display='inline';
-        else
-            element.style.display='none';
-    }
-    */
-    
-    function checkvalue(val, elementName, elementBoxName) {
-        var element=document.getElementById(elementName);
-        var elementbox=document.getElementById(elementBoxName);
-        if(element.checked)
-            elementbox.style.display='inline';
-        else {
-            elementbox.style.display='none';
-        }
-    } 
-    
-</script>
+    <script src="prism.js"></script>
 
 </head>
 
@@ -89,7 +79,7 @@
                     expected output of the program if it were executed. (Taken from "The Rust 
                     Programming Language" by Steve Klabnik and Carol Nichols)
                 </p>
-                <code>
+                <pre><code class = "language-rust">
                     use std::ops::Deref;
                     <br>
                     <br>#[derive(Clone, Copy)]
@@ -109,7 +99,7 @@
                     <br>&nbsp let n2 = n
                     <br>&nbsp println!("{} {}", x, *n);
                     <br>}
-                </code>
+                </code></pre>
                 <br>
                 <select name="q1" id="q1" onchange='checkVal1()'>
                     <option value=0>does NOT compile</option>
@@ -140,14 +130,14 @@
                     Determine whether the program will pass the compiler. If it passes, write the 
                     expected output of the program if it were executed.
                 </p>
-                <code>
+                <pre><code class = "language-rust">
                     fn main() {
                     <br>&nbsp let a = String::from("hello");
                     <br>&nbsp let b = &a;
                     <br>&nbsp let c = *b;
                     <br>&nbsp println!("{} {} {}", a, b, c);
                     <br>}
-                </code>
+                </code></pre>
                 <br>
                 <select name="q2" id="q2" onchange='checkVal2()'>
                     <option value=0>does NOT compile</option>
@@ -178,27 +168,27 @@
                     Determine whether the program will pass the compiler. If it passes, write the 
                     expected output of the program if it were executed.
                 </p>
-                <code>
+                <pre><code class = "language-rust">
                     struct Point {
                     <br>&nbsp x: i32,
                     <br>&nbsp y: i32,
                     <br>}
                     <br>
                     <br>impl Point {
-                    <br>&nbsp fn new(x: i32, y:i32) -> Point {
+                    <br>&nbsp fn new(x:i32, y:i32) -> Point {
                     <br>&nbsp&nbsp Point{x, y}
                     <br>&nbsp }
                     <br>
                     <br>&nbsp fn display(&self) {
-                    <br>&nbsp&nbsp println!("{} {}", self.x, self.y)
+                    <br>&nbsp&nbsp println!("{} {}", self.x, self.y);
                     <br>&nbsp }
                     <br>}
                     <br>
                     <br>fn main() {
                     <br>&nbsp let p = Point::new(3, 5);
-                    <br>p.display();
+                    <br>&nbsp p.display();
                     <br>}
-                </code>
+                </code></pre>
                 <br>
                 <select name="q3" id="q3" onchange='checkVal3()'>
                     <option value=0>does NOT compile</option>
@@ -233,15 +223,15 @@
                     Determine whether the program will pass the compiler. If it passes, write the 
                     value of wrapped_value after execution.
                 </p>
-                <code>
+                <pre><code class = "language-rust">
                     use std::ops::Deref;
                     <br>
-                    <br>struct Wrapper<T> {
-                    <br>&nbsp value: T,
+                    <br>struct Wrapper {
+                    <br>&nbsp value: i:32,
                     <br>}
                     <br>
-                    <br>impl<T> Wrapper<T> {
-                    <br>&nbsp fn new(value: T) -> Self {
+                    <br>impl<T> Wrapper {
+                    <br>&nbsp fn new(value: i:32) -> Self {
                     <br>&nbsp&nbsp Wrapper { value }
                     <br>&nbsp }
                     <br>}
@@ -254,7 +244,7 @@
                     <br>&nbsp let mut wrapped_value = Wrapper::new(5);
                     <br>&nbsp modify_value(&mut wrapped_value);
                     <br>}
-                </code>
+                </code></pre>
                 <br>
                 <select name="q4" id="q4" onchange='checkVal4()'>
                     <option value=0>does NOT compile</option>
