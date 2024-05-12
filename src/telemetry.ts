@@ -55,5 +55,6 @@ function openNewLog(logDir: string, enableExt: boolean, uuid: string): [string, 
  */
 function sendTelemetry(logPath: string, reporter: TelemetryReporter){
     const data = fs.readFileSync(logPath, 'utf-8');
+    console.log(data);
     reporter.sendTelemetryEvent('errorLog', {'data': data});
 }

@@ -94,6 +94,7 @@
     "@svgdotjs/svg.js": "^3.1.2",
     "@vscode/extension-telemetry": "^0.8.5",
     "@vscode/webview-ui-toolkit": "^1.2.2",
+    "axios": "^1.6.8",
     "svgdom": "^0.1.13",
     "vscode-languageclient": "^8.1.0",
     "vscode-uri": "^3.0.7"

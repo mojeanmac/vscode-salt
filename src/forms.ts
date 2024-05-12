@@ -1,3 +1,6 @@
+
+export const quiz = ``;
+
 export const consentForm = `<style>
 .parabreak {
     line-height: 16px;

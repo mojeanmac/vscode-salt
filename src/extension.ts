@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { consentForm, consentFormPersonal, survey, thankYou } from "./forms";
+import { consentForm, consentFormPersonal, survey, thankYou, quiz } from "./forms";
 import { languages } from "vscode";
 import * as errorviz from "./errorviz";
 import { log } from "./util";
@@ -14,7 +14,7 @@ import * as crypto from 'crypto';
 
 let intervalHandle: number | null = null;
 
-const SENDINTERVAL = 25;
+const SENDINTERVAL = 10;
 const NEWLOGINTERVAL = 1000;
 const TWO_WEEKS = 1209600;
 const YEAR = 31536000;
@@ -41,17 +41,18 @@ let reporter: TelemetryReporter, logPath: string, linecnt: number,
 stream: fs.WriteStream, output: vscode.LogOutputChannel, uuid: string;
 
 export function activate(context: vscode.ExtensionContext) {
+  console.log("test");
+  if (context.globalState.get("uuid") === undefined){
+    console.log("wtf");
+  }
+
+  context.globalState.update("test", "test lalalalalalala").then(() => {
+    console.log("test");
+  });
   if (!vscode.workspace.workspaceFolders) {
     log.error("no workspace folders");
     return;
   }
-  //FOR TESTING - reset all states
-  // fs.rmSync(context.globalStorageUri.fsPath, {recursive: true});
-  // context.globalState.update("participation", undefined);
-  // context.globalState.update("startDate", undefined);
-  // context.globalState.update("enableRevis", undefined);
-  // context.globalState.update("uuid", undefined);
-  // context.globalState.update("survey", undefined);
 
 
   if (logDir === null) {
@@ -66,6 +67,19 @@ export function activate(context: vscode.ExtensionContext) {
   //if not, render it!
   if (context.globalState.get("participation") === undefined){
     renderConsentForm(context);
+  }
+
+  // //one time notif for existing participants to do quiz
+  if (context.globalState.get("quiznotif") === undefined //not yet notified
+      && context.globalState.get("quiz") === undefined //not done quiz
+      && context.globalState.get("participation") === true){ //but is a participant
+    
+    vscode.window.showInformationMessage("SALT would like you take a short quiz on Rust topics!", "Take Quiz").then((sel) => {
+      if (sel === "Take Quiz") {
+        renderQuiz(context);
+      }
+    });
+    context.globalState.update("quiznotif", true);
   }
 
   //fixing mistake from last release - if participating, enable logging just once by setting a state
@@ -161,12 +175,27 @@ export function activate(context: vscode.ExtensionContext) {
           );
         }
       }));
+
   context.subscriptions.push(
     vscode.commands.registerTextEditorCommand(
       "salt.clearAllVisualizations",
       clearAllVisualizations
     )
   );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("salt.renderQuiz",
+      () => {
+        if (context.globalState.get("quiz") !== undefined){
+          renderQuiz(context);
+        }
+        else {
+          vscode.window
+          .showInformationMessage(
+            "You've already completed the quiz!",
+          );
+        }
+      }));
 
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((_: vscode.TextDocument) => {
@@ -221,6 +250,7 @@ export function activate(context: vscode.ExtensionContext) {
           logError(doc, time);
           //check if divisible by interval
           if (linecnt % SENDINTERVAL === 0){
+            console.log("sending telemetry");
             sendTelemetry(logPath, reporter);
             if (linecnt >= NEWLOGINTERVAL){
               [logPath, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
@@ -301,10 +331,35 @@ function renderSurvey(context: vscode.ExtensionContext){
   panel.webview.onDidReceiveMessage(
     message => {
       context.globalState.update("survey", message.text);
+      renderQuiz(context);
       //write to latest log
       const fileCount = fs.readdirSync(logDir!).filter(f => path.extname(f) === ".json").length;
       const logPath = path.join(logDir!, `log${fileCount}.json`);
       fs.writeFileSync(logPath, JSON.stringify({survey: message.text}) + '\n', {flag: 'a'});
+      panel.dispose();
+    }
+  );
+}
+
+function renderQuiz(context: vscode.ExtensionContext){
+  const panel = vscode.window.createWebviewPanel(
+    'form',
+    'SALT Quiz',
+    vscode.ViewColumn.One,
+    {
+      enableScripts: true
+    }
+  );
+
+  panel.webview.html = quiz;
+
+  panel.webview.onDidReceiveMessage(
+    message => {
+      context.globalState.update("quiz", message.text);
+      //write to latest log
+      const fileCount = fs.readdirSync(logDir!).filter(f => path.extname(f) === ".json").length;
+      const logPath = path.join(logDir!, `log${fileCount}.json`);
+      fs.writeFileSync(logPath, JSON.stringify({quiz: message.text}) + '\n', {flag: 'a'});
       panel.webview.html = thankYou;
     }
   );
@@ -425,17 +480,6 @@ function logError(doc: vscode.TextDocument, time: string){
 async function countrs(): Promise<number> {
   //get all Rust files in the workspace
   const files = await vscode.workspace.findFiles('**/*.rs');
-
-  // let totalLines = 0;
-
-  // //iterate through each file
-  // for (const file of files) {
-  //     const document = await vscode.workspace.openTextDocument(file);
-  //     const lines = document.lineCount;
-  //     totalLines += lines;
-  // }
-
-  // return totalLines;
   return files.length;
 }
 
@@ -541,3 +585,4 @@ export function deactivate() {
     clearInterval(intervalHandle);
   }
 }
+
