@@ -8,7 +8,7 @@ import * as fs from "fs";
 import * as path from "path";
 import TelemetryReporter from '@vscode/extension-telemetry';
 // import { printAllItems } from "./printRust";
-import { openNewLog, openExistingLog, sendTelemetry, newReporter } from "./telemetry";
+import { openNewLog, openExistingLog, sendPayload } from "./telemetry_aws";
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
 
@@ -37,18 +37,11 @@ let enableExt = true;
 let noErrors = false;
 
 let logDir: string | null = null;
-let reporter: TelemetryReporter, logPath: string, linecnt: number,
+let logPath: string, logCount: number, linecnt: number,
 stream: fs.WriteStream, output: vscode.LogOutputChannel, uuid: string;
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log("test");
-  if (context.globalState.get("uuid") === undefined){
-    console.log("wtf");
-  }
 
-  context.globalState.update("test", "test lalalalalalala").then(() => {
-    console.log("test");
-  });
   if (!vscode.workspace.workspaceFolders) {
     log.error("no workspace folders");
     return;
@@ -100,9 +93,6 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
-    //init telemetry reporter
-    reporter = newReporter();
-
     //if 2 weeks have passed, re-enable tool
     //otherwise set enabled = false
     if (context.globalState.get("enableRevis") === false){
@@ -114,7 +104,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }
 
-    [logPath, linecnt, stream] = openExistingLog(logDir, enableExt, initialStamp - startDate);
+    [logPath, logCount, linecnt, stream] = openExistingLog(logDir, enableExt, initialStamp - startDate);
     output = vscode.window.createOutputChannel("SALT-logger", {log:true});
     uuid = context.globalState.get("uuid") as string;
 
@@ -214,9 +204,9 @@ export function activate(context: vscode.ExtensionContext) {
         output.append(savedAt);
         linecnt++;
         if (linecnt % SENDINTERVAL === 0){
-          sendTelemetry(logPath, reporter);
+          sendPayload(logPath, uuid, logCount);
           if (linecnt >= NEWLOGINTERVAL){
-            [logPath, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
+            [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
           }
         }
       }
@@ -251,9 +241,9 @@ export function activate(context: vscode.ExtensionContext) {
           //check if divisible by interval
           if (linecnt % SENDINTERVAL === 0){
             console.log("sending telemetry");
-            sendTelemetry(logPath, reporter);
+            sendPayload(logPath, uuid, logCount);
             if (linecnt >= NEWLOGINTERVAL){
-              [logPath, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
+              [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
             }
           }
         }, 2000);
@@ -286,8 +276,7 @@ function renderConsentForm(context: vscode.ExtensionContext){
           renderSurvey(context);
   
           //init telemetry reporter and other values
-          reporter = newReporter();
-          [logPath, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
+          [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
           output = vscode.window.createOutputChannel("SALT-logger", {log:true});
           uuid = context.globalState.get("uuid") as string;
           if (!vscode.env.isTelemetryEnabled){
