@@ -165,6 +165,34 @@
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
+                    Choose the options below that, if put into the blank ("__"), will allow the code to compile.
+                </p>
+                <pre><code class = "language-rust">
+                    use std::ops::Deref;
+                    <br>
+                    <br>fn f (x:i32) {}
+                    <br>
+                    <br>fn main() {
+                    <br>&nbsp let i = 8;
+                    <br>&nbsp let ir = &i;
+                    <br>&nbsp f(_ir_);
+                    <br>}
+                </code></pre>
+                <br>
+                <input type="checkbox" id="q3a" name="q3a">
+                <label for="q3a"> *ir</label><br> <!--works-->
+                <input type="checkbox" id="q3b" name="q3b">
+                <label for="q3b"> ir</label><br> <!--doesn't work-->
+                <input type="checkbox" id="q3c" name="q3c">
+                <label for="q3c"> &ir</label><br> <!--doesn't work-->
+            </div>
+        </section>
+
+        <section>
+            <h2>Question 4</h2>
+            <p id="warn"></p>
+            <div class="questions"> 
+                <p>
                     Choose the options below that, if put into the blank ("__"), will correctly print out "42".
                 </p>
                 <pre><code class = "language-rust">
@@ -189,17 +217,17 @@
                     <br>}
                 </code></pre>
                 <br>
-                <input type="checkbox" id="q3a" name="q3a">
-                <label for="q3a"> ir</label><br>
-                <input type="checkbox" id="q3b" name="q3b">
-                <label for="q3b"> *ir</label><br> <!--doesn't work-->
-                <input type="checkbox" id="q3c" name="q3c">
-                <label for="q3c"> &(ir)</label><br>
+                <input type="checkbox" id="q4a" name="q4a">
+                <label for="q4a"> ir</label><br>
+                <input type="checkbox" id="q4b" name="q4b">
+                <label for="q4b"> *ir</label><br> <!--doesn't work-->
+                <input type="checkbox" id="q4c" name="q4c">
+                <label for="q4c"> &(ir)</label><br>
             </div>
         </section>
 
         <section>
-            <h2>Question 4</h2>
+            <h2>Question 5</h2>
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
@@ -229,16 +257,16 @@
                     <br>}
                 </code></pre>
                 <br>
-                <input type="checkbox" id="q4a" name="q4a">
-                <label for="q4a"> _s.u</label><br>
-                <input type="checkbox" id="q4b" name="q4b">
-                <label for="q4b"> (*_s).u</label><br>
+                <input type="checkbox" id="q5a" name="q5a">
+                <label for="q5a"> _s.u</label><br>
+                <input type="checkbox" id="q5b" name="q5b">
+                <label for="q5b"> (*_s).u</label><br>
                 <br>
             </div>
         </section>
 
         <section>
-            <h2>Question 4</h2>
+            <h2>Question 6</h2>
             <p id="warn"></p>
             <div class="questions">
                 <p>
@@ -247,45 +275,35 @@
                 </p>
                 <pre><code class = "language-rust">
                     use std::ops::Deref;
+                    <br>use std::ops::DerefMut;
                     <br>
-                    <br>struct Wrapper {
-                    <br>&nbsp value: i:32,
-                    <br>}
-                    <br>
-                    <br>impl<T> Wrapper {
-                    <br>&nbsp fn new(value: i:32) -> Self {
-                    <br>&nbsp&nbsp Wrapper { value }
+                    <br>struct MyBox<T>(T);
+                    <br>&nbsp impl<T> MyBox<T> {
+                    <br>&nbsp fn new(x: T) -> MyBox<T> {
+                    <br>&nbsp&nbsp MyBox(x)
                     <br>&nbsp }
                     <br>}
                     <br>
-                    <br>fn modify_value(value: &mut i32) {
-                    <br>&nbsp *value += 10;
+                    <br>impl<T> Deref for MyBox<T> {
+                    <br>&nbsp type Target = T;
+                    <br> 
+                    <br>&nbsp fn deref(&self) -> &T {
+                    <br>&nbsp&nbsp &self.0
+                    <br>&nbsp }
                     <br>}
                     <br>
                     <br>fn main() {
-                    <br>&nbsp let mut wrapped_value = Wrapper::new(5);
-                    <br>&nbsp modify_value(&mut wrapped_value);
+                    <br>&nbsp let mut x = MyBox::new(5);
+                    <br>&nbsp *x = 6;
                     <br>}
                 </code></pre>
+                <!--will provide an error "cannot assign to data in dereference of `MyBox<i32>`"-->
+                <!--Rust will suggest that you use DerefMut to modify through a dereference-->
                 <br>
-                <select name="q4" id="q4" onchange='checkVal4()'>
+                <select name="q6" id="q6" onchange='checkVal4()'>
                     <option value=0>does NOT compile</option>
                     <option value=1>DOES compile</option>
                 </select>
-                <input type="text" id="q4Input" name="q4Input" style="visibility:hidden" placeholder="Type the wrapped_value here.">
-                
-                <script>
-                    function checkVal4() {
-                        var element=document.getElementById("q4");
-                        var inp=document.getElementById("q4Input");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
             </div>
         </section>
 
