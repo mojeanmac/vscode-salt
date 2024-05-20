@@ -1,0 +1,462 @@
+<html>
+
+<head>
+    <title>Rust Knowledge Quiz</title>
+    <!--importing prism-->
+    <link href="prism.css" rel="stylesheet"/>
+    
+    <style>
+        h1 {
+            text-align: center;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        p {
+            text-align: left;
+            font-size: 16px;
+        }
+
+        code {
+            /*text-align: left;
+            font-size: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            */
+            
+            /*make it so people can't copy paste*/
+            
+            user-select: none; /*disable text selection*/
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            pointer-events: none; /*disable mouse events */
+        }
+
+        /* .questions {
+    text-align: left;
+    font-size: 16;
+}
+
+.container{
+    margin-left: 100px;
+    margin-right: 100px;
+} */
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: left;
+        }
+
+        #warn {
+            color: red;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+    </style>
+
+    <script src="prism.js"></script>
+
+</head>
+
+<body>
+    <div id="container">
+        <h1>Rust Knowledge Quiz</h1>
+
+        <section>
+            <h2>Question 1</h2>
+            <p id="warn"></p>
+            <div class="questions">
+                <p>
+                    Determine whether the program will pass the compiler. If it passes, write the 
+                    expected output of the program if it were executed. (Taken from "The Rust 
+                    Programming Language" by Steve Klabnik and Carol Nichols)
+                </p>
+                <pre><code class = "language-rust">
+                    use std::ops::Deref;
+                    <br>
+                    <br>#[derive(Clone, Copy)]
+                    <br>struct AccessLogger(i32);
+                    <br>
+                    <br>impl Deref for AccessLogger {
+                    <br>&nbsp type Target = i32;
+                    <br>&nbsp fn deref(&self) -> &Self::Target {
+                    <br>&nbsp&nbsp println!("deref");
+                    <br>&nbsp&nbsp &self.0
+                    <br>&nbsp }
+                    <br>}
+                    <br>
+                    <br>fn main() {
+                    <br>&nbsp let n = AccessLogger(-1);
+                    <br>&nbsp let x = *n + 1;
+                    <br>&nbsp let n2 = n
+                    <br>&nbsp println!("{} {}", x, *n);
+                    <br>}
+                </code></pre>
+                <br>
+                <select name="q1" id="q1" onchange='checkVal1()'>
+                    <option value=0>does NOT compile</option>
+                    <option value=1>DOES compile</option>
+                </select>
+                <input type="text" id="q1Input" name="q1Input" style="visibility:hidden" placeholder="Type program output here.">
+                
+                <script>
+                    function checkVal1() {
+                        var element=document.getElementById("q1");
+                        var inp=document.getElementById("q1Input");
+                        if(element.value=="1") {
+                            inp.style.visibility='visible';
+                        }
+                        else {
+                            inp.style.visibility='hidden';
+                        }
+                    }
+                </script>
+            </div>
+        </section>
+
+        <section>
+            <h2>Question 2</h2>
+            <p id="warn"></p>
+            <div class="questions">
+                <p>
+                    Determine whether the program will pass the compiler. If it passes, write the 
+                    expected output of the program if it were executed.
+                </p>
+                <pre><code class = "language-rust">
+                    fn main() {
+                    <br>&nbsp let a = String::from("hello");
+                    <br>&nbsp let b = &a;
+                    <br>&nbsp let c = *b;
+                    <br>&nbsp println!("{} {} {}", a, b, c);
+                    <br>}
+                </code></pre>
+                <br>
+                <select name="q2" id="q2" onchange='checkVal2()'>
+                    <option value=0>does NOT compile</option>
+                    <option value=1>DOES compile</option>
+                </select>
+                <input type="text" id="q2Input" name="q2Input" style="visibility:hidden" placeholder="Type program output here.">
+                
+                <script>
+                    function checkVal2() {
+                        var element=document.getElementById("q2");
+                        var inp=document.getElementById("q2Input");
+                        if(element.value=="1") {
+                            inp.style.visibility='visible';
+                        }
+                        else {
+                            inp.style.visibility='hidden';
+                        }
+                    }
+                </script>
+            </div>
+        </section>
+
+        <section>
+            <h2>Question 3</h2>
+            <p id="warn"></p>
+            <div class="questions"> 
+                <p>
+                    Determine whether the program will pass the compiler. If it passes, write the 
+                    expected output of the program if it were executed.
+                </p>
+                <pre><code class = "language-rust">
+                    struct Point {
+                    <br>&nbsp x: i32,
+                    <br>&nbsp y: i32,
+                    <br>}
+                    <br>
+                    <br>impl Point {
+                    <br>&nbsp fn new(x:i32, y:i32) -> Point {
+                    <br>&nbsp&nbsp Point{x, y}
+                    <br>&nbsp }
+                    <br>
+                    <br>&nbsp fn display(&self) {
+                    <br>&nbsp&nbsp println!("{} {}", self.x, self.y);
+                    <br>&nbsp }
+                    <br>}
+                    <br>
+                    <br>fn main() {
+                    <br>&nbsp let p = Point::new(3, 5);
+                    <br>&nbsp p.display();
+                    <br>}
+                </code></pre>
+                <br>
+                <select name="q3" id="q3" onchange='checkVal3()'>
+                    <option value=0>does NOT compile</option>
+                    <option value=1>DOES compile</option>
+                </select>
+                <input type="text" id="q3aInput" name="q3aInput" style="visibility:hidden" placeholder="Type the output.">
+                <!--<input type="text" id="q3bInput" name="q3bInput" style="visibility:hidden" placeholder="Type LINE TWO output."-->
+                
+                <script>
+                    function checkVal3() {
+                        var element=document.getElementById("q3");
+                        var inp1=document.getElementById("q3aInput");
+                        var inp2=document.getElementById("q3bInput");
+                        if(element.value=="1") {
+                            inp1.style.visibility='visible';
+                            //inp2.style.visibility='visible';
+                        }
+                        else {
+                            inp1.style.visibility='hidden';
+                            //inp2.style.visibility='hidden';
+                        }
+                    }
+                </script>
+            </div>
+        </section>
+
+        <section>
+            <h2>Question 4</h2>
+            <p id="warn"></p>
+            <div class="questions">
+                <p>
+                    Determine whether the program will pass the compiler. If it passes, write the 
+                    value of wrapped_value after execution.
+                </p>
+                <pre><code class = "language-rust">
+                    use std::ops::Deref;
+                    <br>
+                    <br>struct Wrapper {
+                    <br>&nbsp value: i:32,
+                    <br>}
+                    <br>
+                    <br>impl<T> Wrapper {
+                    <br>&nbsp fn new(value: i:32) -> Self {
+                    <br>&nbsp&nbsp Wrapper { value }
+                    <br>&nbsp }
+                    <br>}
+                    <br>
+                    <br>fn modify_value(value: &mut i32) {
+                    <br>&nbsp *value += 10;
+                    <br>}
+                    <br>
+                    <br>fn main() {
+                    <br>&nbsp let mut wrapped_value = Wrapper::new(5);
+                    <br>&nbsp modify_value(&mut wrapped_value);
+                    <br>}
+                </code></pre>
+                <br>
+                <select name="q4" id="q4" onchange='checkVal4()'>
+                    <option value=0>does NOT compile</option>
+                    <option value=1>DOES compile</option>
+                </select>
+                <input type="text" id="q4Input" name="q4Input" style="visibility:hidden" placeholder="Type the wrapped_value here.">
+                
+                <script>
+                    function checkVal4() {
+                        var element=document.getElementById("q4");
+                        var inp=document.getElementById("q4Input");
+                        if(element.value=="1") {
+                            inp.style.visibility='visible';
+                        }
+                        else {
+                            inp.style.visibility='hidden';
+                        }
+                    }
+                </script>
+            </div>
+        </section>
+
+        <br />
+        <p>Please answer all questions before submitting.</p>
+        <div style="text-align: center;">
+            <button type="button" id="submit">Submit</button>
+        </div>
+    </div>
+
+<!--
+    <script>
+        document.getElementById('submit').addEventListener("click", () => {
+
+            let yearsOfExp = document.getElementById("yearsOfExp").value;
+            let rustExp = document.getElementById("rustExp").value;
+            if (rustExp == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("rustExp").focus();
+                return;
+            }
+            let linesOfCode = document.getElementById("linesOfCode").value;
+            if (linesOfCode == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("linesOfCode").focus();
+                return;
+            }
+
+            let java = document.querySelectorAll('input[name="java"]');
+            let javaExp = '';
+            for (const rb of java) {
+                if (rb.checked) {
+                    javaExp = rb.value;
+                    break;
+                }
+            }
+            if (javaExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("java").focus();
+                return;
+            }
+
+            let javascript = document.querySelectorAll('input[name="javascript"]');
+            let jsExp = '';
+            for (const rb of javascript) {
+                if (rb.checked) {
+                    jsExp = rb.value;
+                    break;
+                }
+            }
+            if (jsExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("js").focus();
+                return;
+            }
+
+            let clang = document.querySelectorAll('input[name="clang"]');
+            let cExp = '';
+            for (const rb of clang) {
+                if (rb.checked) {
+                    cExp = rb.value;
+                    break;
+                }
+            }
+            if (cExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("c").focus();
+                return;
+            }
+
+            let python = document.querySelectorAll('input[name="python"]');
+            let pythonExp = '';
+            for (const rb of python) {
+                if (rb.checked) {
+                    pythonExp = rb.value;
+                    break;
+                }
+            }
+            if (pythonExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("python").focus();
+                return;
+            }
+
+            let rustBook = document.getElementById("resources1").checked;
+            let youtube = document.getElementById("resources2").checked;
+            let stackOverflow = document.getElementById("resources3").checked;
+            let other = document.getElementById("resources4").checked;
+
+            let industry = document.getElementById("industry").value;
+            if (industry == "") {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("industry").focus();
+                return;
+            }
+            let gender = document.getElementById("gender").value;
+            if (gender == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("gender").focus();
+                return;
+            }
+            let age = document.getElementById("age").value;
+            if (age == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("age").focus();
+                return;
+            }
+            let degree = document.getElementById("degree").value;
+            if (degree == -1) {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("degree").focus();
+                return;
+            }
+
+            // //checking rustExp - how long they've been programming in Rust
+            // if(document.getElementById("rustExp").value==-1){
+            //     window.alert("Please tell us how long you've been programming in Rust.");
+            // }
+            // //checking java, javascript, clang, and python - what programming languages they have experience in
+            // else if(document.querySelector('input[name="java"]:checked')==null
+            // || document.querySelector('input[name="javascript"]:checked')==null
+            // || document.querySelector('input[name="clang"]:checked')==null
+            // || document.querySelector('input[name="python"]:checked')==null){
+            //     window.alert("Please tell us what programming languages you have experience in.");
+            // }
+            // //checking resources - what resources they used to learn Rust
+            // else if(!(document.getElementById("resources1").checked
+            // ||document.getElementById("resources2").checked
+            // ||document.getElementById("resources3").checked
+            // ||document.getElementById("resources4").checked)) {
+            //     window.alert("Please tell us how you learned Rust.");
+            // }
+            // //checking linesOfCode - how many lines of code they have written
+            // else if(document.getElementById("linesOfCode").value==-1){
+            //     window.alert("Please tell us how many lines of code you've written in Rust.");
+            // }
+            // //checking industry
+            // else if(document.getElementById("industry").value=="Select"){
+            //     window.alert("Please select your industry.");
+            // }
+            // //checking gender
+            // else if(document.getElementById("gender").value==-1){
+            //     window.alert("Please select your gender.");
+            // }
+            // //checking age
+            // else if(document.getElementById("age").value==-1){
+            //     window.alert("Please select your age.");
+            // }
+            // //checking degree
+            // else if(document.getElementById("degree").value==-1){
+            //     window.alert("Please select your level of education.");
+            // }
+            // else{
+            //     //close webview, move onto thank you page
+            //     window.location.replace("thankyoumessage.html");
+            // }
+
+
+            let results = {
+                "experience": {
+                    "codingExp": yearsOfExp,
+                    "rustExp": rustExp,
+                    "linesOfCode": linesOfCode,
+                },
+                "languages": {
+                    "java": javaExp,
+                    "javascript": jsExp,
+                    "c": cExp,
+                    "python": pythonExp,
+                },
+                "resources": {
+                    "rustBook": rustBook,
+                    "youtube": youtube,
+                    "stackOverflow": stackOverflow,
+                    "other": other,
+                },
+
+                "demographics": {
+                    "industry": industry,
+                    "gender": gender,
+                    "age": age,
+                    "degree": degree
+                }
+            }
+            console.log(results);
+
+            //Send a message to the extension with the form data
+            const vscode = acquireVsCodeApi();
+            vscode.postMessage({
+                command: 'submitSurvey',
+                text: results
+            });
+        });
+    </script>
+-->
+</html>
