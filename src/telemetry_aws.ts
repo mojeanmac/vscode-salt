@@ -1,20 +1,14 @@
 import * as path from "path";
-import TelemetryReporter from '@vscode/extension-telemetry';
 import * as fs from "fs";
 import axios from "axios";
 
-export { openNewLog, openExistingLog, sendPayload};
-const key = "cdf9fbe6-bfd3-438a-a2f6-9eed10994c4e"; //use this key for development
-//const key = "0cddc2d3-b3f6-4be5-ba35-dcadf125535c";
-
-  
-//launches a telemetry reporter
-function newReporter(): TelemetryReporter{
-    return new TelemetryReporter(key);
-}
+export { openNewLog, openExistingLog, sendPayload, sendBackup};
 
 /**
  * Opens an existing log file
+ * @param logDir - directory to store logs
+ * @param enableExt - whether the extension is enabled
+ * @param timeSinceStart - the time since the extension was enabled
  * @returns path of current log, line count, and the stream
  */
 function openExistingLog(logDir: string, enableExt: boolean, timeSinceStart: number): [string, number, number, fs.WriteStream]{
@@ -34,6 +28,9 @@ function openExistingLog(logDir: string, enableExt: boolean, timeSinceStart: num
 
 /**
  * Creates a new log file
+ * @param logDir - directory to store logs
+ * @param enableExt - whether the extension is enabled
+ * @param uuid - the unique identifier for the user
  * @returns path of current log, line count, and the stream
  */
 function openNewLog(logDir: string, enableExt: boolean, uuid: string): [string, number, number, fs.WriteStream]{
@@ -43,15 +40,21 @@ function openNewLog(logDir: string, enableExt: boolean, uuid: string): [string, 
     fileCount++; //we are creating a new file, so increment the count
     const logPath = path.join(logDir, `log${fileCount}.json`);
 
-    fs.writeFileSync(logPath, JSON.stringify({uuid: uuid, logCount: fileCount, studyEnabled: enableExt}) + '\n', {flag: 'a'});
+    fs.writeFileSync(logPath, JSON.stringify({logCount: fileCount, uuid: uuid, studyEnabled: enableExt}) + '\n', {flag: 'a'});
     let linecnt = 0;
 
     const stream = fs.createWriteStream(logPath, {flags: 'a'});
     return [logPath, fileCount, linecnt, stream];
 }
 
-// call payload function and invoke function url for lambda
-async function sendPayload(logPath: string, uuid: string, logCount: number){
+/**
+ * Sends the current log to the server
+ * @param logPath - path to the log file
+ * @param uuid - the unique identifier for the user
+ * @param logCount - the current log number
+ * @returns true if the log was sent successfully, false otherwise
+*/
+async function sendPayload(logPath: string, uuid: string, logCount: number): Promise<boolean>{
 
     const lambdaEndpoint = "https://eszhueee2i.execute-api.us-west-1.amazonaws.com";
     const dataToUpdate = {
@@ -59,12 +62,34 @@ async function sendPayload(logPath: string, uuid: string, logCount: number){
         logNum: logCount,
         data: fs.readFileSync(logPath, 'utf-8'),
     };
-    console.log(dataToUpdate);
     try {
         const response = await axios.put(lambdaEndpoint, dataToUpdate);
-        console.log("response yay it worked: ", response.data);
+        console.log("Log sent: ", response.data);
+        return true;
     }
-    catch (error) {
-        console.error("there's an error:", error);
+    catch {
+        console.log("Error sending log");
+        return false;
     }
 };
+
+
+/**
+ * One time function to send all logs in the log directory
+ * @param logDir - path to log directory
+ * @param uuid - the unique identifier for the user
+ * @returns promise that resolves to true if all logs were sent successfully, false otherwise
+ */
+async function sendBackup(logDir: string, uuid: string): Promise<boolean> {
+    const lambdaEndpoint = "https://eszhueee2i.execute-api.us-west-1.amazonaws.com";
+    for (let i = 1; i <= fs.readdirSync(logDir).length; i++) {
+        const logPath = path.join(logDir, `log${i}.json`);
+        try {
+            sendPayload(logPath, uuid, i);
+        }
+        catch {
+            return false;
+        }
+    }
+    return true;
+}

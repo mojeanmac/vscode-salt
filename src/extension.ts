@@ -6,9 +6,8 @@ import { log } from "./util";
 import { codeFuncMap } from "./visualizations";
 import * as fs from "fs";
 import * as path from "path";
-import TelemetryReporter from '@vscode/extension-telemetry';
 // import { printAllItems } from "./printRust";
-import { openNewLog, openExistingLog, sendPayload } from "./telemetry_aws";
+import { openNewLog, openExistingLog, sendPayload, sendBackup } from "./telemetry_aws";
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
 
@@ -79,6 +78,20 @@ export function activate(context: vscode.ExtensionContext) {
   if (context.globalState.get("participation") === true && context.globalState.get("globalEnable") === undefined){
     vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
     context.globalState.update("globalEnable", true);
+  }
+
+  //one time call to backup existing logs to aws
+  if (context.globalState.get("participation") === true && context.globalState.get("backedUp") !== true){
+    sendBackup(logDir!, context.globalState.get("uuid") as string).then(completed => {
+      if (completed === true) {
+        context.globalState.update("backedUp", true);
+      } else {
+        context.globalState.update("backedUp", false);
+      }
+    })
+    .catch(() => {
+      context.globalState.update("backedUp", false);
+    });
   }
   
   //if logging is enabled, initialize reporter, log file, and line count
@@ -203,7 +216,9 @@ export function activate(context: vscode.ExtensionContext) {
         stream.write(savedAt);
         output.append(savedAt);
         linecnt++;
+        //send telemetry every SENDINTERVAL lines
         if (linecnt % SENDINTERVAL === 0){
+          console.log("sending telemetry");
           sendPayload(logPath, uuid, logCount);
           if (linecnt >= NEWLOGINTERVAL){
             [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
@@ -238,14 +253,6 @@ export function activate(context: vscode.ExtensionContext) {
         timeoutHandle = setTimeout(() => {
           //log errors
           logError(doc, time);
-          //check if divisible by interval
-          if (linecnt % SENDINTERVAL === 0){
-            console.log("sending telemetry");
-            sendPayload(logPath, uuid, logCount);
-            if (linecnt >= NEWLOGINTERVAL){
-              [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
-            }
-          }
         }, 2000);
       }
     })
