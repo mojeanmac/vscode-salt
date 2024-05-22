@@ -1,8 +1,10 @@
 import * as path from "path";
 import * as fs from "fs";
 import axios from "axios";
+import { Octokit } from '@octokit/rest';
+import simpleGit from 'simple-git';
 
-export { openNewLog, openExistingLog, sendPayload, sendBackup};
+export { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo};
 
 /**
  * Opens an existing log file
@@ -92,4 +94,36 @@ async function sendBackup(logDir: string, uuid: string): Promise<boolean> {
         }
     }
     return true;
+}
+
+/**
+ * Checks if the current workspace is a public github repo
+ * @param workspacePath - path to the workspace
+ * @returns true if the workspace is verified to be public, false otherwise
+ */
+async function isPrivateRepo(workspacePath: string): Promise<boolean> {
+    const git = simpleGit(workspacePath);
+    try {
+        const remote = await git.getRemotes(true);
+        if (remote.length === 0 || remote === null) { //no git remotes
+            console.log("No remotes");
+            return true;
+        }
+        const owner = remote[0].refs.fetch.split('/')[3];
+        const repo = remote[0].refs.fetch.split('/')[4].replace(".git", "");
+        const octokit = new Octokit();
+        try {
+            const response = await octokit.repos.get({owner: owner , repo: repo});
+            console.log("isPrivate:", response.data.private);
+            return response.data.private;
+        }
+        catch {
+            console.log("isPrivate:", true);
+            return true;
+        }
+    }
+    catch {
+        console.log("isPrivate:", true);
+        return true;
+    }
 }

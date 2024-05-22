@@ -1,5 +1,62 @@
-
 export const quiz = ``;
+
+export const allOrPublic = `
+<html>
+    <style>
+        body {
+            font-size: 18px;
+        }
+        p {
+            margin-top: 30px;
+            width: 80%;
+        }
+        form {
+            width: 250px;
+            margin: 0 auto; 
+        }
+    </style>
+    <body>
+        <p>Would you like SALT to collect telemetry from <b>all workspaces</b> or only workspaces cloned from <b>public</b> Github repositories? (This can be changed later in settings)</p>
+        <form>
+            <input type="radio" id="all" name="agreement" value="all" checked>
+            <label for="all">All workspaces</label>
+            <br />
+            <input type="radio" id="public" name="agreement" value="public">
+            <label for="public">Only public repositories</label>
+            <br />
+        </form>
+        <br />
+        <form>
+            <button type="button" id="submit">Submit</button>
+        </form>
+        <script>
+
+            document.getElementById('submit').addEventListener("click", () => {
+                let all = document.getElementById("all").checked;
+                let public = document.getElementById("public").checked;
+
+                if (!all && !public) {
+                    return;
+                }
+                
+                const vscode = acquireVsCodeApi();
+                if (all) {
+                    vscode.postMessage({
+                        command: 'submit',
+                        text: "all"
+                    });
+                }
+                if (public) {
+                    vscode.postMessage({
+                        command: 'submit',
+                        text: "public"
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
+`;
 
 export const consentForm = `<style>
 .parabreak {

@@ -55,7 +55,12 @@
         "salt.errorLogging": {
           "type": "boolean",
           "default": "false",
-          "description": "Enable the recording and sending of error logs for academic research. You must agree to the consent form for it to go into effect. Disabling this will opt you out of the study on reload."
+          "description": "Enable the recording and sending of error logs for academic research. You must agree to the consent form for it to go into effect."
+        },
+        "salt.publicOnly": {
+          "type": "boolean",
+          "default": "false",
+          "description": "Only send telemetry data for public repositories."
         }
       }
     }
@@ -91,10 +96,11 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@octokit/rest": "^20.1.1",
     "@svgdotjs/svg.js": "^3.1.2",
-    "@vscode/extension-telemetry": "^0.8.5",
     "@vscode/webview-ui-toolkit": "^1.2.2",
     "axios": "^1.6.8",
+    "simple-git": "^3.24.0",
     "svgdom": "^0.1.13",
     "vscode-languageclient": "^8.1.0",
     "vscode-uri": "^3.0.7"

@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { consentForm, consentFormPersonal, survey, thankYou, quiz } from "./forms";
 import { languages } from "vscode";
 import * as errorviz from "./errorviz";
 import { log } from "./util";
@@ -7,7 +6,9 @@ import { codeFuncMap } from "./visualizations";
 import * as fs from "fs";
 import * as path from "path";
 // import { printAllItems } from "./printRust";
-import { openNewLog, openExistingLog, sendPayload, sendBackup } from "./telemetry_aws";
+import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
+import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
+export { initStudy };
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
 
@@ -33,7 +34,6 @@ const suggestions = [
 const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
 let enableExt = true;
-let noErrors = false;
 
 let logDir: string | null = null;
 let logPath: string, logCount: number, linecnt: number,
@@ -46,7 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
     return;
   }
 
-
   if (logDir === null) {
     logDir = context.globalStorageUri.fsPath;
 
@@ -58,73 +57,86 @@ export function activate(context: vscode.ExtensionContext) {
   //have they given an answer to the current consent form?
   //if not, render it!
   if (context.globalState.get("participation") === undefined){
-    renderConsentForm(context);
+    renderConsentForm(context, logDir);
   }
 
   // //one time notif for existing participants to do quiz
-  if (context.globalState.get("quiznotif") === undefined //not yet notified
-      && context.globalState.get("quiz") === undefined //not done quiz
-      && context.globalState.get("participation") === true){ //but is a participant
+  // if (context.globalState.get("quiznotif") === undefined //not yet notified
+  //     && context.globalState.get("quiz") === undefined //not done quiz
+  //     && context.globalState.get("participation") === true){ //but is a participant
     
-    vscode.window.showInformationMessage("SALT would like you take a short quiz on Rust topics!", "Take Quiz").then((sel) => {
-      if (sel === "Take Quiz") {
-        renderQuiz(context);
-      }
-    });
-    context.globalState.update("quiznotif", true);
-  }
+  //   vscode.window.showInformationMessage("SALT would like you take a short quiz on Rust topics!", "Take Quiz").then((sel) => {
+  //     if (sel === "Take Quiz") {
+  //       renderQuiz(context, logDir!);
+  //     }
+  //   });
+  //   context.globalState.update("quiznotif", true);
+  // }
 
-  //fixing mistake from last release - if participating, enable logging just once by setting a state
-  if (context.globalState.get("participation") === true && context.globalState.get("globalEnable") === undefined){
-    vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
-    context.globalState.update("globalEnable", true);
-  }
+  if (context.globalState.get("participation") === true){
 
-  //one time call to backup existing logs to aws
-  if (context.globalState.get("participation") === true && context.globalState.get("backedUp") !== true){
-    sendBackup(logDir!, context.globalState.get("uuid") as string).then(completed => {
-      if (completed === true) {
-        context.globalState.update("backedUp", true);
-      } else {
+    //disable logging for this session if publicOnly is true and not a public repo
+    if (vscode.workspace.getConfiguration("salt").get("publicOnly") === true){
+      isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
+          context.workspaceState.update("enabled", !isPrivate);
+      });
+    }
+    else {
+      context.workspaceState.update("enabled", true);
+    }
+
+    //if global enable is undefined, set it to true
+    if (context.globalState.get("globalEnable") === undefined){
+      vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
+      context.globalState.update("globalEnable", true);
+    }
+
+    //one time call to backup existing logs to aws
+    if (context.globalState.get("backedUp") !== true){
+      sendBackup(logDir!, context.globalState.get("uuid") as string).then(completed => {
+        if (completed === true) {
+          context.globalState.update("backedUp", true);
+        } else {
+          context.globalState.update("backedUp", false);
+        }
+      })
+      .catch(() => {
         context.globalState.update("backedUp", false);
-      }
-    })
-    .catch(() => {
-      context.globalState.update("backedUp", false);
-    });
-  }
-  
-  //if logging is enabled, initialize reporter, log file, and line count
-  if (vscode.workspace.getConfiguration("salt").get("errorLogging")
-      && context.globalState.get("participation") === true){
-
-    //if a year has passed, disable logging
-    let startDate = context.globalState.get("startDate") as number;
-    if (initialStamp > startDate + YEAR){
-      vscode.workspace.getConfiguration("salt").update("errorLogging", false);
-      context.globalState.update("participation", undefined);
-      return;
+      });
     }
+    
+    //if logging is enabled, initialize reporter, log file, and line count
+    if (vscode.workspace.getConfiguration("salt").get("errorLogging") === true
+        && context.workspaceState.get("enabled") === true){
 
-    //if 2 weeks have passed, re-enable tool
-    //otherwise set enabled = false
-    if (context.globalState.get("enableRevis") === false){
-      if (initialStamp > startDate + TWO_WEEKS){
-        context.globalState.update("enableRevis", true);
+      //if a year has passed, disable logging
+      let startDate = context.globalState.get("startDate") as number;
+      if (initialStamp > startDate + YEAR){
+        vscode.workspace.getConfiguration("salt").update("errorLogging", false);
+        context.globalState.update("participation", undefined);
+        return;
       }
-      else {
-        enableExt = false;
+
+      //if 2 weeks have passed, re-enable tool
+      //otherwise set enabled = false
+      if (context.globalState.get("enableRevis") === false){
+        if (initialStamp > startDate + TWO_WEEKS){
+          context.globalState.update("enableRevis", true);
+        }
+        else {
+          enableExt = false;
+        }
       }
-    }
 
-    [logPath, logCount, linecnt, stream] = openExistingLog(logDir, enableExt, initialStamp - startDate);
-    output = vscode.window.createOutputChannel("SALT-logger", {log:true});
-    uuid = context.globalState.get("uuid") as string;
+      [logPath, logCount, linecnt, stream] = openExistingLog(logDir, enableExt, initialStamp - startDate);
+      output = vscode.window.createOutputChannel("SALT-logger", {log:true});
+      uuid = context.globalState.get("uuid") as string;
 
-    //check if telemetry is enabled globally
-    if (!vscode.env.isTelemetryEnabled){
-      vscode.window.showWarningMessage(
-        "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
+      //check if telemetry is enabled globally
+      if (!vscode.env.isTelemetryEnabled){
+        vscode.window.showWarningMessage(
+          "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
+      }
     }
   }
 
@@ -145,6 +157,20 @@ export function activate(context: vscode.ExtensionContext) {
       });
   }
 
+  //stop logging if publiconly set to true && private
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (context.globalState.get("participation") === true 
+          && e.affectsConfiguration("salt.publicOnly") 
+          && vscode.workspace.getConfiguration("salt").get("publicOnly") === true
+          && vscode.workspace.workspaceFolders) {
+        isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
+          context.workspaceState.update("enabled", !isPrivate);
+        });
+      }
+    })
+  );
+
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((e) => {
       if (e === undefined) {
@@ -161,7 +187,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("salt.renderConsentForm",
       () => {
-        renderConsentForm(context);
+        renderConsentForm(context, logDir!);
     }));
 
   //command to render survey
@@ -169,7 +195,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("salt.renderSurvey",
       () => {
         if (context.globalState.get("participation") === true){
-          renderSurvey(context);
+          renderSurvey(context, logDir!);
         }
         else{
           vscode.window
@@ -186,19 +212,19 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand("salt.renderQuiz",
-      () => {
-        if (context.globalState.get("quiz") !== undefined){
-          renderQuiz(context);
-        }
-        else {
-          vscode.window
-          .showInformationMessage(
-            "You've already completed the quiz!",
-          );
-        }
-      }));
+  // context.subscriptions.push(
+  //   vscode.commands.registerCommand("salt.renderQuiz",
+  //     () => {
+  //       if (context.globalState.get("quiz") !== undefined){
+  //         renderQuiz(context, logDir!);
+  //       }
+  //       else {
+  //         vscode.window
+  //         .showInformationMessage(
+  //           "You've already completed the quiz!",
+  //         );
+  //       }
+  //     }));
 
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((_: vscode.TextDocument) => {
@@ -210,7 +236,7 @@ export function activate(context: vscode.ExtensionContext) {
       // printAllItems(context);
 
       let doc = editor.document;
-      if (vscode.workspace.getConfiguration("salt").get("errorLogging")
+      if (vscode.workspace.getConfiguration("salt").get("errorLogging") && context.workspaceState.get("enabled") === true
           && context.globalState.get("participation") === true && stream !== undefined){
         let savedAt = JSON.stringify({file: hashString(doc.fileName), savedAt: ((Date.now() / 1000) - initialStamp).toFixed(3)}) + "\n";
         stream.write(savedAt);
@@ -246,7 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
       setTimeout(() => {
         saveDiagnostics(editor);
       }, 200);
-      if (vscode.workspace.getConfiguration("salt").get("errorLogging")
+      if (vscode.workspace.getConfiguration("salt").get("errorLogging") && context.workspaceState.get("enabled") === true
           && context.globalState.get("participation") === true && stream !== undefined){
         //if logging is enabled, wait for diagnostics to load in
         let time = ((Date.now() / 1000) - initialStamp).toFixed(3);
@@ -256,108 +282,6 @@ export function activate(context: vscode.ExtensionContext) {
         }, 2000);
       }
     })
-  );
-}
-
-/**
-  * Renders the consent form
-  */
-function renderConsentForm(context: vscode.ExtensionContext){
-  if (context.globalState.get("participation") === undefined
-      || context.globalState.get("participation") === false){
-    const panel = vscode.window.createWebviewPanel(
-      'form',
-      'SALT Study Consent Form',
-      vscode.ViewColumn.One,
-      {
-        enableScripts: true
-      }
-    );
-    panel.webview.html = consentForm;
-  
-    panel.webview.onDidReceiveMessage(
-      message => {
-        if (message.text === "yes"){
-          context.globalState.update("participation", true);
-          initStudy(context);
-          renderSurvey(context);
-  
-          //init telemetry reporter and other values
-          [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
-          output = vscode.window.createOutputChannel("SALT-logger", {log:true});
-          uuid = context.globalState.get("uuid") as string;
-          if (!vscode.env.isTelemetryEnabled){
-            vscode.window.showWarningMessage(
-              "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
-          }
-        }
-        else {
-          context.globalState.update("participation", false);
-        }
-        panel.dispose();
-      }
-    );
-  }
-  else {
-    //if already participating, render personal copy
-    const panel = vscode.window.createWebviewPanel(
-      'form',
-      'SALT Study Consent Form',
-      vscode.ViewColumn.One
-    );
-    panel.webview.html = consentFormPersonal;
-  }
-}
-
-/**
- * Renders the survey
- */
-function renderSurvey(context: vscode.ExtensionContext){
-  const panel = vscode.window.createWebviewPanel(
-    'form',
-    'SALT Survey',
-    vscode.ViewColumn.One,
-    {
-      enableScripts: true
-    }
-  );
-
-  panel.webview.html = survey;
-
-  panel.webview.onDidReceiveMessage(
-    message => {
-      context.globalState.update("survey", message.text);
-      renderQuiz(context);
-      //write to latest log
-      const fileCount = fs.readdirSync(logDir!).filter(f => path.extname(f) === ".json").length;
-      const logPath = path.join(logDir!, `log${fileCount}.json`);
-      fs.writeFileSync(logPath, JSON.stringify({survey: message.text}) + '\n', {flag: 'a'});
-      panel.dispose();
-    }
-  );
-}
-
-function renderQuiz(context: vscode.ExtensionContext){
-  const panel = vscode.window.createWebviewPanel(
-    'form',
-    'SALT Quiz',
-    vscode.ViewColumn.One,
-    {
-      enableScripts: true
-    }
-  );
-
-  panel.webview.html = quiz;
-
-  panel.webview.onDidReceiveMessage(
-    message => {
-      context.globalState.update("quiz", message.text);
-      //write to latest log
-      const fileCount = fs.readdirSync(logDir!).filter(f => path.extname(f) === ".json").length;
-      const logPath = path.join(logDir!, `log${fileCount}.json`);
-      fs.writeFileSync(logPath, JSON.stringify({quiz: message.text}) + '\n', {flag: 'a'});
-      panel.webview.html = thankYou;
-    }
   );
 }
 
@@ -384,10 +308,18 @@ function initStudy(context: vscode.ExtensionContext){
   }
 
   context.globalState.update("startDate", Math.floor(Date.now() / 1000));
-
+  
   //set config to enable logging
   vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
   context.globalState.update("globalEnable", true);
+
+  //init log values
+  [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
+  output = vscode.window.createOutputChannel("SALT-logger", {log:true});
+  if (!vscode.env.isTelemetryEnabled){
+    vscode.window.showWarningMessage(
+      "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
+  }
 }
 
 /**
@@ -405,16 +337,6 @@ function logError(doc: vscode.TextDocument, time: string){
                 typeof d.code.value === "string"
               );
             });
-  if (diagnostics.length === 0){
-    //if duplicate successful build, return
-    if (noErrors){
-      return;
-    }
-    noErrors = true;
-  }
-  else {
-    noErrors = false;
-  }
 
   //for every error create a JSON object in the errors list
   let errors = [];
