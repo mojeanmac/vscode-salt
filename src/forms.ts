@@ -7,12 +7,14 @@ export const allOrPublic = `
             font-size: 18px;
         }
         p {
-            margin-top: 30px;
             width: 80%;
+            margin: 0 auto;
+            margin-top: 50px;
+            margin-bottom: 25px;
         }
         form {
             width: 250px;
-            margin: 0 auto; 
+            margin: 0 auto;
         }
     </style>
     <body>

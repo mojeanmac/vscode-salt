@@ -7,7 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 // import { printAllItems } from "./printRust";
 import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
-import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
+import { renderConsentForm, renderSurvey } from "./webviews";
 export { initStudy };
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import * as crypto from 'crypto';
@@ -162,11 +162,15 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.workspace.onDidChangeConfiguration(e => {
       if (context.globalState.get("participation") === true 
           && e.affectsConfiguration("salt.publicOnly") 
-          && vscode.workspace.getConfiguration("salt").get("publicOnly") === true
           && vscode.workspace.workspaceFolders) {
-        isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
-          context.workspaceState.update("enabled", !isPrivate);
-        });
+        if (vscode.workspace.getConfiguration("salt").get("publicOnly") === true){
+          isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
+            context.workspaceState.update("enabled", !isPrivate);
+          });
+        }
+        else {
+          context.workspaceState.update("enabled", true);
+        }
       }
     })
   );
