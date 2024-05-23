@@ -14,7 +14,7 @@ import * as crypto from 'crypto';
 
 let intervalHandle: number | null = null;
 
-const SENDINTERVAL = 10;
+const SENDINTERVAL = 25;
 const NEWLOGINTERVAL = 1000;
 const TWO_WEEKS = 1209600;
 const YEAR = 31536000;
@@ -248,8 +248,14 @@ export function activate(context: vscode.ExtensionContext) {
         linecnt++;
         //send telemetry every SENDINTERVAL lines
         if (linecnt % SENDINTERVAL === 0){
-          console.log("sending telemetry");
-          sendPayload(logPath, uuid, logCount);
+          output.append("Sending telemetry...\n");
+          try {
+            sendPayload(logPath, uuid, logCount);
+            output.append("Telemetry sent.\n");
+          }
+          catch(e) {
+            output.append("Failed to send telemetry.\n" + e);
+          }
           if (linecnt >= NEWLOGINTERVAL){
             [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
           }

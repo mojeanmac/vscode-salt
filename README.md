@@ -19,6 +19,7 @@ This extension focuses on errors with a "timeline" that can be visualized.
 ### Error Logging
 
 Custom error logs are generated to minimize privacy concern and only start after you provide consent. A live trace of errors being logged can be viewed in the `SALT-logger` Output Channel.
+You are given the choice whether you want to allow reporting data for all workspaces or only those belonging to public github repositories.
 
 A log entry is created every time a Rust project is built, following the JSON object format of:
 ```
@@ -33,7 +34,7 @@ entry: {
         code: [error code],
         msg: [hashed message],
         source: [rustc or rust-analyzer],
-        hint: [optional if matches pattern]
+        hint: [included if matches pattern]
         range: {
             start: [starting line num],
             end: [ending line num]
