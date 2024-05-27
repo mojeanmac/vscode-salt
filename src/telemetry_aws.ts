@@ -3,6 +3,7 @@ import * as fs from "fs";
 import axios from "axios";
 import { Octokit } from '@octokit/rest';
 import simpleGit from 'simple-git';
+import { deflate } from 'zlib';
 
 export { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo};
 
@@ -59,17 +60,21 @@ function openNewLog(logDir: string, enableExt: boolean, uuid: string): [string, 
 async function sendPayload(logPath: string, uuid: string, logCount: number): Promise<boolean>{
 
     const lambdaEndpoint = "https://eszhueee2i.execute-api.us-west-1.amazonaws.com";
-    const dataToUpdate = {
-        uuid: uuid,
-        logNum: logCount,
-        data: fs.readFileSync(logPath, 'utf-8'),
-    };
     try {
+        const data = fs.readFileSync(logPath, 'utf-8');
+        const compressedData = await compressData(data);
+
+        const dataToUpdate = {
+            uuid: uuid,
+            logNum: logCount,
+            data: compressedData,
+        };
         const response = await axios.put(lambdaEndpoint, dataToUpdate);
         console.log("Log sent: ", response.data);
         return true;
     }
-    catch {
+    catch (e) {
+        console.log(e);
         console.log("Error sending log");
         return false;
     }
@@ -83,17 +88,32 @@ async function sendPayload(logPath: string, uuid: string, logCount: number): Pro
  * @returns promise that resolves to true if all logs were sent successfully, false otherwise
  */
 async function sendBackup(logDir: string, uuid: string): Promise<boolean> {
-    const lambdaEndpoint = "https://eszhueee2i.execute-api.us-west-1.amazonaws.com";
-    for (let i = 1; i <= fs.readdirSync(logDir).length; i++) {
+    const logFiles = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json");
+    for (let i = 1; i <= logFiles.length; i++) {
         const logPath = path.join(logDir, `log${i}.json`);
-        try {
-            sendPayload(logPath, uuid, i);
-        }
-        catch {
-            return false;
+        const result = await sendPayload(logPath, uuid, i);
+        if (!result) {
+            return false; // Return false if any payload sending fails
         }
     }
     return true;
+}
+
+/**
+ * Compression function to compress data before sending to server
+ * @param data log text to compress
+ * @returns compressed data in base64 format
+ */
+function compressData(data: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        deflate(data, (err, buffer) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(buffer.toString('base64'));
+            }
+        });
+    });
 }
 
 /**

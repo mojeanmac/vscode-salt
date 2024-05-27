@@ -92,16 +92,13 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     //one time call to backup existing logs to aws
-    if (context.globalState.get("backedUp") !== true){
-      sendBackup(logDir!, context.globalState.get("uuid") as string).then(completed => {
-        if (completed === true) {
-          context.globalState.update("backedUp", true);
+    if (context.globalState.get("backedUp") !== "v2"){
+      sendBackup(logDir!, context.globalState.get("uuid") as string).then((completed) => {;
+        if (completed) {
+          context.globalState.update("backedUp", "v2");
         } else {
-          context.globalState.update("backedUp", false);
+          context.globalState.update("backedUp", "failed");
         }
-      })
-      .catch(() => {
-        context.globalState.update("backedUp", false);
       });
     }
     
