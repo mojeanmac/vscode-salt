@@ -270,39 +270,100 @@
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    Determine whether the program will print out 6.
+                    How can you fix the error being caused?
                 </p>
                 <pre><code class = "language-rust">
-                    use std::ops::Deref;
-                    <br>
-                    <br>struct MyBox<T>(T);
-                    <br>&nbsp impl<T> MyBox<T> {
-                    <br>&nbsp fn new(x: T) -> MyBox<T> {
-                    <br>&nbsp&nbsp MyBox(x)
-                    <br>&nbsp }
+                    struct MyStruct {
+                    <br>&nbsp name: String,
+                    <br>&nbsp value: i32,
                     <br>}
                     <br>
-                    <br>impl<T> Deref for MyBox<T> {
-                    <br>&nbsp type Target = T;
-                    <br> 
-                    <br>&nbsp fn deref(&self) -> &T {
-                    <br>&nbsp&nbsp &self.0
+                    <br>fn main() {
+                    <br>&nbsp let s = MyStruct {
+                    <br>&nbsp&nbsp name: String::from("example"),
+                    <br>&nbsp&nbsp value: 42,
+                    <br>&nbsp };
+                    <br>
+                    <br>&nbsp s.value += 1;
+                    <br>}
+                </code></pre>
+                <br>
+                <input type="checkbox" id="q6a" name="q6a">
+                <label for="q6a"> Change the <code>value</code> field to be mutable</label><br>
+                <input type="checkbox" id="q6b" name="q6b">
+                <label for="q6b"> Use a <code>RefCell&lti32&gt</code> for the <code>value</code> field</label><br>
+                <input type="checkbox" id="q6c" name="q6c">
+                <label for="q6c"> Change <code>let s</code> to <code>let mut s</code></label><br>
+                <br>
+                <!--b and c are correct-->
+            </div>
+        </section>
+
+        <section>
+            <h2>Question 7</h2>
+            <p id="warn"></p>
+            <div class="questions">
+                <p>
+                    What are the lifetimes of the following variables in this code? (Line numbers are labeled in parentheses)
+                </p>
+                <pre><code class = "language-rust">
+                    (1) fn main() { 
+                    <br>(2) &nbsp let r;
+                    <br>(3) &nbsp { 
+                    <br>(4) &nbsp&nbsp let x = 5;
+                    <br>(5) &nbsp&nbsp r = &x;
+                    <br>(6) &nbsp }
+                    <br>(7) &nbsp println!("r: {}", r);
+                    <br>(8) }
+                </code></pre>
+                <br>
+                <!--r's lifetime is 2-8; x's lifetime is 4-6 -->
+                <p>Lifetime of <code>r</code>: </p>
+                <input type="text" id="q7rBeginInput" name="q7rBeginInput" placeholder="r's lifetime begins">
+                <p style="display:inline">to</p>
+                <input type="text" id="q7rEndInput" name="q7rEndInput" placeholder="r's lifetime ends">
+                <br>
+
+                <p>Lifetime of <code>x</code>: </p>
+                <input type="text" id="q7xBeginInput" name="q7xBeginInput" placeholder="x's lifetime begins">
+                <p style="display:inline">to</p>
+                <input type="text" id="q7xEndInput" name="q7xEndInput" placeholder="x's lifetime ends">
+                <br>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Question 8</h2>
+            <p id="warn"></p>
+            <div class="questions">
+                <p>
+                    What function definition will make the code correctly print out <code>"world"</code>?
+                </p>
+                <pre><code class = "language-rust">
+                    fn longest() { //REPLACE THIS LINE
+                    <br>&nbsp if x.len() > y.len() {
+                    <br>&nbsp&nbsp x
+                    <br>&nbsp }
+                    <br>&nbsp else {
+                    <br>&nbsp&nbsp y
                     <br>&nbsp }
                     <br>}
                     <br>
                     <br>fn main() {
-                    <br>&nbsp let mut x = MyBox::new(5);
-                    <br>&nbsp *x = 6;
-                    <br>&nbsp println!("{}", x);
+                    <br>&nbsp let s1 = "hello";
+                    <br>&nbsp let s2 = "world";
+                    <br>&nbsp let longest_str = longest(s1, s2);
+                    <br>&nbsp println!("The longest string is: {}", longest_str);
                     <br>}
                 </code></pre>
-                <!--will provide an error "cannot assign to data in dereference of `MyBox<i32>`"-->
-                <!--Rust will suggest that you use DerefMut to modify through a dereference-->
                 <br>
-                <select name="q6" id="q6" onchange='checkVal4()'>
-                    <option value=0>does NOT print out 6</option>
-                    <option value=1>DOES print out 6</option>
-                </select>
+                <input type="radio" id="q8a" name="q8a">
+                <label for="q8a"> <code>fn longest&lt'a, 'b>(x, y) -> &'a str {</code></label><br>
+                <input type="radio" id="q8b" name="q8b">
+                <label for="q8b"> <code>fn longest&lt'a, 'b>(x: &'a str, y: &'b str) -> &'a str {</code></label><br>
+                <input type="radio" id="q8c" name="q8c">
+                <label for="q8c"> <code>fn longest&lt'a, 'b: 'a>(x: &'a str, y: &'b str) -> &'a str {</code></label><br>
+                <br>
             </div>
         </section>
 
@@ -312,6 +373,7 @@
             <button type="button" id="submit">Submit</button>
         </div>
     </div>
+
 
 <!--
     <script>
