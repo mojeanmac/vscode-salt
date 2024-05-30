@@ -98,5 +98,10 @@ fn e716() {
     let _q = *p;
 }
 
+fn autoderef(asdf: &mut i32) {
+    asdf = 0i32.wrapping_add(1);
+    let a = 1;
+}
+
 // ==========
 fn main() {}
