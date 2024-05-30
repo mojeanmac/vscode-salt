@@ -83,20 +83,21 @@ async function sendPayload(logPath: string, uuid: string, logCount: number): Pro
 
 /**
  * One time function to send all logs in the log directory
+ * @param startOn - the log number to start on
  * @param logDir - path to log directory
  * @param uuid - the unique identifier for the user
- * @returns promise that resolves to true if all logs were sent successfully, false otherwise
+ * @returns resolves to 0 if all logs were sent successfully, otherwise the log number that failed
  */
-async function sendBackup(logDir: string, uuid: string): Promise<boolean> {
+async function sendBackup(startOn: number, logDir: string, uuid: string): Promise<number> {
     const logFiles = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json");
-    for (let i = 1; i <= logFiles.length; i++) {
+    for (let i = startOn; i <= logFiles.length; i++) {
         const logPath = path.join(logDir, `log${i}.json`);
         const result = await sendPayload(logPath, uuid, i);
         if (!result) {
-            return false; // Return false if any payload sending fails
+            return i; // Return count of the log that failed to send
         }
     }
-    return true;
+    return 0; //0 if all succeeded
 }
 
 /**

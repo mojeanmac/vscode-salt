@@ -91,13 +91,20 @@ export function activate(context: vscode.ExtensionContext) {
       context.globalState.update("globalEnable", true);
     }
 
-    //one time call to backup existing logs to aws
-    if (context.globalState.get("backedUp") !== "v2"){
-      sendBackup(logDir!, context.globalState.get("uuid") as string).then((completed) => {;
-        if (completed) {
-          context.globalState.update("backedUp", "v2");
+    //call to backup existing logs to aws
+    if (context.globalState.get("backedUp") !== 0){
+      let startOn;
+      if (typeof context.globalState.get("backedUp") === "number"){
+        startOn = context.globalState.get("backedUp") as number;
+      }
+      else {
+        startOn = 1;
+      }
+      sendBackup(startOn, logDir!, context.globalState.get("uuid") as string).then((failedOn) => {;
+        if (failedOn === 0) {
+          context.globalState.update("backedUp", 0);
         } else {
-          context.globalState.update("backedUp", "failed");
+          context.globalState.update("backedUp", failedOn);
         }
       });
     }
