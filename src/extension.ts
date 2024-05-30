@@ -1,16 +1,20 @@
 import * as vscode from "vscode";
-import { languages } from "vscode";
-import * as errorviz from "./errorviz";
-import { log } from "./utils/log";
-import { codeFuncMap } from "./visualizations";
+
+// node builtin modules
+import * as crypto from 'crypto';
 import * as fs from "fs";
 import * as path from "path";
+
+
 // import { printAllItems } from "./printRust";
+//import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
 import { renderConsentForm, renderSurvey } from "./webviews";
-export { initStudy };
-//import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
-import * as crypto from 'crypto';
+
+import { supportedErrorcodes } from "./interventions";
+import * as errorviz from "./interventions/errorviz";
+
+import { log } from "./utils/log";
 
 let intervalHandle: number | null = null;
 
@@ -263,7 +267,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   let timeoutHandle: NodeJS.Timeout | null = null;
   context.subscriptions.push(
-    languages.onDidChangeDiagnostics((_: vscode.DiagnosticChangeEvent) => {
+    vscode.languages.onDidChangeDiagnostics((_: vscode.DiagnosticChangeEvent) => {
       const editor = vscode.window.activeTextEditor;
       if (editor === undefined) {
         return;
@@ -295,7 +299,7 @@ export function activate(context: vscode.ExtensionContext) {
 /**
  * Initializes variables for the study
  */
-function initStudy(context: vscode.ExtensionContext){
+export function initStudy(context: vscode.ExtensionContext){
   //generate UUID
   const uuid = crypto.randomBytes(16).toString('hex');
   context.globalState.update("uuid", uuid);
@@ -335,7 +339,7 @@ function initStudy(context: vscode.ExtensionContext){
  * @param time to be subtracted from initial time
  */
 function logError(doc: vscode.TextDocument, time: string){
-  let diagnostics = languages
+  let diagnostics = vscode.languages
             .getDiagnostics(doc.uri)
             .filter((d) => {
               return (
@@ -428,7 +432,7 @@ function saveDiagnostics(editor: vscode.TextEditor) {
     // only supports rust
     return;
   }
-  const diagnostics = languages
+  const diagnostics = vscode.languages
     .getDiagnostics(doc.uri)
     // only include _supported_ _rust_ _errors_
     .filter((d) => {
@@ -437,10 +441,10 @@ function saveDiagnostics(editor: vscode.TextEditor) {
         d.severity === vscode.DiagnosticSeverity.Error &&
         typeof d.code === "object" &&
         typeof d.code.value === "string" &&
-        codeFuncMap.has(d.code.value)
+        supportedErrorcodes.has(d.code.value)
       );
     });
-  const newdiags = new Map<string, errorviz.DiagnosticInfo>();
+  const newdiags: Array<[string, errorviz.DiagnosticInfo]> = [];
   const torefresh: string[] = [];
   for (const diag of diagnostics) {
     if (diag.code === undefined || typeof diag.code === "number" || typeof diag.code === "string") {
@@ -448,32 +452,33 @@ function saveDiagnostics(editor: vscode.TextEditor) {
       return;
     }
     const erridx = diag.range.start.line.toString() + "_" + diag.code.value;
-    newdiags.set(erridx, {
+    newdiags.push([erridx, {
       diagnostics: diag,
       displayed: false,
       dectype: null,
       svg: null,
-    });
-    const odiag = errorviz.G.diags.get(erridx);
+    }]);
+    const odiag = errorviz.diags.get(erridx);
     if (odiag?.displayed) {
       // this is a displayed old diagnostics
       torefresh.push(erridx);
     }
   }
   // hide old diags and refresh displayed diagnostics
-  errorviz.G.hideAllDiags(editor);
-  errorviz.G.diags = newdiags;
+  errorviz.hideAllDiags(editor);
+  errorviz.diags.clear();
+  newdiags.forEach(([k, v]) => errorviz.diags.set(k, v));
   for (const d of torefresh) {
     log.info("reshow", d);
-    errorviz.G.showDiag(editor, d);
+    errorviz.showDiag(editor, d);
   }
-  errorviz.G.showTriangles(editor);
+  errorviz.showTriangles(editor);
 }
 
 function toggleVisualization(editor: vscode.TextEditor, _: vscode.TextEditorEdit) {
   visToggled = true;
   const currline = editor.selection.active.line;
-  const lines = [...errorviz.G.diags.keys()];
+  const lines = [...errorviz.diags.keys()];
   const ontheline = lines.filter((i) => parseInt(i) === currline);
   if (!ontheline) {
     log.info("no diagnostics on line", currline + 1);
@@ -483,7 +488,7 @@ function toggleVisualization(editor: vscode.TextEditor, _: vscode.TextEditorEdit
     vscode.window
       .showQuickPick(
         ontheline.map((id) => {
-          const diag = errorviz.G.diags.get(id);
+          const diag = errorviz.diags.get(id);
           const [line, ecode] = id.split("_", 2);
           const label = `${ecode} on line ${parseInt(line) + 1}`;
           const detail = diag?.diagnostics.message;
@@ -492,16 +497,16 @@ function toggleVisualization(editor: vscode.TextEditor, _: vscode.TextEditorEdit
       )
       .then((selected) => {
         if (selected !== undefined) {
-          errorviz.G.toggleDiag(editor, selected.id);
+          errorviz.toggleDiag(editor, selected.id);
         }
       });
   } else {
-    errorviz.G.toggleDiag(editor, ontheline[0]);
+    errorviz.toggleDiag(editor, ontheline[0]);
   }
 }
 
 function clearAllVisualizations(e: vscode.TextEditor, _: vscode.TextEditorEdit) {
-  errorviz.G.hideAllDiags(e);
+  errorviz.hideAllDiags(e);
 }
 
 // This method is called when your extension is deactivated
