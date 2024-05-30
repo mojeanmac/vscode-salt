@@ -2,11 +2,11 @@ import { CONFIG } from "../config";
 import { pointerText } from "../utils/canvas";
 import { getXshift } from "../utils/line";
 import { regionPointConflict, svgWithCanvas } from "../utils/svg";
-import { renderInapplicable, type RenderFunction } from "./_utils";
+import { h, type RenderFunction } from "./_utils";
 
 export const image382: RenderFunction = (editor, diag, theme) => {
   const moveline = diag.relatedInformation?.find((d) => d.message.endsWith("value moved here"))?.location.range.start.line;
-  if (moveline === undefined) { return renderInapplicable("cannot parse diagnostics"); }
+  if (moveline === undefined) { return h.inapplicable("cannot parse diagnostics"); }
   
   const { charwidth } = CONFIG;
   const colortheme = CONFIG.color[theme];
@@ -41,7 +41,7 @@ export const image382: RenderFunction = (editor, diag, theme) => {
       .text("tip: value cannot be used after being moved")
       .fill(colortheme.tip)
       .attr({ x: 20, y: CONFIG.fontsize + CONFIG.lineheight * (errorline - moveline + 1) });
-    return [svgimg, line];
+    return h.success([svgimg, line]);
   }
   const xshift = getXshift(editor, defineline, errorline) * CONFIG.charwidth;
   const [svgimg, line, canvas] = regionPointConflict(
@@ -64,5 +64,5 @@ export const image382: RenderFunction = (editor, diag, theme) => {
     `\`${moved}\` moved to another variable`,
     colortheme.info2
   );
-  return [svgimg, line];
+  return h.success([svgimg, line]);
 };

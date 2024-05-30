@@ -2,7 +2,7 @@ import { CONFIG } from "../config";
 import { getXshift } from "../utils/line";
 import { svgWithCanvas } from "../utils/svg";
 
-import type { RenderFunction } from "./_utils";
+import { h, type RenderFunction } from "./_utils";
 
 export const image373: RenderFunction = (editor, diag, theme) => {
   const colortheme = CONFIG.color[theme];
@@ -27,5 +27,5 @@ export const image373: RenderFunction = (editor, diag, theme) => {
     .text(`but the closure needs to live after the function returns`)
     .fill(colortheme.error)
     .attr({ x: 20, y: fontsize + lineheight });
-  return [svgimg, line];
+  return h.success([svgimg, line]);
 };

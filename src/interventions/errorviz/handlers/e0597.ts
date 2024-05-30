@@ -4,15 +4,16 @@ import { CONFIG } from "../config";
 import { pointerText, regionText } from "../utils/canvas";
 import { getXshift } from "../utils/line";
 import { regionPointConflict, svgWithCanvas } from "../utils/svg";
-import { renderInapplicable, type RenderFunction } from "./_utils";
+
+import { h, type RenderFunction } from "./_utils";
 
 export const image597: RenderFunction = (editor, diag, theme) => {
   const borrowed = /`(.+)` does not live long enough/.exec(diag.message)?.[1];
-  if (borrowed === undefined) { return renderInapplicable("cannot parse diagnostics"); }
+  if (borrowed === undefined) { return h.inapplicable("cannot parse diagnostics"); }
 
   const validfrom = diag.range.start.line;
   const validto = diag.relatedInformation?.find((d) => d.message.endsWith("dropped here while still borrowed"))?.location.range.end.line;
-  if (validfrom === undefined || validto === undefined) { return renderInapplicable("cannot parse diagnostics"); }
+  if (validfrom === undefined || validto === undefined) { return h.inapplicable("cannot parse diagnostics"); }
   
   const colortheme = CONFIG.color[theme];
   
@@ -43,7 +44,7 @@ export const image597: RenderFunction = (editor, diag, theme) => {
       `tip: make sure \`${user}\` borrows from a valid value`,
       theme
     );
-    return [s, li];
+    return h.success([s, li]);
   } else if (laterMightUse !== undefined) {
     const mightuse = laterMightUse.location.range.start.line;
     const xshift = getXshift(editor, validfrom, mightuse) * CONFIG.charwidth;
@@ -68,7 +69,7 @@ export const image597: RenderFunction = (editor, diag, theme) => {
       laterMightUse.message,
       colortheme.error
     );
-    return [svgimg, imgfrom];
+    return h.success([svgimg, imgfrom]);
   } else if (shouldStatic !== undefined) {
     // should be static
     const [line, lineto] = minmax(shouldStatic, validfrom, validto);
@@ -92,9 +93,9 @@ export const image597: RenderFunction = (editor, diag, theme) => {
       `\`${borrowed}\` is required to have static lifetime`,
       colortheme.error
     );
-    return [svgimg, line];
+    return h.success([svgimg, line]);
   } else {
     // no user and no 'static
-    return renderInapplicable("cannot parse diagnostics");
+    return h.inapplicable("cannot parse diagnostics");
   }
 };

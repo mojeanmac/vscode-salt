@@ -2,15 +2,15 @@ import { CONFIG } from "../config";
 import { pointerText } from "../utils/canvas";
 import { getXshift } from "../utils/line";
 import { regionPointConflict, svgWithCanvas } from "../utils/svg";
-import { renderInapplicable, type RenderFunction } from "./_utils";
+import { h, type RenderFunction } from "./_utils";
 
 export const image499: RenderFunction = (editor, diag, theme) => {
   const borrowed = /^cannot borrow `(.+)` as mutable more than once at a time/.exec(diag.message)?.[1];
-  if (borrowed === undefined) { return renderInapplicable("cannot parse diagnostics"); }
+  if (borrowed === undefined) { return h.inapplicable("cannot parse diagnostics"); }
   
   const fromline = diag.relatedInformation?.find((d) => d.message.endsWith("first mutable borrow occurs here"))?.location.range.start.line;
   const toline = diag.relatedInformation?.find((d) => d.message.endsWith("first borrow later used here"))?.location.range.end.line;
-  if (fromline === undefined || toline === undefined) { return renderInapplicable("cannot parse diagnostics"); }
+  if (fromline === undefined || toline === undefined) { return h.inapplicable("cannot parse diagnostics"); }
   
   const colortheme = CONFIG.color[theme];
   const errorline = diag.range.start.line;
@@ -41,7 +41,7 @@ export const image499: RenderFunction = (editor, diag, theme) => {
       .text("tip: a value can only be mutably borrowed once at a time")
       .fill(colortheme.tip)
       .attr({ x: 20, y: CONFIG.fontsize + CONFIG.lineheight * (tipline - fromline) });
-    return [svgimg, fromline];
+    return h.success([svgimg, fromline]);
   } else {
     const imm = `\`${borrowed}\` borrowed mutably in this region`;
     const mut = `\`${borrowed}\` borrowed mutably again, conflicting with the first borrow`;
@@ -57,6 +57,6 @@ export const image499: RenderFunction = (editor, diag, theme) => {
       tip,
       theme
     );
-    return [s, li];
+    return h.success([s, li]);
   }
 };

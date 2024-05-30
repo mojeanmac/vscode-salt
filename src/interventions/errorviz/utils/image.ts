@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { type Svg } from "@svgdotjs/svg.js";
 
 import { log } from "../../../utils/log";
-import { isRenderUnsuccessful } from "../handlers/_utils";
+import { isHandlerUnsuccessful } from "../../utils/handler";
 import { errorvizHandlersMap } from "../handlers";
 import { svg2uri } from "./svg";
 
@@ -23,11 +23,11 @@ export function imageByCode(
     return `unsupported error code ${diag.code.value}`;
   } else {
     const darkresult = render(editor, diag, "dark");
-    if (isRenderUnsuccessful(darkresult)) { return darkresult.context ?? 'renderer not applicable'; }
+    if (isHandlerUnsuccessful(darkresult)) { return darkresult.context ?? 'renderer not applicable'; }
     const lightresult = render(editor, diag, "light");
-    if (isRenderUnsuccessful(lightresult)) { return lightresult.context ?? 'renderer not applicable'; }
-    const [dark, line] = darkresult;
-    const [light, _] = lightresult;
+    if (isHandlerUnsuccessful(lightresult)) { return lightresult.context ?? 'renderer not applicable'; }
+    const [dark, line] = darkresult.data;
+    const [light, _] = lightresult.data;
     return image2decoration(dark, light, line);
   }
 }

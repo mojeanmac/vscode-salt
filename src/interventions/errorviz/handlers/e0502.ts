@@ -1,18 +1,18 @@
 import { CONFIG } from "../config";
 import { getXshift } from "../utils/line";
 import { regionPointConflict } from "../utils/svg";
-import { renderInapplicable, type RenderFunction } from "./_utils";
+import { h, type RenderFunction } from "./_utils";
 
 export const image502: RenderFunction = (editor, diag, theme) => {
   const borrowednull = /^cannot borrow `\*?(.+)` as (im)?mutable/.exec(diag.message);
-  if (borrowednull === null) { return renderInapplicable("cannot parse diagnostics"); }
+  if (borrowednull === null) { return h.inapplicable("cannot parse diagnostics"); }
   
   const borrowed = borrowednull[1];
-  if (borrowed === undefined) { return renderInapplicable("cannot parse related diagnostics"); }
+  if (borrowed === undefined) { return h.inapplicable("cannot parse related diagnostics"); }
 
   const fromline = diag.relatedInformation?.find((d) => d.message.endsWith("borrow occurs here"))?.location.range.start.line;
   const toline = diag.relatedInformation?.find((d) => d.message.endsWith("borrow later used here"))?.location.range.end.line;
-  if (fromline === undefined || toline === undefined) { return renderInapplicable("cannot parse related diagnostics"); }
+  if (fromline === undefined || toline === undefined) { return h.inapplicable("cannot parse related diagnostics"); }
   
   // whether the error point is immutable.
   const isimm = borrowednull[2] === "im";
@@ -38,5 +38,5 @@ export const image502: RenderFunction = (editor, diag, theme) => {
     tip,
     theme
   );
-  return [s, li];
+  return h.success([s, li]);
 };
