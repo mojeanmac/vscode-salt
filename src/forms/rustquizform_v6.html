@@ -75,8 +75,7 @@
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    Determine whether the program will pass the compiler. If it passes, write the 
-                    expected output of the program if it were executed. (Taken from "The Rust 
+                    What will happen when the program is run? (Modified from "The Rust 
                     Programming Language" by Steve Klabnik and Carol Nichols)
                 </p>
                 <pre><code class = "language-rust">
@@ -101,24 +100,19 @@
                     <br>}
                 </code></pre>
                 <br>
-                <select name="q1" id="q1" onchange='checkVal1()'>
-                    <option value=0>does NOT compile</option>
-                    <option value=1>DOES compile</option>
-                </select>
-                <input type="text" id="q1Input" name="q1Input" style="visibility:hidden" placeholder="Type program output here.">
-                
-                <script>
-                    function checkVal1() {
-                        var element=document.getElementById("q1");
-                        var inp=document.getElementById("q1Input");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
+                <!--answer: deref /n deref /n 0 -1 will be printed out-->
+                <input type="radio" id="q1a" name="q1a">
+                <label for="q1a">The program will not compile because the <code>Deref</code> trait cannot be implemented for a custom struct </label><br>
+                <br>
+                <input type="radio" id="q1b" name="q1b">
+                <label for="q1b">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <br>
+                <input type="radio" id="q1c" name="q1c">
+                <label for="q1c">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <br>
+                <input type="radio" id="q1d" name="q1d">
+                <label for="q1d">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <br>
             </div>
         </section>
 
@@ -127,8 +121,7 @@
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    Determine whether the program will pass the compiler. If it passes, write the 
-                    expected output of the program if it were executed.
+                    What will happen when the program is run?
                 </p>
                 <pre><code class = "language-rust">
                     fn main() {
@@ -139,24 +132,19 @@
                     <br>}
                 </code></pre>
                 <br>
-                <select name="q2" id="q2" onchange='checkVal2()'>
-                    <option value=0>does NOT compile</option>
-                    <option value=1>DOES compile</option>
-                </select>
-                <input type="text" id="q2Input" name="q2Input" style="visibility:hidden" placeholder="Type program output here.">
-                
-                <script>
-                    function checkVal2() {
-                        var element=document.getElementById("q2");
-                        var inp=document.getElementById("q2Input");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
+                <!--answer: b (error E0507 cannot move out of *b which is behind a shared reference)-->
+                <input type="radio" id="q2a" name="q2a">
+                <label for="q2a">The program will not compile because <code>c</code> is incorrectly dereferenced</label><br>
+                <br>
+                <input type="radio" id="q2b" name="q2b">
+                <label for="q2b">The program will not compile because there is a type mismatch when dereferencing <code>b</code></label><br>
+                <br>
+                <input type="radio" id="q2c" name="q2c">
+                <label for="q2c">The program will not compile because variable <code>c</code> is not a reference</label><br>
+                <br>
+                <input type="radio" id="q2d" name="q2d">
+                <label for="q2d">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp hello<br>&nbsp&nbsp&nbsp hello<br>&nbsp&nbsp&nbsp hello</code></label><br>
+                <br>
             </div>
         </section>
 
@@ -270,110 +258,65 @@
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    How can you fix the error being caused?
+                    What are the lifetimes of the following variables in this code? (Line numbers are labeled in parentheses)
                 </p>
                 <pre><code class = "language-rust">
-                    struct MyStruct {
-                    <br>&nbsp name: String,
-                    <br>&nbsp value: i32,
-                    <br>}
-                    <br>
-                    <br>fn main() {
-                    <br>&nbsp let s = MyStruct {
-                    <br>&nbsp&nbsp name: String::from("example"),
-                    <br>&nbsp&nbsp value: 42,
-                    <br>&nbsp };
-                    <br>
-                    <br>&nbsp s.value += 1;
-                    <br>}
-                </code></pre>
-                <br>
-                <input type="checkbox" id="q6a" name="q6a">
-                <label for="q6a"> Change the <code>value</code> field to be mutable</label><br>
-                <input type="checkbox" id="q6b" name="q6b">
-                <label for="q6b"> Use a <code>RefCell&lti32&gt</code> for the <code>value</code> field</label><br>
-                <input type="checkbox" id="q6c" name="q6c">
-                <label for="q6c"> Change <code>let s</code> to <code>let mut s</code></label><br>
-                <br>
-                <!--b and c are correct-->
-            </div>
-        </section>
-
-        <section>
-            <h2>Question 7</h2>
-            <p id="warn"></p>
-            <div class="questions">
-                <p>
-                    What are the lifetimes of the following variables in this code? (Select from the lines labeled in parentheses)
-                </p>
-                <pre><code class = "language-rust">
-                    ( ) fn main() { 
-                    <br>(1) &nbsp let r;
-                    <br>( ) &nbsp { 
-                    <br>(2) &nbsp&nbsp let x = 5;
-                    <br>(3) &nbsp&nbsp r = &x;
-                    <br>( ) &nbsp }
-                    <br>(4) &nbsp println!("r: {}", r);
-                    <br>( ) }
+                    (1) fn main() { 
+                    <br>(2) &nbsp let r;
+                    <br>(3) &nbsp { 
+                    <br>(4) &nbsp&nbsp let x = 5;
+                    <br>(5) &nbsp&nbsp r = &x;
+                    <br>(6) &nbsp }
+                    <br>(7) &nbsp println!("r: {}", r);
+                    <br>(8) }
                 </code></pre>
                 <br>
                 <!--r's lifetime is 2-8; x's lifetime is 4-6 -->
-                <p>Lifetime of <code>r</code>: </p>
-                <input type="text" id="q7rBeginInput" name="q7rBeginInput" placeholder="r's lifetime begins">
-                <p style="display:inline">to</p>
-                <input type="text" id="q7rEndInput" name="q7rEndInput" placeholder="r's lifetime ends">
+                <p>When does the lifetime of <code>r</code> begin?</p> <!--answer: 2-->
+                <input type="radio" id="q6a1" name="q6a1">
+                <label for="q6a1">Line 2 </label><br>
+                <input type="radio" id="q6a2" name="q6a2">
+                <label for="q6a2">Line 4 </label><br>
+                <input type="radio" id="q6a3" name="q6a3">
+                <label for="q6a3">Line 5 </label><br>
+                <input type="radio" id="q6a4" name="q6a4">
+                <label for="q6a4">Line 7 </label><br>
                 <br>
 
-                <p>Lifetime of <code>x</code>: </p>
-                <input type="text" id="q7xBeginInput" name="q7xBeginInput" placeholder="x's lifetime begins">
-                <p style="display:inline">to</p>
-                <input type="text" id="q7xEndInput" name="q7xEndInput" placeholder="x's lifetime ends">
+                <p>When does the lifetime of <code>r</code> end?</p> <!--answer: 7-->
+                <input type="radio" id="q6b1" name="q6b1">
+                <label for="q6b1">Line 2 </label><br>
+                <input type="radio" id="q6b2" name="q6b2">
+                <label for="q6b2">Line 4 </label><br>
+                <input type="radio" id="q6b3" name="q6b3">
+                <label for="q6b3">Line 5 </label><br>
+                <input type="radio" id="q6b4" name="q6b4">
+                <label for="q6b4">Line 7 </label><br>
+                <br>
+                
+                <p>When does the lifetime of <code>x</code> begin?</p> <!--answer: 4-->
+                <input type="radio" id="q6c1" name="q6c1">
+                <label for="q6c1">Line 2</label><br>
+                <input type="radio" id="q6c2" name="q6c2">
+                <label for="q6c2">Line 4</label><br>
+                <input type="radio" id="q6c3" name="q6c3">
+                <label for="q6c3">Line 5</label><br>
+                <input type="radio" id="q6c4" name="q6c4">
+                <label for="q6c4">Line 7</label><br>
+                <br>
+
+                <p>When does the lifetime of <code>x</code> end?</p> <!--answer: 5-->
+                <input type="radio" id="q6d1" name="q6d1">
+                <label for="q6d1">Line 2 </label><br>
+                <input type="radio" id="q6d2" name="q6d2">
+                <label for="q6d2">Line 4 </label><br>
+                <input type="radio" id="q6d3" name="q6d3">
+                <label for="q6d3">Line 5 </label><br>
+                <input type="radio" id="q6d4" name="q6d4">
+                <label for="q6d4">Line 7 </label><br>
                 <br>
             </div>
         </section>
-        
-        <section>
-            <h2>Question 8</h2>
-            <p id="warn"></p>
-            <div class="questions">
-                <p>
-                    What function definition will make the code correctly print out <code>"world"</code>?
-                </p>
-                <pre><code class = "language-rust">
-                    fn longest() { //REPLACE THIS LINE
-                    <br>&nbsp if x.len() > y.len() {
-                    <br>&nbsp&nbsp x
-                    <br>&nbsp }
-                    <br>&nbsp else {
-                    <br>&nbsp&nbsp y
-                    <br>&nbsp }
-                    <br>}
-                    <br>
-                    <br>fn main() {
-                    <br>&nbsp let s1 = "hello";
-                    <br>&nbsp let s2 = "world";
-                    <br>&nbsp let longest_str = longest(s1, s2);
-                    <br>&nbsp println!("The longest string is: {}", longest_str);
-                    <br>}
-                </code></pre>
-                <br>
-                <input type="radio" id="q8a" name="q8a">
-                <label for="q8a"> <code>fn longest&lt'a, 'b>(x, y) -> &'a str {</code></label><br>
-                <input type="radio" id="q8b" name="q8b">
-                <label for="q8b"> <code>fn longest&lt'a, 'b>(x: &'a str, y: &'b str) -> &'a str {</code></label><br>
-                <input type="radio" id="q8c" name="q8c">
-                <label for="q8c"> <code>fn longest&lt'a, 'b: 'a>(x: &'a str, y: &'b str) -> &'a str {</code></label><br>
-                <br>
-            </div>
-        </section>
-
-        <br />
-        <p>Please answer all questions before submitting.</p>
-        <div style="text-align: center;">
-            <button type="button" id="submit">Submit</button>
-        </div>
-    </div>
-
 
 <!--
     <script>
