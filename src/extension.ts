@@ -350,6 +350,17 @@ export function initStudy(context: vscode.ExtensionContext){
  * @param time to be subtracted from initial time
  */
 function logError(doc: vscode.TextDocument, time: string){
+  interface ErrorJson {
+    code: string | number,
+      msg: string,
+      source: string | undefined,
+      hint: string,
+      range:{
+        start: number,
+        end: number
+      }
+  }
+
   let diagnostics = vscode.languages
             .getDiagnostics(doc.uri)
             .filter((d) => {
@@ -361,7 +372,7 @@ function logError(doc: vscode.TextDocument, time: string){
             });
 
   //for every error create a JSON object in the errors list
-  let errors: $TSFIXME[] = [];
+  let errors: ErrorJson[] = [];
   for (const diag of diagnostics) {
     if (diag.code === undefined || typeof diag.code === "number" || typeof diag.code === "string") {
       log.error("unexpected diag.code type", typeof diag.code);
