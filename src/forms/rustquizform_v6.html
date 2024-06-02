@@ -75,8 +75,7 @@
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    Determine whether the program will pass the compiler. If it passes, write the 
-                    expected output of the program if it were executed. (Taken from "The Rust 
+                    What will happen when the program is run? (Modified from "The Rust 
                     Programming Language" by Steve Klabnik and Carol Nichols)
                 </p>
                 <pre><code class = "language-rust">
@@ -101,24 +100,19 @@
                     <br>}
                 </code></pre>
                 <br>
-                <select name="q1" id="q1" onchange='checkVal1()'>
-                    <option value=0>does NOT compile</option>
-                    <option value=1>DOES compile</option>
-                </select>
-                <input type="text" id="q1Input" name="q1Input" style="visibility:hidden" placeholder="Type program output here.">
-                
-                <script>
-                    function checkVal1() {
-                        var element=document.getElementById("q1");
-                        var inp=document.getElementById("q1Input");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
+                <!--answer: deref /n deref /n 0 -1 will be printed out-->
+                <input type="radio" id="q1a" name="q1a">
+                <label for="q1a">The program will not compile because the <code>Deref</code> trait cannot be implemented for a custom struct </label><br>
+                <br>
+                <input type="radio" id="q1b" name="q1b">
+                <label for="q1b">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <br>
+                <input type="radio" id="q1c" name="q1c">
+                <label for="q1c">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <br>
+                <input type="radio" id="q1d" name="q1d">
+                <label for="q1d">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <br>
             </div>
         </section>
 
@@ -127,8 +121,7 @@
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    Determine whether the program will pass the compiler. If it passes, write the 
-                    expected output of the program if it were executed.
+                    What will happen when the program is run?
                 </p>
                 <pre><code class = "language-rust">
                     fn main() {
@@ -139,29 +132,52 @@
                     <br>}
                 </code></pre>
                 <br>
-                <select name="q2" id="q2" onchange='checkVal2()'>
-                    <option value=0>does NOT compile</option>
-                    <option value=1>DOES compile</option>
-                </select>
-                <input type="text" id="q2Input" name="q2Input" style="visibility:hidden" placeholder="Type program output here.">
-                
-                <script>
-                    function checkVal2() {
-                        var element=document.getElementById("q2");
-                        var inp=document.getElementById("q2Input");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
+                <!--answer: b (error E0507 cannot move out of *b which is behind a shared reference)-->
+                <input type="radio" id="q2a" name="q2a">
+                <label for="q2a">The program will not compile because <code>c</code> is incorrectly dereferenced</label><br>
+                <br>
+                <input type="radio" id="q2b" name="q2b">
+                <label for="q2b">The program will not compile because there is a type mismatch when dereferencing <code>b</code></label><br>
+                <br>
+                <input type="radio" id="q2c" name="q2c">
+                <label for="q2c">The program will not compile because variable <code>c</code> is not a reference</label><br>
+                <br>
+                <input type="radio" id="q2d" name="q2d">
+                <label for="q2d">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp hello<br>&nbsp&nbsp&nbsp hello<br>&nbsp&nbsp&nbsp hello</code></label><br>
+                <br>
             </div>
         </section>
 
         <section>
             <h2>Question 3</h2>
+            <p id="warn"></p>
+            <div class="questions"> 
+                <p>
+                    Choose the options below that, if put into the blank ("__"), will allow the code to compile.
+                </p>
+                <pre><code class = "language-rust">
+                    use std::ops::Deref;
+                    <br>
+                    <br>fn f (x:i32) {}
+                    <br>
+                    <br>fn main() {
+                    <br>&nbsp let i = 8;
+                    <br>&nbsp let ir = &i;
+                    <br>&nbsp f(__);
+                    <br>}
+                </code></pre>
+                <br>
+                <input type="checkbox" id="q3a" name="q3a">
+                <label for="q3a"> *ir</label><br> <!--works-->
+                <input type="checkbox" id="q3b" name="q3b">
+                <label for="q3b"> ir</label><br> <!--doesn't work-->
+                <input type="checkbox" id="q3c" name="q3c">
+                <label for="q3c"> &ir</label><br> <!--doesn't work-->
+            </div>
+        </section>
+
+        <section>
+            <h2>Question 4</h2>
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
@@ -189,56 +205,24 @@
                     <br>}
                 </code></pre>
                 <br>
-                <input type="checkbox" id="q3a" name="q3a">
-                <label for="q3a"> ir</label><br>
-                <input type="checkbox" id="q3b" name="q3b">
-                <label for="q3b"> *ir</label><br> <!--doesn't work-->
-                <input type="checkbox" id="q3c" name="q3c">
-                <label for="q3c"> &(ir)</label><br>
-                <!--
-                <label for="q3a"> ir</label><br>
-                <input type="checkbox" id="q3b" name="q3b">
-                <label for="q3b"> &(*ir)</label><br>
-                <input type="checkbox" id="q3c" name="q3c">
-                <label for="q3c"> *ir</label><br>
-                <input type="checkbox" id="q3d" name="q3d">
-                <label for="q3d"> &(ir)</label><br>
-                <input type="checkbox" id="q3e" name="q3e">
-                <label for="q3e"> *(*ir)</label><br>
-                <input type="checkbox" id="q3g" name="q3g">
-                <label for="q3g"> *(&ir)</label><br>
-                <input type="checkbox" id="q3h" name="q3h">
-                <label for="q3h"> &(*(&ir))</label><br>
-                -->
-                <!--
-                <select name="q3" id="q3" multiple="multiple" size='8'>
-                    <option value=0>ir</option>
-                    <option value=1>&(*ir)</option>
-                    <option value=2>*ir</option> doesn't work
-                    <option value=3>&(ir)</option>
-                    <option value=4>&(&ir)</option>                    
-                    <option value=5>*(*ir)</option> doesn't work
-                    <option value=6>*(&ir)</option>
-                    <option value=7>&(*(&ir))</option>
-                </select>
-                -->
+                <input type="checkbox" id="q4a" name="q4a">
+                <label for="q4a"> ir</label><br>
+                <input type="checkbox" id="q4b" name="q4b">
+                <label for="q4b"> *ir</label><br> <!--doesn't work-->
+                <input type="checkbox" id="q4c" name="q4c">
+                <label for="q4c"> &(ir)</label><br>
             </div>
         </section>
 
         <section>
-            <h2>Question 4</h2>
+            <h2>Question 5</h2>
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
-                    Type in the code that, when placed into the blanks, will correctly print out "42" for that value.
-                    Or, if there is no code that can accomplish this, select "Has no solution".
+                    Select the all the code options that, when placed into the blanks, will correctly print out "42" for that value.
                 </p>
                 <pre><code class = "language-rust">
                     use std::ops::Deref;
-                    <br>fn take_int(u: u32) {
-                    <br>&nbsp //Fill in the blank so 42 will be printed
-                    <br>&nbsp println!("{}", __); //LINE A
-                    <br>}
                     <br>
                     <br>struct S {
                     <br>&nbsp u:u32,
@@ -250,14 +234,10 @@
                     <br>
                     <br>fn take_s(_s: &S) {
                     <br>&nbsp //Fill in the blank so 42 will be printed
-                    <br>&nbsp println!("{}", __); //LINE B
+                    <br>&nbsp println!("{}", __); //LINE A
                     <br>}
                     <br>
                     <br>fn main() {
-                    <br>&nbsp let n = 42;
-                    <br>&nbsp let nr = &n;
-                    <br>&nbsp take_int(*nr);
-                    <br>
                     <br>&nbsp let s = S {u: 42};
                     <br>&nbsp let sr = &s;
                     <br>&nbsp sr.f();
@@ -265,128 +245,78 @@
                     <br>}
                 </code></pre>
                 <br>
-                Line A:
-                <select name="q4a" id="q4a" onchange='checkVal4a()'>
-                    <option value=0>Has no solution</option>
-                    <option value=1>Has a solution</option>
-                </select>
-                <input type="text" id="q4aInput" name="q4aInput" style="visibility:hidden" placeholder="Fill in the blank here.">
-                
-                <script>
-                    function checkVal4a() {
-                        var element=document.getElementById("q4a");
-                        var inp=document.getElementById("q4aInput");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
+                <input type="checkbox" id="q5a" name="q5a">
+                <label for="q5a"> _s.u</label><br>
+                <input type="checkbox" id="q5b" name="q5b">
+                <label for="q5b"> (*_s).u</label><br>
                 <br>
-                Line B:
-                <select name="q4b" id="q4b" onchange='checkVal4b()'>
-                    <option value=0>Has no solution</option>
-                    <option value=1>Has a solution</option>
-                </select>
-                <input type="text" id="q4bInput" name="q4bInput" style="visibility:hidden" placeholder="Fill in the blank here.">
-                
-                <script>
-                    function checkVal4b() {
-                        var element=document.getElementById("q4b");
-                        var inp=document.getElementById("q4bInput");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
-                <!--
-                <select name="q4a" id="q4a" onchange='checkVal4()'>
-                    <option value=0>Has no solution</option>
-                    <option value=1>Has solution</option>
-                </select>
-                <input type="text" id="q4aInput" name="q4aInput" style="visibility:hidden" placeholder="Type the output.">
-                
-                <script>
-                    function checkVal4() {
-                        var element=document.getElementById("q4a");
-                        var inp1=document.getElementById("q4aInput");
-                        if(element.value=="1") {
-                            inp1.style.visibility='visible';
-                            //inp2.style.visibility='visible';
-                        }
-                        else {
-                            inp1.style.visibility='hidden';
-                            //inp2.style.visibility='hidden';
-                        }
-                    }
-                </script>
-            -->
             </div>
         </section>
 
         <section>
-            <h2>Question 4</h2>
+            <h2>Question 6</h2>
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    Determine whether the program will pass the compiler. If it passes, write the 
-                    value of wrapped_value after execution.
+                    What are the lifetimes of the following variables in this code? (Line numbers are labeled in parentheses)
                 </p>
                 <pre><code class = "language-rust">
-                    use std::ops::Deref;
-                    <br>
-                    <br>struct Wrapper {
-                    <br>&nbsp value: i:32,
-                    <br>}
-                    <br>
-                    <br>impl<T> Wrapper {
-                    <br>&nbsp fn new(value: i:32) -> Self {
-                    <br>&nbsp&nbsp Wrapper { value }
-                    <br>&nbsp }
-                    <br>}
-                    <br>
-                    <br>fn modify_value(value: &mut i32) {
-                    <br>&nbsp *value += 10;
-                    <br>}
-                    <br>
-                    <br>fn main() {
-                    <br>&nbsp let mut wrapped_value = Wrapper::new(5);
-                    <br>&nbsp modify_value(&mut wrapped_value);
-                    <br>}
+                    (1) fn main() { 
+                    <br>(2) &nbsp let r;
+                    <br>(3) &nbsp { 
+                    <br>(4) &nbsp&nbsp let x = 5;
+                    <br>(5) &nbsp&nbsp r = &x;
+                    <br>(6) &nbsp }
+                    <br>(7) &nbsp println!("r: {}", r);
+                    <br>(8) }
                 </code></pre>
                 <br>
-                <select name="q4" id="q4" onchange='checkVal4()'>
-                    <option value=0>does NOT compile</option>
-                    <option value=1>DOES compile</option>
-                </select>
-                <input type="text" id="q4Input" name="q4Input" style="visibility:hidden" placeholder="Type the wrapped_value here.">
+                <!--r's lifetime is 2-8; x's lifetime is 4-6 -->
+                <p>When does the lifetime of <code>r</code> begin?</p> <!--answer: 2-->
+                <input type="radio" id="q6a1" name="q6a1">
+                <label for="q6a1">Line 2 </label><br>
+                <input type="radio" id="q6a2" name="q6a2">
+                <label for="q6a2">Line 4 </label><br>
+                <input type="radio" id="q6a3" name="q6a3">
+                <label for="q6a3">Line 5 </label><br>
+                <input type="radio" id="q6a4" name="q6a4">
+                <label for="q6a4">Line 7 </label><br>
+                <br>
+
+                <p>When does the lifetime of <code>r</code> end?</p> <!--answer: 7-->
+                <input type="radio" id="q6b1" name="q6b1">
+                <label for="q6b1">Line 2 </label><br>
+                <input type="radio" id="q6b2" name="q6b2">
+                <label for="q6b2">Line 4 </label><br>
+                <input type="radio" id="q6b3" name="q6b3">
+                <label for="q6b3">Line 5 </label><br>
+                <input type="radio" id="q6b4" name="q6b4">
+                <label for="q6b4">Line 7 </label><br>
+                <br>
                 
-                <script>
-                    function checkVal4() {
-                        var element=document.getElementById("q4");
-                        var inp=document.getElementById("q4Input");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
+                <p>When does the lifetime of <code>x</code> begin?</p> <!--answer: 4-->
+                <input type="radio" id="q6c1" name="q6c1">
+                <label for="q6c1">Line 2</label><br>
+                <input type="radio" id="q6c2" name="q6c2">
+                <label for="q6c2">Line 4</label><br>
+                <input type="radio" id="q6c3" name="q6c3">
+                <label for="q6c3">Line 5</label><br>
+                <input type="radio" id="q6c4" name="q6c4">
+                <label for="q6c4">Line 7</label><br>
+                <br>
+
+                <p>When does the lifetime of <code>x</code> end?</p> <!--answer: 5-->
+                <input type="radio" id="q6d1" name="q6d1">
+                <label for="q6d1">Line 2 </label><br>
+                <input type="radio" id="q6d2" name="q6d2">
+                <label for="q6d2">Line 4 </label><br>
+                <input type="radio" id="q6d3" name="q6d3">
+                <label for="q6d3">Line 5 </label><br>
+                <input type="radio" id="q6d4" name="q6d4">
+                <label for="q6d4">Line 7 </label><br>
+                <br>
             </div>
         </section>
-
-        <br />
-        <p>Please answer all questions before submitting.</p>
-        <div style="text-align: center;">
-            <button type="button" id="submit">Submit</button>
-        </div>
-    </div>
 
 <!--
     <script>

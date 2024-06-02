@@ -165,6 +165,34 @@
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
+                    Choose the options below that, if put into the blank ("__"), will allow the code to compile.
+                </p>
+                <pre><code class = "language-rust">
+                    use std::ops::Deref;
+                    <br>
+                    <br>fn f (x:i32) {}
+                    <br>
+                    <br>fn main() {
+                    <br>&nbsp let i = 8;
+                    <br>&nbsp let ir = &i;
+                    <br>&nbsp f(_ir_);
+                    <br>}
+                </code></pre>
+                <br>
+                <input type="checkbox" id="q3a" name="q3a">
+                <label for="q3a"> *ir</label><br> <!--works-->
+                <input type="checkbox" id="q3b" name="q3b">
+                <label for="q3b"> ir</label><br> <!--doesn't work-->
+                <input type="checkbox" id="q3c" name="q3c">
+                <label for="q3c"> &ir</label><br> <!--doesn't work-->
+            </div>
+        </section>
+
+        <section>
+            <h2>Question 4</h2>
+            <p id="warn"></p>
+            <div class="questions"> 
+                <p>
                     Choose the options below that, if put into the blank ("__"), will correctly print out "42".
                 </p>
                 <pre><code class = "language-rust">
@@ -189,56 +217,24 @@
                     <br>}
                 </code></pre>
                 <br>
-                <input type="checkbox" id="q3a" name="q3a">
-                <label for="q3a"> ir</label><br>
-                <input type="checkbox" id="q3b" name="q3b">
-                <label for="q3b"> *ir</label><br> <!--doesn't work-->
-                <input type="checkbox" id="q3c" name="q3c">
-                <label for="q3c"> &(ir)</label><br>
-                <!--
-                <label for="q3a"> ir</label><br>
-                <input type="checkbox" id="q3b" name="q3b">
-                <label for="q3b"> &(*ir)</label><br>
-                <input type="checkbox" id="q3c" name="q3c">
-                <label for="q3c"> *ir</label><br>
-                <input type="checkbox" id="q3d" name="q3d">
-                <label for="q3d"> &(ir)</label><br>
-                <input type="checkbox" id="q3e" name="q3e">
-                <label for="q3e"> *(*ir)</label><br>
-                <input type="checkbox" id="q3g" name="q3g">
-                <label for="q3g"> *(&ir)</label><br>
-                <input type="checkbox" id="q3h" name="q3h">
-                <label for="q3h"> &(*(&ir))</label><br>
-                -->
-                <!--
-                <select name="q3" id="q3" multiple="multiple" size='8'>
-                    <option value=0>ir</option>
-                    <option value=1>&(*ir)</option>
-                    <option value=2>*ir</option> doesn't work
-                    <option value=3>&(ir)</option>
-                    <option value=4>&(&ir)</option>                    
-                    <option value=5>*(*ir)</option> doesn't work
-                    <option value=6>*(&ir)</option>
-                    <option value=7>&(*(&ir))</option>
-                </select>
-                -->
+                <input type="checkbox" id="q4a" name="q4a">
+                <label for="q4a"> ir</label><br>
+                <input type="checkbox" id="q4b" name="q4b">
+                <label for="q4b"> *ir</label><br> <!--doesn't work-->
+                <input type="checkbox" id="q4c" name="q4c">
+                <label for="q4c"> &(ir)</label><br>
             </div>
         </section>
 
         <section>
-            <h2>Question 4</h2>
+            <h2>Question 5</h2>
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
-                    Type in the code that, when placed into the blanks, will correctly print out "42" for that value.
-                    Or, if there is no code that can accomplish this, select "Has no solution".
+                    Select the all the code options that, when placed into the blanks, will correctly print out "42" for that value.
                 </p>
                 <pre><code class = "language-rust">
                     use std::ops::Deref;
-                    <br>fn take_int(u: u32) {
-                    <br>&nbsp //Fill in the blank so 42 will be printed
-                    <br>&nbsp println!("{}", __); //LINE A
-                    <br>}
                     <br>
                     <br>struct S {
                     <br>&nbsp u:u32,
@@ -250,14 +246,10 @@
                     <br>
                     <br>fn take_s(_s: &S) {
                     <br>&nbsp //Fill in the blank so 42 will be printed
-                    <br>&nbsp println!("{}", __); //LINE B
+                    <br>&nbsp println!("{}", __); //LINE A
                     <br>}
                     <br>
                     <br>fn main() {
-                    <br>&nbsp let n = 42;
-                    <br>&nbsp let nr = &n;
-                    <br>&nbsp take_int(*nr);
-                    <br>
                     <br>&nbsp let s = S {u: 42};
                     <br>&nbsp let sr = &s;
                     <br>&nbsp sr.f();
@@ -265,119 +257,52 @@
                     <br>}
                 </code></pre>
                 <br>
-                Line A:
-                <select name="q4a" id="q4a" onchange='checkVal4a()'>
-                    <option value=0>Has no solution</option>
-                    <option value=1>Has a solution</option>
-                </select>
-                <input type="text" id="q4aInput" name="q4aInput" style="visibility:hidden" placeholder="Fill in the blank here.">
-                
-                <script>
-                    function checkVal4a() {
-                        var element=document.getElementById("q4a");
-                        var inp=document.getElementById("q4aInput");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
+                <input type="checkbox" id="q5a" name="q5a">
+                <label for="q5a"> _s.u</label><br>
+                <input type="checkbox" id="q5b" name="q5b">
+                <label for="q5b"> (*_s).u</label><br>
                 <br>
-                Line B:
-                <select name="q4b" id="q4b" onchange='checkVal4b()'>
-                    <option value=0>Has no solution</option>
-                    <option value=1>Has a solution</option>
-                </select>
-                <input type="text" id="q4bInput" name="q4bInput" style="visibility:hidden" placeholder="Fill in the blank here.">
-                
-                <script>
-                    function checkVal4b() {
-                        var element=document.getElementById("q4b");
-                        var inp=document.getElementById("q4bInput");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
-                <!--
-                <select name="q4a" id="q4a" onchange='checkVal4()'>
-                    <option value=0>Has no solution</option>
-                    <option value=1>Has solution</option>
-                </select>
-                <input type="text" id="q4aInput" name="q4aInput" style="visibility:hidden" placeholder="Type the output.">
-                
-                <script>
-                    function checkVal4() {
-                        var element=document.getElementById("q4a");
-                        var inp1=document.getElementById("q4aInput");
-                        if(element.value=="1") {
-                            inp1.style.visibility='visible';
-                            //inp2.style.visibility='visible';
-                        }
-                        else {
-                            inp1.style.visibility='hidden';
-                            //inp2.style.visibility='hidden';
-                        }
-                    }
-                </script>
-            -->
             </div>
         </section>
 
         <section>
-            <h2>Question 4</h2>
+            <h2>Question 6</h2>
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    Determine whether the program will pass the compiler. If it passes, write the 
-                    value of wrapped_value after execution.
+                    Determine whether the program will print out 6.
                 </p>
                 <pre><code class = "language-rust">
                     use std::ops::Deref;
                     <br>
-                    <br>struct Wrapper {
-                    <br>&nbsp value: i:32,
-                    <br>}
-                    <br>
-                    <br>impl<T> Wrapper {
-                    <br>&nbsp fn new(value: i:32) -> Self {
-                    <br>&nbsp&nbsp Wrapper { value }
+                    <br>struct MyBox<T>(T);
+                    <br>&nbsp impl<T> MyBox<T> {
+                    <br>&nbsp fn new(x: T) -> MyBox<T> {
+                    <br>&nbsp&nbsp MyBox(x)
                     <br>&nbsp }
                     <br>}
                     <br>
-                    <br>fn modify_value(value: &mut i32) {
-                    <br>&nbsp *value += 10;
+                    <br>impl<T> Deref for MyBox<T> {
+                    <br>&nbsp type Target = T;
+                    <br> 
+                    <br>&nbsp fn deref(&self) -> &T {
+                    <br>&nbsp&nbsp &self.0
+                    <br>&nbsp }
                     <br>}
                     <br>
                     <br>fn main() {
-                    <br>&nbsp let mut wrapped_value = Wrapper::new(5);
-                    <br>&nbsp modify_value(&mut wrapped_value);
+                    <br>&nbsp let mut x = MyBox::new(5);
+                    <br>&nbsp *x = 6;
+                    <br>&nbsp println!("{}", x);
                     <br>}
                 </code></pre>
+                <!--will provide an error "cannot assign to data in dereference of `MyBox<i32>`"-->
+                <!--Rust will suggest that you use DerefMut to modify through a dereference-->
                 <br>
-                <select name="q4" id="q4" onchange='checkVal4()'>
-                    <option value=0>does NOT compile</option>
-                    <option value=1>DOES compile</option>
+                <select name="q6" id="q6" onchange='checkVal4()'>
+                    <option value=0>does NOT print out 6</option>
+                    <option value=1>DOES print out 6</option>
                 </select>
-                <input type="text" id="q4Input" name="q4Input" style="visibility:hidden" placeholder="Type the wrapped_value here.">
-                
-                <script>
-                    function checkVal4() {
-                        var element=document.getElementById("q4");
-                        var inp=document.getElementById("q4Input");
-                        if(element.value=="1") {
-                            inp.style.visibility='visible';
-                        }
-                        else {
-                            inp.style.visibility='hidden';
-                        }
-                    }
-                </script>
             </div>
         </section>
 
