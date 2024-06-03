@@ -10,7 +10,15 @@ import TelemetryReporter from '@vscode/extension-telemetry';
 // import { printAllItems } from "./printRust";
 import { openNewLog, openExistingLog, sendTelemetry, newReporter } from "./telemetry";
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
-import * as crypto from 'crypto';
+import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
+import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
+
+import { supportedErrorcodes } from "./interventions";
+import * as errorviz from "./interventions/errorviz";
+import { showInlineSuggestions } from "./interventions/inline-suggestions";
+import { registerCommands } from './interventions/inline-suggestions/commands';
+
+import { log } from "./utils/log";
 
 let intervalHandle: number | null = null;
 
@@ -62,21 +70,66 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  renderQuiz(context, logDir!);
+
   //have they given an answer to the current consent form?
   //if not, render it!
   if (context.globalState.get("participation") === undefined){
     renderConsentForm(context);
   }
 
-  //fixing mistake from last release - if participating, enable logging just once by setting a state
-  if (context.globalState.get("participation") === true && context.globalState.get("globalEnable") === undefined){
-    vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
-    context.globalState.update("globalEnable", true);
+  //one time notif for existing participants to do quiz
+  if (context.globalState.get("quiznotif") === undefined //not yet notified
+      && context.globalState.get("quiz") === undefined //not done quiz
+      && context.globalState.get("participation") === true){ //but is a participant
+    
+    vscode.window.showInformationMessage("SALT would like you take a short quiz on Rust topics!", "Take Quiz").then((sel) => {
+      if (sel === "Take Quiz") {
+        renderQuiz(context, logDir!);
+      }
+    });
+    context.globalState.update("quiznotif", true);
   }
-  
-  //if logging is enabled, initialize reporter, log file, and line count
-  if (vscode.workspace.getConfiguration("salt").get("errorLogging")
-      && context.globalState.get("participation") === true){
+
+  if (context.globalState.get("participation") === true){
+
+    //disable logging for this session if publicOnly is true and not a public repo
+    if (vscode.workspace.getConfiguration("salt").get("publicOnly") === true){
+      isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
+          context.workspaceState.update("enabled", !isPrivate);
+      });
+    }
+    else {
+      context.workspaceState.update("enabled", true);
+    }
+
+    //if global enable is undefined, set it to true
+    if (context.globalState.get("globalEnable") === undefined){
+      vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
+      context.globalState.update("globalEnable", true);
+    }
+
+    //call to backup existing logs to aws
+    if (context.globalState.get("backedUp") !== 0){
+      let startOn;
+      if (typeof context.globalState.get("backedUp") === "number"){
+        startOn = context.globalState.get("backedUp") as number;
+      }
+      else {
+        startOn = 1;
+      }
+      sendBackup(startOn, logDir!, context.globalState.get("uuid") as string).then((failedOn) => {;
+        if (failedOn === 0) {
+          context.globalState.update("backedUp", 0);
+        } else {
+          context.globalState.update("backedUp", failedOn);
+        }
+      });
+    }
+    
+    //if logging is enabled, initialize reporter, log file, and line count
+    if (vscode.workspace.getConfiguration("salt").get("errorLogging") === true
+        && context.workspaceState.get("enabled") === true){
 
     //if a year has passed, disable logging
     let startDate = context.globalState.get("startDate") as number;
