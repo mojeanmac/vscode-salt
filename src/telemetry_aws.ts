@@ -59,7 +59,7 @@ function openNewLog(logDir: string, enableExt: boolean, uuid: string): [string, 
 */
 async function sendPayload(logPath: string, uuid: string, logCount: number): Promise<boolean>{
 
-    const lambdaEndpoint = "https://eszhueee2i.execute-api.us-west-1.amazonaws.com";
+    const lambdaEndpoint = ""; //"https://eszhueee2i.execute-api.us-west-1.amazonaws.com";
     try {
         const data = fs.readFileSync(logPath, 'utf-8');
         const compressedData = await compressData(data);

@@ -99,7 +99,7 @@
     "@aws-sdk/client-dynamodb": "^3.450.0",
     "@octokit/rest": "^20.1.1",
     "@svgdotjs/svg.js": "^3.1.2",
-    "@vscode/webview-ui-toolkit": "^1.2.2",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "axios": "^1.6.8",
     "simple-git": "^3.24.0",
     "svgdom": "^0.1.13",

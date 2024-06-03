@@ -2,8 +2,6 @@
 
 <head>
     <title>Rust Knowledge Quiz</title>
-    <!--importing prism-->
-    <link href="prism.css" rel="stylesheet"/>
     
     <style>
         h1 {
@@ -60,9 +58,11 @@
             flex-direction: column;
             align-items: stretch;
         }
-    </style>
+        /* PrismJS 1.29.0
+        https://prismjs.com/download.html#themes=prism&languages=markup+css+clike+javascript */
+        code[class*=language-],pre[class*=language-]{color:#000;background:0 0;text-shadow:0 1px #fff;font-family:Consolas,Monaco,'Andale Mono','Ubuntu Mono',monospace;font-size:1em;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.5;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}code[class*=language-] ::-moz-selection,code[class*=language-]::-moz-selection,pre[class*=language-] ::-moz-selection,pre[class*=language-]::-moz-selection{text-shadow:none;background:#b3d4fc}code[class*=language-] ::selection,code[class*=language-]::selection,pre[class*=language-] ::selection,pre[class*=language-]::selection{text-shadow:none;background:#b3d4fc}@media print{code[class*=language-],pre[class*=language-]{text-shadow:none}}pre[class*=language-]{padding:1em;margin:.5em 0;overflow:auto}:not(pre)>code[class*=language-],pre[class*=language-]{background:#f5f2f0}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal}.token.cdata,.token.comment,.token.doctype,.token.prolog{color:#708090}.token.punctuation{color:#999}.token.namespace{opacity:.7}.token.boolean,.token.constant,.token.deleted,.token.number,.token.property,.token.symbol,.token.tag{color:#905}.token.attr-name,.token.builtin,.token.char,.token.inserted,.token.selector,.token.string{color:#690}.language-css .token.string,.style .token.string,.token.entity,.token.operator,.token.url{color:#9a6e3a;background:hsla(0,0%,100%,.5)}.token.atrule,.token.attr-value,.token.keyword{color:#07a}.token.class-name,.token.function{color:#dd4a68}.token.important,.token.regex,.token.variable{color:#e90}.token.bold,.token.important{font-weight:700}.token.italic{font-style:italic}.token.entity{cursor:help}
 
-    <script src="prism.js"></script>
+    </style>
 
 </head>
 
@@ -101,16 +101,16 @@
                 </code></pre>
                 <br>
                 <!--answer: deref /n deref /n 0 -1 will be printed out-->
-                <input type="radio" id="q1a" name="q1a">
+                <input type="radio" id="q1a" name="q1" value="a">
                 <label for="q1a">The program will not compile because the <code>Deref</code> trait cannot be implemented for a custom struct </label><br>
                 <br>
-                <input type="radio" id="q1b" name="q1b">
+                <input type="radio" id="q1b" name="q1" value="b">
                 <label for="q1b">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
                 <br>
-                <input type="radio" id="q1c" name="q1c">
+                <input type="radio" id="q1c" name="q1" value="c">
                 <label for="q1c">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
                 <br>
-                <input type="radio" id="q1d" name="q1d">
+                <input type="radio" id="q1d" name="q1" value="d">
                 <label for="q1d">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
                 <br>
             </div>
@@ -133,16 +133,16 @@
                 </code></pre>
                 <br>
                 <!--answer: b (error E0507 cannot move out of *b which is behind a shared reference)-->
-                <input type="radio" id="q2a" name="q2a">
+                <input type="radio" id="q2a" name="q2" value="a">
                 <label for="q2a">The program will not compile because <code>c</code> is incorrectly dereferenced</label><br>
                 <br>
-                <input type="radio" id="q2b" name="q2b">
+                <input type="radio" id="q2b" name="q2" value="b">
                 <label for="q2b">The program will not compile because there is a type mismatch when dereferencing <code>b</code></label><br>
                 <br>
-                <input type="radio" id="q2c" name="q2c">
+                <input type="radio" id="q2c" name="q2" value="c">
                 <label for="q2c">The program will not compile because variable <code>c</code> is not a reference</label><br>
                 <br>
-                <input type="radio" id="q2d" name="q2d">
+                <input type="radio" id="q2d" name="q2" value="d">
                 <label for="q2d">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp hello<br>&nbsp&nbsp&nbsp hello<br>&nbsp&nbsp&nbsp hello</code></label><br>
                 <br>
             </div>
@@ -153,7 +153,7 @@
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
-                    Choose the options below that, if put into the blank ("__"), will allow the code to compile.
+                    Select all the options below that, if put into the blank ("__"), will allow the code to compile.
                 </p>
                 <pre><code class = "language-rust">
                     use std::ops::Deref;
@@ -167,11 +167,11 @@
                     <br>}
                 </code></pre>
                 <br>
-                <input type="checkbox" id="q3a" name="q3a">
+                <input type="checkbox" id="q3a" name="q3" value="a">
                 <label for="q3a"> *ir</label><br> <!--works-->
-                <input type="checkbox" id="q3b" name="q3b">
+                <input type="checkbox" id="q3b" name="q3" value="b">
                 <label for="q3b"> ir</label><br> <!--doesn't work-->
-                <input type="checkbox" id="q3c" name="q3c">
+                <input type="checkbox" id="q3c" name="q3" value="c">
                 <label for="q3c"> &ir</label><br> <!--doesn't work-->
             </div>
         </section>
@@ -181,7 +181,7 @@
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
-                    Choose the options below that, if put into the blank ("__"), will correctly print out "42".
+                    Select all the options below that, if placed in the blank ("__"), will correctly print out "42".
                 </p>
                 <pre><code class = "language-rust">
                     use std::ops::Deref;
@@ -205,11 +205,11 @@
                     <br>}
                 </code></pre>
                 <br>
-                <input type="checkbox" id="q4a" name="q4a">
+                <input type="checkbox" id="q4a" name="q4" value="a">
                 <label for="q4a"> ir</label><br>
-                <input type="checkbox" id="q4b" name="q4b">
+                <input type="checkbox" id="q4b" name="q4" value="b">
                 <label for="q4b"> *ir</label><br> <!--doesn't work-->
-                <input type="checkbox" id="q4c" name="q4c">
+                <input type="checkbox" id="q4c" name="q4" value="c">
                 <label for="q4c"> &(ir)</label><br>
             </div>
         </section>
@@ -219,7 +219,7 @@
             <p id="warn"></p>
             <div class="questions"> 
                 <p>
-                    Select the all the code options that, when placed into the blanks, will correctly print out "42" for that value.
+                    Select all the options below that, when placed into the blanks, will correctly print out "42" for that value.
                 </p>
                 <pre><code class = "language-rust">
                     use std::ops::Deref;
@@ -245,9 +245,9 @@
                     <br>}
                 </code></pre>
                 <br>
-                <input type="checkbox" id="q5a" name="q5a">
+                <input type="checkbox" id="q5a" name="q5" value="a">
                 <label for="q5a"> _s.u</label><br>
-                <input type="checkbox" id="q5b" name="q5b">
+                <input type="checkbox" id="q5b" name="q5" value="b">
                 <label for="q5b"> (*_s).u</label><br>
                 <br>
             </div>
@@ -273,234 +273,152 @@
                 <br>
                 <!--r's lifetime is 2-8; x's lifetime is 4-6 -->
                 <p>When does the lifetime of <code>r</code> begin?</p> <!--answer: 2-->
-                <input type="radio" id="q6a1" name="q6a1">
+                <input type="radio" id="q6a1" name="q6a" value=2>
                 <label for="q6a1">Line 2 </label><br>
-                <input type="radio" id="q6a2" name="q6a2">
+                <input type="radio" id="q6a2" name="q6a" value=4>
                 <label for="q6a2">Line 4 </label><br>
-                <input type="radio" id="q6a3" name="q6a3">
+                <input type="radio" id="q6a3" name="q6a" value=5>
                 <label for="q6a3">Line 5 </label><br>
-                <input type="radio" id="q6a4" name="q6a4">
+                <input type="radio" id="q6a4" name="q6a" value=7>
                 <label for="q6a4">Line 7 </label><br>
                 <br>
 
                 <p>When does the lifetime of <code>r</code> end?</p> <!--answer: 7-->
-                <input type="radio" id="q6b1" name="q6b1">
+                <input type="radio" id="q6b1" name="q6b" value=2>
                 <label for="q6b1">Line 2 </label><br>
-                <input type="radio" id="q6b2" name="q6b2">
+                <input type="radio" id="q6b2" name="q6b" value=4>
                 <label for="q6b2">Line 4 </label><br>
-                <input type="radio" id="q6b3" name="q6b3">
+                <input type="radio" id="q6b3" name="q6b" value=5>
                 <label for="q6b3">Line 5 </label><br>
-                <input type="radio" id="q6b4" name="q6b4">
+                <input type="radio" id="q6b4" name="q6b" value=7>
                 <label for="q6b4">Line 7 </label><br>
                 <br>
                 
                 <p>When does the lifetime of <code>x</code> begin?</p> <!--answer: 4-->
-                <input type="radio" id="q6c1" name="q6c1">
+                <input type="radio" id="q6c1" name="q6c" value=2>
                 <label for="q6c1">Line 2</label><br>
-                <input type="radio" id="q6c2" name="q6c2">
+                <input type="radio" id="q6c2" name="q6c" value=4>
                 <label for="q6c2">Line 4</label><br>
-                <input type="radio" id="q6c3" name="q6c3">
+                <input type="radio" id="q6c3" name="q6c" value=5>
                 <label for="q6c3">Line 5</label><br>
-                <input type="radio" id="q6c4" name="q6c4">
+                <input type="radio" id="q6c4" name="q6c" value=7>
                 <label for="q6c4">Line 7</label><br>
                 <br>
 
                 <p>When does the lifetime of <code>x</code> end?</p> <!--answer: 5-->
-                <input type="radio" id="q6d1" name="q6d1">
+                <input type="radio" id="q6d1" name="q6d" value=2>
                 <label for="q6d1">Line 2 </label><br>
-                <input type="radio" id="q6d2" name="q6d2">
+                <input type="radio" id="q6d2" name="q6d" value=4>
                 <label for="q6d2">Line 4 </label><br>
-                <input type="radio" id="q6d3" name="q6d3">
+                <input type="radio" id="q6d3" name="q6d" value=5>
                 <label for="q6d3">Line 5 </label><br>
-                <input type="radio" id="q6d4" name="q6d4">
+                <input type="radio" id="q6d4" name="q6d" value=7>
                 <label for="q6d4">Line 7 </label><br>
                 <br>
             </div>
         </section>
-
-<!--
+        <button type="button" onclick="submitForm()">Submit</button>
     <script>
-        document.getElementById('submit').addEventListener("click", () => {
 
-            let yearsOfExp = document.getElementById("yearsOfExp").value;
-            let rustExp = document.getElementById("rustExp").value;
-            if (rustExp == -1) {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("rustExp").focus();
-                return;
-            }
-            let linesOfCode = document.getElementById("linesOfCode").value;
-            if (linesOfCode == -1) {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("linesOfCode").focus();
-                return;
-            }
+        const vscode = acquireVsCodeApi();
+        let quizResults = new Array(9);
 
-            let java = document.querySelectorAll('input[name="java"]');
-            let javaExp = '';
-            for (const rb of java) {
-                if (rb.checked) {
-                    javaExp = rb.value;
-                    break;
-                }
-            }
-            if (javaExp == '') {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("java").focus();
-                return;
-            }
-
-            let javascript = document.querySelectorAll('input[name="javascript"]');
-            let jsExp = '';
-            for (const rb of javascript) {
-                if (rb.checked) {
-                    jsExp = rb.value;
-                    break;
-                }
-            }
-            if (jsExp == '') {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("js").focus();
-                return;
-            }
-
-            let clang = document.querySelectorAll('input[name="clang"]');
-            let cExp = '';
-            for (const rb of clang) {
-                if (rb.checked) {
-                    cExp = rb.value;
-                    break;
-                }
-            }
-            if (cExp == '') {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("c").focus();
-                return;
-            }
-
-            let python = document.querySelectorAll('input[name="python"]');
-            let pythonExp = '';
-            for (const rb of python) {
-                if (rb.checked) {
-                    pythonExp = rb.value;
-                    break;
-                }
-            }
-            if (pythonExp == '') {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("python").focus();
-                return;
-            }
-
-            let rustBook = document.getElementById("resources1").checked;
-            let youtube = document.getElementById("resources2").checked;
-            let stackOverflow = document.getElementById("resources3").checked;
-            let other = document.getElementById("resources4").checked;
-
-            let industry = document.getElementById("industry").value;
-            if (industry == "") {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("industry").focus();
-                return;
-            }
-            let gender = document.getElementById("gender").value;
-            if (gender == -1) {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("gender").focus();
-                return;
-            }
-            let age = document.getElementById("age").value;
-            if (age == -1) {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("age").focus();
-                return;
-            }
-            let degree = document.getElementById("degree").value;
-            if (degree == -1) {
-                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
-                document.getElementById("degree").focus();
-                return;
-            }
-
-            // //checking rustExp - how long they've been programming in Rust
-            // if(document.getElementById("rustExp").value==-1){
-            //     window.alert("Please tell us how long you've been programming in Rust.");
-            // }
-            // //checking java, javascript, clang, and python - what programming languages they have experience in
-            // else if(document.querySelector('input[name="java"]:checked')==null
-            // || document.querySelector('input[name="javascript"]:checked')==null
-            // || document.querySelector('input[name="clang"]:checked')==null
-            // || document.querySelector('input[name="python"]:checked')==null){
-            //     window.alert("Please tell us what programming languages you have experience in.");
-            // }
-            // //checking resources - what resources they used to learn Rust
-            // else if(!(document.getElementById("resources1").checked
-            // ||document.getElementById("resources2").checked
-            // ||document.getElementById("resources3").checked
-            // ||document.getElementById("resources4").checked)) {
-            //     window.alert("Please tell us how you learned Rust.");
-            // }
-            // //checking linesOfCode - how many lines of code they have written
-            // else if(document.getElementById("linesOfCode").value==-1){
-            //     window.alert("Please tell us how many lines of code you've written in Rust.");
-            // }
-            // //checking industry
-            // else if(document.getElementById("industry").value=="Select"){
-            //     window.alert("Please select your industry.");
-            // }
-            // //checking gender
-            // else if(document.getElementById("gender").value==-1){
-            //     window.alert("Please select your gender.");
-            // }
-            // //checking age
-            // else if(document.getElementById("age").value==-1){
-            //     window.alert("Please select your age.");
-            // }
-            // //checking degree
-            // else if(document.getElementById("degree").value==-1){
-            //     window.alert("Please select your level of education.");
-            // }
-            // else{
-            //     //close webview, move onto thank you page
-            //     window.location.replace("thankyoumessage.html");
-            // }
-
-
-            let results = {
-                "experience": {
-                    "codingExp": yearsOfExp,
-                    "rustExp": rustExp,
-                    "linesOfCode": linesOfCode,
-                },
-                "languages": {
-                    "java": javaExp,
-                    "javascript": jsExp,
-                    "c": cExp,
-                    "python": pythonExp,
-                },
-                "resources": {
-                    "rustBook": rustBook,
-                    "youtube": youtube,
-                    "stackOverflow": stackOverflow,
-                    "other": other,
-                },
-
-                "demographics": {
-                    "industry": industry,
-                    "gender": gender,
-                    "age": age,
-                    "degree": degree
-                }
-            }
-            console.log(results);
-
-            //Send a message to the extension with the form data
-            const vscode = acquireVsCodeApi();
-            vscode.postMessage({
-                command: 'submitSurvey',
-                text: results
+        document.getElementsByName('q1').forEach((radio) => {
+            radio.addEventListener('change', (event) => {
+                quizResults[0] = event.target.value;
+                sendState('q1', event.target.value);
             });
         });
+
+        document.getElementsByName('q2').forEach((radio) => {
+            radio.addEventListener('change', (event) => {
+                quizResults[1] = event.target.value;
+                sendState('q2', event.target.value);
+            });
+        });
+
+        let selectedQ3 = new Set();
+        document.getElementsByName('q3').forEach((checkbox) => {
+            checkbox.addEventListener('change', (event) => {
+                let val = event.target.value;
+                if (event.target.checked) {
+                    selectedQ3.add(val);
+                } else {
+                    selectedQ3.delete(val);
+                }
+                quizResults[2] = selectedQ3;
+                sendState('q3', selectedQ3);
+            });
+        });
+
+        let selectedQ4 = new Set();
+        document.getElementsByName('q4').forEach((checkbox) => {
+            checkbox.addEventListener('change', (event) => {
+                let val = event.target.value;
+                if (event.target.checked) {
+                    selectedQ4.add(val);
+                } else {
+                    selectedQ4.delete(val);
+                }
+                quizResults[3] = selectedQ4;
+                sendState('q4', selectedQ4);
+            });
+        });
+
+        let selectedQ5 = new Set();
+        document.getElementsByName('q5').forEach((checkbox) => {
+            checkbox.addEventListener('change', (event) => {
+                let val = event.target.value;
+                if (event.target.checked) {
+                    selectedQ5.add(val);
+                } else {
+                    selectedQ5.delete(val);
+                }
+                quizResults[4] = selectedQ5;
+                sendState('q5', selectedQ5);
+            });
+        });
+
+        document.getElementsByName('q6a').forEach((radio) => {
+            radio.addEventListener('change', (event) => {
+                quizResults[5] = event.target.value;
+                sendState('q6a', event.target.value);
+            });
+        });
+        document.getElementsByName('q6b').forEach((radio) => {
+            radio.addEventListener('change', (event) => {
+                quizResults[6] = event.target.value;
+                sendState('q6b', event.target.value);
+            });
+        });
+        document.getElementsByName('q6c').forEach((radio) => {
+            radio.addEventListener('change', (event) => {
+                quizResults[7] = event.target.value;
+                sendState('q6c', event.target.value);
+            });
+        });
+        document.getElementsByName('q6d').forEach((radio) => {
+            radio.addEventListener('change', (event) => {
+                quizResults[8] = event.target.value;
+                sendState('q6d', event.target.value);
+            });
+        });
+
+        function sendState(question, val) {
+            vscode.postMessage({
+                command: 'stateChange',
+                value: {
+                    question: question,
+                    value: val
+                }
+            });
+        }
+
+        function submitForm() {
+            vscode.postMessage({
+                command: 'submitForm',
+                value: quizResults
+            });
+        }
     </script>
--->
 </html>

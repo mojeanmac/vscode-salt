@@ -9,7 +9,7 @@ import * as path from "path";
 // import { printAllItems } from "./printRust";
 //import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
-import { renderConsentForm, renderSurvey } from "./webviews";
+import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
 
 import { supportedErrorcodes } from "./interventions";
 import * as errorviz from "./interventions/errorviz";
@@ -60,24 +60,26 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
+  renderQuiz(context, logDir!);
+
   //have they given an answer to the current consent form?
   //if not, render it!
   if (context.globalState.get("participation") === undefined){
     renderConsentForm(context, logDir);
   }
 
-  // //one time notif for existing participants to do quiz
-  // if (context.globalState.get("quiznotif") === undefined //not yet notified
-  //     && context.globalState.get("quiz") === undefined //not done quiz
-  //     && context.globalState.get("participation") === true){ //but is a participant
+  //one time notif for existing participants to do quiz
+  if (context.globalState.get("quiznotif") === undefined //not yet notified
+      && context.globalState.get("quiz") === undefined //not done quiz
+      && context.globalState.get("participation") === true){ //but is a participant
     
-  //   vscode.window.showInformationMessage("SALT would like you take a short quiz on Rust topics!", "Take Quiz").then((sel) => {
-  //     if (sel === "Take Quiz") {
-  //       renderQuiz(context, logDir!);
-  //     }
-  //   });
-  //   context.globalState.update("quiznotif", true);
-  // }
+    vscode.window.showInformationMessage("SALT would like you take a short quiz on Rust topics!", "Take Quiz").then((sel) => {
+      if (sel === "Take Quiz") {
+        renderQuiz(context, logDir!);
+      }
+    });
+    context.globalState.update("quiznotif", true);
+  }
 
   if (context.globalState.get("participation") === true){
 

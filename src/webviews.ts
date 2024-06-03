@@ -98,12 +98,12 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
       message => {
         console.log(message.text);
         context.globalState.update("survey", message.text);
-        panel.webview.html = thankYou; //renderQuiz(context, logDir);
+        renderQuiz(context, logDir);
         //write to latest log
         const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
         const logPath = path.join(logDir, `log${fileCount}.json`);
         fs.writeFileSync(logPath, JSON.stringify({survey: message.text}) + '\n', {flag: 'a'});
-        //panel.dispose();
+        panel.dispose();
       }
     );
   }
@@ -119,15 +119,19 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
     );
   
     panel.webview.html = quiz;
-  
+    const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
+    const logPath = path.join(logDir, `log${fileCount}.json`);
     panel.webview.onDidReceiveMessage(
       message => {
-        context.globalState.update("quiz", message.text);
-        //write to latest log
-        const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
-        const logPath = path.join(logDir, `log${fileCount}.json`);
-        fs.writeFileSync(logPath, JSON.stringify({quiz: message.text}) + '\n', {flag: 'a'});
-        panel.webview.html = thankYou;
+        if (message.command === "submitForm"){
+          context.globalState.update("quiz", message.value);
+          //write to latest log
+          fs.writeFileSync(logPath, JSON.stringify({quizComplete: message.value}) + '\n', {flag: 'a'});
+          panel.webview.html = thankYou;
+        }
+        else if (message.command === "stateChange") {
+          fs.writeFileSync(logPath, JSON.stringify({quizUpdate: message.value}) + '\n', {flag: 'a'});
+        }
       }
     );
   }
