@@ -1,5 +1,5 @@
 <html>
-
+    <meta http-equiv="Content-Security-Policy" content="default-src self; img-src vscode-resource:; script-src vscode-resource: 'self' 'unsafe-inline'; style-src vscode-resource: 'self' 'unsafe-inline'; "/>
 <head>
     <title>Rust Knowledge Quiz</title>
     
@@ -12,7 +12,7 @@
             text-align: center;
         }
 
-        p {
+        p, label {
             text-align: left;
             font-size: 16px;
         }
@@ -24,7 +24,6 @@
             */
             
             /*make it so people can't copy paste*/
-            
             user-select: none; /*disable text selection*/
             -moz-user-select: none;
             -webkit-user-select: none;
@@ -64,6 +63,8 @@
 
     </style>
 
+<script src=${scriptUri}></script>
+
 </head>
 
 <body>
@@ -75,8 +76,7 @@
             <p id="warn"></p>
             <div class="questions">
                 <p>
-                    What will happen when the program is run? (Modified from "The Rust 
-                    Programming Language" by Steve Klabnik and Carol Nichols)
+                    What will happen when the program is run?
                 </p>
                 <pre><code class = "language-rust">
                     use std::ops::Deref;
@@ -105,13 +105,13 @@
                 <label for="q1a">The program will not compile because the <code>Deref</code> trait cannot be implemented for a custom struct </label><br>
                 <br>
                 <input type="radio" id="q1b" name="q1" value="b">
-                <label for="q1b">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <label for="q1b">The program will pass the compiler and output:  <br><code>deref<br>deref<br>deref<br>0 -1</code></label><br>
                 <br>
                 <input type="radio" id="q1c" name="q1" value="c">
-                <label for="q1c">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <label for="q1c">The program will pass the compiler and output:  <br><code>deref<br>deref<br>0 -1</code></label><br>
                 <br>
                 <input type="radio" id="q1d" name="q1" value="d">
-                <label for="q1d">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp deref<br>&nbsp&nbsp&nbsp 0 -1</code></label><br>
+                <label for="q1d">The program will pass the compiler and output:  <br><code>deref<br>0 -1</code></label><br>
                 <br>
             </div>
         </section>
@@ -143,7 +143,7 @@
                 <label for="q2c">The program will not compile because variable <code>c</code> is not a reference</label><br>
                 <br>
                 <input type="radio" id="q2d" name="q2" value="d">
-                <label for="q2d">The program will pass the compiler and output:  <br><code>&nbsp&nbsp&nbsp hello<br>&nbsp&nbsp&nbsp hello<br>&nbsp&nbsp&nbsp hello</code></label><br>
+                <label for="q2d">The program will pass the compiler and output:  <br><code>hello<br>hello<br>hello</code></label><br>
                 <br>
             </div>
         </section>
@@ -346,8 +346,8 @@
                 } else {
                     selectedQ3.delete(val);
                 }
-                quizResults[2] = selectedQ3;
-                sendState('q3', selectedQ3);
+                quizResults[2] = JSON.stringify(Array.from(selectedQ3));
+                sendState('q3', quizResults[2]);
             });
         });
 
@@ -360,8 +360,8 @@
                 } else {
                     selectedQ4.delete(val);
                 }
-                quizResults[3] = selectedQ4;
-                sendState('q4', selectedQ4);
+                quizResults[3] = JSON.stringify(Array.from(selectedQ4));
+                sendState('q4', quizResults[3]);
             });
         });
 
@@ -374,8 +374,8 @@
                 } else {
                     selectedQ5.delete(val);
                 }
-                quizResults[4] = selectedQ5;
-                sendState('q5', selectedQ5);
+                quizResults[4] = JSON.stringify(Array.from(selectedQ5));
+                sendState('q5', quizResults[4]);
             });
         });
 

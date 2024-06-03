@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import { consentForm, consentFormPersonal, survey, thankYou, quiz, allOrPublic } from "./forms";
 import { initStudy } from './extension';
 import { isPrivateRepo } from './telemetry_aws';
 export { renderConsentForm, renderpublicOnly, renderSurvey, renderQuiz };
@@ -20,7 +19,9 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
           enableScripts: true
         }
       );
-      panel.webview.html = consentForm;
+
+      const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'consentform.html'), 'utf8');
+      panel.webview.html = html;
     
       panel.webview.onDidReceiveMessage(
         message => {
@@ -43,7 +44,8 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
         'SALT Study Consent Form',
         vscode.ViewColumn.One
       );
-      panel.webview.html = consentFormPersonal;
+      const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'consentformCopy.html'), 'utf8');
+      panel.webview.html = html;
     }
   }
   
@@ -59,8 +61,9 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
         enableScripts: true
       }
     );
-  
-    panel.webview.html = allOrPublic;
+    
+    const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'allOrPublic.html'), 'utf8');
+    panel.webview.html = html;
   
     panel.webview.onDidReceiveMessage(
       message => {
@@ -92,7 +95,8 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
       }
     );
   
-    panel.webview.html = survey;
+    const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'survey.html'), 'utf8');
+    panel.webview.html = html;
   
     panel.webview.onDidReceiveMessage(
       message => {
@@ -108,17 +112,25 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
     );
   }
   
+  /**
+   * Renders the quiz
+   */
   function renderQuiz(context: vscode.ExtensionContext, logDir: string){
     const panel = vscode.window.createWebviewPanel(
       'form',
       'SALT Quiz',
       vscode.ViewColumn.One,
       {
-        enableScripts: true
+        enableScripts: true,
+        localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'assets', 'forms'))]
       }
     );
-  
-    panel.webview.html = quiz;
+    const scriptPath = vscode.Uri.file(path.join(context.extensionPath, 'assets', 'forms', 'prism.js'));
+    const scriptUri = panel.webview.asWebviewUri(scriptPath);
+
+    const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'rustquizform_v6.html'), 'utf8');
+    panel.webview.html = html.replace("${scriptUri}", scriptUri.toString());
+
     const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
     const logPath = path.join(logDir, `log${fileCount}.json`);
     panel.webview.onDidReceiveMessage(
@@ -127,7 +139,8 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
           context.globalState.update("quiz", message.value);
           //write to latest log
           fs.writeFileSync(logPath, JSON.stringify({quizComplete: message.value}) + '\n', {flag: 'a'});
-          panel.webview.html = thankYou;
+          const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'thankyoumessage.html'), 'utf8');
+          panel.webview.html = html;
         }
         else if (message.command === "stateChange") {
           fs.writeFileSync(logPath, JSON.stringify({quizUpdate: message.value}) + '\n', {flag: 'a'});

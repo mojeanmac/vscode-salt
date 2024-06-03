@@ -5,9 +5,7 @@ import * as crypto from 'crypto';
 import * as fs from "fs";
 import * as path from "path";
 
-
 // import { printAllItems } from "./printRust";
-//import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
 import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
 
@@ -59,8 +57,6 @@ export function activate(context: vscode.ExtensionContext) {
         fs.mkdirSync(logDir, { recursive: true });
     }
   }
-
-  renderQuiz(context, logDir!);
 
   //have they given an answer to the current consent form?
   //if not, render it!
