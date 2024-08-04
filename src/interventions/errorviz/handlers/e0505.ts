@@ -6,8 +6,8 @@ import { h, type RenderFunction } from "./_utils";
 export const image505: RenderFunction = (editor, diag, theme) => {
   const borrowed = /^cannot move out of `(.+)` because it is borrowed/.exec(diag.message)?.[1];
   if (borrowed === undefined) { return h.inapplicable("cannot parse diagnostics"); }
-
-  const fromline = diag.relatedInformation?.find((d) => d.message.endsWith("is borrowed here"))?.location.range.start.line;
+  const fromline = diag.relatedInformation?.find((d) => d.message.endsWith(`borrow of \`${borrowed}\` occurs here`)
+      || d.message.endsWith("is borrowed here"))?.location.range.start.line;
   const toline = diag.relatedInformation?.find((d) => d.message.endsWith("borrow later used here"))?.location.range.end.line;
   if (fromline === undefined || toline === undefined) { return h.inapplicable("cannot parse diagnostics"); }
   

@@ -36,3 +36,17 @@ export function showInlineSuggestions(
   editor.setDecorations(inlineHintDecorationType, decorations);
 }
 
+export function showInlineSuggestion(
+  editor: vscode.TextEditor,
+  diag: vscode.Diagnostic,
+) {
+  let decorations = [];
+  if (!(typeof diag.code === "object" && typeof diag.code.value === "string")) { return; }
+  const handler = inlineSuggestionHandlersMap.get(diag.code.value);
+  if (handler === undefined) { return; }
+  const result = handler(editor, diag);
+  if (isHandlerUnsuccessful(result)) { return; }
+  decorations.push(...result.data);
+  editor.setDecorations(inlineHintDecorationType, decorations);
+}
+

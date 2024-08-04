@@ -4,6 +4,7 @@ import { log } from "../../utils/log";
 import { imageByCode } from "./utils/image";
 import { svg2uri } from "./utils/svg";
 import { triangleAvail, triangleShown } from "./triangle";
+import { inlineSuggestionHandlersMap } from "../inline-suggestions/handlers";
 
 function newDecorationType(): vscode.TextEditorDecorationType {
   return vscode.window.createTextEditorDecorationType({ isWholeLine: true });
@@ -27,6 +28,14 @@ const triangleShownDtype = vscode.window.createTextEditorDecorationType({
 
 export const diags = new Map<string, DiagnosticInfo>();
 
+const isInline = (diag: vscode.Diagnostic): boolean => {
+  return diag.code !== undefined
+    && typeof diag.code !== "number"
+    && typeof diag.code !== "string"
+    && typeof diag.code.value === "string"
+    && inlineSuggestionHandlersMap.has(diag.code.value);
+};
+
 export function showTriangles(editor: vscode.TextEditor, _diags?: Map<string, DiagnosticInfo>) {
   const resolvedDiags = _diags ?? diags;
   const showns: vscode.Range[] = [];
@@ -34,7 +43,7 @@ export function showTriangles(editor: vscode.TextEditor, _diags?: Map<string, Di
   for (const [k, v] of resolvedDiags) {
     const line = parseInt(k);
     const range = new vscode.Range(line, 0, line, 0);
-    if (v.displayed) {
+    if (v.displayed || isInline(v.diagnostics)) {
       showns.push(range);
     } else {
       avails.push(range);
@@ -98,8 +107,6 @@ export function showDiag(
   _diags?: Map<string, DiagnosticInfo>,
 ) {
   const resolvedDiags = _diags ?? diags;
-  // TODO: workaround to avoid overlapping visualizations
-  hideAllDiags(editor, resolvedDiags);
   const diaginfo = resolvedDiags.get(erridx);
   if (diaginfo === undefined) {
     const msg = `diags for ${erridx} does not exist`;
@@ -108,6 +115,9 @@ export function showDiag(
     return;
   }
   const diag = diaginfo.diagnostics;
+  if (isInline(diag)) { return; };
+  // TODO: workaround to avoid overlapping visualizations
+  hideAllDiags(editor, resolvedDiags);
   const img = imageByCode(editor, diag);
   if (typeof img === "string") {
     const msg = "SVG generation failed: " + img;

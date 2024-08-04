@@ -38,7 +38,7 @@ const suggestions = [
 const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
 let enableExt = true;
-
+let prevline: number | undefined;
 let logDir: string | null = null;
 let logPath: string, logCount: number, linecnt: number,
 stream: fs.WriteStream, output: vscode.LogOutputChannel, uuid: string;
@@ -191,8 +191,22 @@ export function activate(context: vscode.ExtensionContext) {
       updateInterventions(e);
     })
   );
+
+  // context.subscriptions.push(
+  //   vscode.commands.registerTextEditorCommand("salt.toggleVisualization", toggleVisualization)
+  // );
+
   context.subscriptions.push(
-    vscode.commands.registerTextEditorCommand("salt.toggleVisualization", toggleVisualization)
+    vscode.window.onDidChangeTextEditorSelection((e) =>{
+      const activeEditor = vscode.window.activeTextEditor;
+      if (activeEditor) {
+        const currline = activeEditor.selections[0].active.line;
+        if (currline !== prevline && currline){
+          prevline = currline;
+          toggleVisualization(activeEditor);
+        }
+      }
+    })
   );
 
   //command to render consent form
@@ -502,15 +516,15 @@ function saveDiagnostics(editor: vscode.TextEditor, diagnostics: vscode.Diagnost
     errorviz.showDiag(editor, d);
   }
   errorviz.showTriangles(editor);
+  //toggleFirstViz(editor);
 }
 
-function toggleVisualization(editor: vscode.TextEditor, _: vscode.TextEditorEdit) {
+function toggleVisualization(editor: vscode.TextEditor) {
   visToggled = true;
   const currline = editor.selection.active.line;
   const lines = [...errorviz.diags.keys()];
   const ontheline = lines.filter((i) => parseInt(i) === currline);
   if (!ontheline) {
-    log.info("no diagnostics on line", currline + 1);
     return;
   }
   if (ontheline.length > 1) {
@@ -534,6 +548,15 @@ function toggleVisualization(editor: vscode.TextEditor, _: vscode.TextEditorEdit
   }
 }
 
+// function toggleFirstViz(editor: vscode.TextEditor) {
+//   const lines = [...errorviz.diags.keys()];
+//   if (lines.length === 0) {
+//     return;
+//   }
+//   errorviz.toggleDiag(editor, lines[0]);
+
+// }
+
 function clearAllVisualizations(e: vscode.TextEditor, _: vscode.TextEditorEdit) {
   errorviz.hideAllDiags(e);
 }
@@ -544,4 +567,3 @@ export function deactivate() {
     clearInterval(intervalHandle);
   }
 }
-
