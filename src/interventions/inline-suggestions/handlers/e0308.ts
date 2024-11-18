@@ -19,7 +19,6 @@ export const autoderef: InlineSuggestionHandler = (editor, diag) => {
       const match = /^consider dereferencing here to assign to the mutably borrowed value: `*`/.test(info.message);
       if (!match) { continue; }
       const range = info.location.range;
-
       // range is 0-width long, i.e. it becomes incredibly difficult to hover over.
       // better to get the whole word and let the hover message apper over any of it.
       const decorationRange = editor.document.getWordRangeAtPosition(range.start) ?? range;

@@ -11,10 +11,11 @@ import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
 
 import { supportedErrorcodes } from "./interventions";
 import * as errorviz from "./interventions/errorviz";
-import { showInlineSuggestions } from "./interventions/inline-suggestions";
+import { hideInlineSuggestion, showInlineSuggestions } from "./interventions/inline-suggestions";
 import { registerCommands } from './interventions/inline-suggestions/commands';
 
 import { log } from "./utils/log";
+import { on } from "events";
 
 let intervalHandle: number | null = null;
 
@@ -122,6 +123,8 @@ export function activate(context: vscode.ExtensionContext) {
       if (initialStamp > startDate + YEAR){
         vscode.workspace.getConfiguration("salt").update("errorLogging", false);
         context.globalState.update("participation", undefined);
+        //remove logdir folder
+        fs.rmdirSync(logDir!, {recursive: true});
         return;
       }
 
@@ -198,14 +201,31 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.window.onDidChangeTextEditorSelection((e) =>{
-      const activeEditor = vscode.window.activeTextEditor;
-      if (activeEditor) {
-        const currline = activeEditor.selections[0].active.line;
-        if (currline !== prevline && currline){
-          prevline = currline;
-          toggleVisualization(activeEditor);
-        }
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return;
       }
+      const currline = editor.selections[0].active.line;
+      if (currline !== prevline && currline){
+        prevline = currline;
+        toggleVisualization(editor);
+      }
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeTextDocument((e) => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return;
+      }
+      const changes = e.contentChanges;
+      e.contentChanges.forEach((change) => {
+        let line = change.range.start.line;
+        if (change.text === '*') {
+          ammendInlineViz(editor, change);
+        }
+      });
     })
   );
 
@@ -480,7 +500,7 @@ function updateInterventions(editor: vscode.TextEditor) {
     });
   
   saveDiagnostics(editor, diagnostics);
-  showInlineSuggestions(editor, diagnostics);
+  showInlineSuggestions(editor, diagnostics, );
 }
 
 /**
@@ -546,6 +566,19 @@ function toggleVisualization(editor: vscode.TextEditor) {
   } else {
     errorviz.toggleDiag(editor, ontheline[0]);
   }
+}
+
+function ammendInlineViz(
+  editor: vscode.TextEditor,
+  change: vscode.TextDocumentContentChangeEvent) {
+    const currline = change.range.start.line;
+    const lines = [...errorviz.diags.keys()];
+    const ontheline = lines.filter((i) => parseInt(i) === currline);
+    if (!ontheline) {
+      return;
+    }
+    console.log(ontheline);
+    
 }
 
 // function toggleFirstViz(editor: vscode.TextEditor) {

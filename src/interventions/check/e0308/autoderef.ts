@@ -14,3 +14,6 @@ export const checkAutoderef: CheckDiag<{
   }
   return { expectedType, foundType };
 };
+
+//calls hideInlineSuggestion if the diagnostic is an autoderef error
+// export function handleAutoderef()
