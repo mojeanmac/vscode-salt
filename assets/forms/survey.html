@@ -57,8 +57,22 @@
             elementbox.style.display='none';
         }
     } 
+    -->
+<script type="text/javascript">
+    function toggleFpExp() {
+        //alert("i'm in");
+        var experienceSelect = document.getElementById('fpExp');
+        var secondQuestionDiv = document.getElementById('fpLanguages');
+        if (experienceSelect.value == '-1' || experienceSelect.value=='0') {
+            secondQuestionDiv.style.display = 'none';
+            //alert("hello!");
+        } else {
+            secondQuestionDiv.style.display = 'inline';
+            //alert("goodbye!");
+        }
+    }
     
-</script> -->
+</script>
 
 </head>
 
@@ -78,23 +92,69 @@
             <select name="rustExp" id="rustExp">
                 <option value=-1>Select</option>
                 <option value=0>&lt; 1 month</option>
-                <option value=1>1 year</option>
-                <option value=2>2 years</option>
-                <option value=3>3 years</option>
-                <option value=4>5+ years</option>
+                <option value=1>A few months</option>
+                <option value=2>1 year</option>
+                <option value=3>2 years</option>
+                <option value=4>3 years</option>
+                <option value=5>4 years</option>
+                <option value=6>5+ years</option>
             </select>
         </div>
 
+        
         <div class="questions">
-            <p>Roughly, how many lines of code have you written in Rust?</p>
-            <select name="linesOfCode" id="linesOfCode">
+            <p>What resources have you used to learn Rust? &lpar;select all that apply&rpar;</p>
+
+            <input type="checkbox" name="resources1" value="RustTextbook" id="resources1">
+            <label for="resources1">The Rust Programming Language textbook</label>
+            <br />
+            <input type="checkbox" name="resources2" value="Youtube" id="resources2">
+            <label for="resources2">Youtube</label>
+            <br />
+            <input type="checkbox" name="resources3" value="StackOverflow" id="resources3">
+            <label for="resources3">Stack Overflow</label>
+            <br />
+            <input type="checkbox" name="resources4" value="Other" id="resources4">
+            <label for="resources4">Other</label>
+            <br />
+        </div>
+
+        <div class="questions">
+            <p>How many years of experience do you have in functional programming?</b>?</p>
+            <select name="fpExp" id="fpExp" onchange="toggleFpExp()">
                 <option value=-1>Select</option>
-                <option value=0>Less than 100</option>
-                <option value=1>101 - 1000</option>
-                <option value=2>1001 - 10000</option>
-                <option value=3>10001 - 100000</option>
-                <option value=4>More than 100000 lines</option>
+                <option value=0>I have never programmed in a functional language</option>
+                <option value=1>&lt; 1 year</option>
+                <option value=2>2 years</option>
+                <option value=3>3 years</option>
+                <option value=4>4 years</option>
+                <option value=5>5+ years</option>
             </select>
+        </div>
+
+        <div class="questions" id="fpLanguages" style="display: none">
+            <p>What functional languages have you programmed in?</p>
+            <label>
+                <input type="checkbox" name="fplanguages" value="Haskell"> Haskell
+            </label><br>
+            <label>
+                <input type="checkbox" name="fplanguages" value="Scala"> Scala
+            </label><br>
+            <label>
+                <input type="checkbox" name="fplanguages" value="OCaml"> OCaml
+            </label><br>
+            <label>
+                <input type="checkbox" name="fplanguages" value="Clojure"> Clojure
+            </label><br>
+            <label>
+                <input type="checkbox" name="fplanguages" value="Erlang"> Erlang
+            </label><br>
+            <label>
+                <input type="checkbox" name="fplanguages" value="Common Lisp"> Common Lisp
+            </label><br>
+            <label>
+                <input type="checkbox" name="fplanguages" value="Other"> Other
+            </label><br>
         </div>
 
         <div class="questions">
@@ -125,6 +185,7 @@
             <input type="radio" name="javascript" value="expert" id="js-expert">
             <label for="js-expert">Expert</label>
             <br /><br />
+
             <h4>C</h4>
             <input type="radio" name="clang" value="none" id="c-none">
             <label for="c-none">None</label>
@@ -138,6 +199,21 @@
             <input type="radio" name="clang" value="expert" id="c-expert">
             <label for="c-expert">Expert</label>
             <br /><br />
+
+            <h4>C++</h4>
+            <input type="radio" name="cpluslang" value="none" id="cplus-none">
+            <label for="cplus-none">None</label>
+            <br />
+            <input type="radio" name="cpluslang" value="novice" id="cplus-novice">
+            <label for="cplus-novice">Novice</label>
+            <br />
+            <input type="radio" name="cpluslang" value="intermediate" id="cplus-inter">
+            <label for="cplus-inter">Intermediate</label>
+            <br />
+            <input type="radio" name="cpluslang" value="expert" id="cplus-expert">
+            <label for="cplus-expert">Expert</label>
+            <br /><br />
+
             <h4>Python</h4>
             <input type="radio" name="python" value="none" id="python-none">
             <label for="python-none">None</label>
@@ -150,23 +226,31 @@
             <br />
             <input type="radio" name="python" value="expert" id="python-expert">
             <label for="python-expert">Expert</label>
+            <br /><br />
+
+            <h4>Haskell</h4>
+            <input type="radio" name="haskell" value="none" id="haskell-none">
+            <label for="haskell-none">None</label>
+            <br />
+            <input type="radio" name="haskell" value="novice" id="haskell-novice">
+            <label for="haskell-novice">Novice</label>
+            <br />
+            <input type="radio" name="haskell" value="intermediate" id="haskell-inter">
+            <label for="haskell-inter">Intermediate</label>
+            <br />
+            <input type="radio" name="haskell" value="expert" id="haskell-expert">
+            <label for="haskell-expert">Expert</label>
+            <br />
             <br />
         </div>
 
         <div class="questions">
-            <p>What resources have you used to learn Rust? &lpar;select all that apply&rpar;</p>
-
-            <input type="checkbox" name="resources1" value="RustTextbook" id="resources1">
-            <label for="resources1">The Rust Programming Language textbook</label>
+            <p>Do you use Github Copilot regularly?</p>
+            <input type="radio" name="copilot" value="none" id="copilot-no">
+            <label for="copilot-no">No</label>
             <br />
-            <input type="checkbox" name="resources2" value="Youtube" id="resources2">
-            <label for="resources2">Youtube</label>
-            <br />
-            <input type="checkbox" name="resources3" value="StackOverflow" id="resources3">
-            <label for="resources3">Stack Overflow</label>
-            <br />
-            <input type="checkbox" name="resources4" value="Other" id="resources4">
-            <label for="resources4">Other</label>
+            <input type="radio" name="copilot" value="novice" id="copilot-yes">
+            <label for="copilot-yes">Yes</label>
             <br />
         </div>
 
@@ -174,7 +258,7 @@
         <h2>Demographic Questions</h2>
 
         <div class="questions">
-            <p>What industry do you work in?</p>
+            <p>What field do you work in?</p>
             <select name="industry" id="industry">
                 <option value="">Select</option>
                 <option value="None">None</option>
