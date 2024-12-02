@@ -16,16 +16,6 @@
             font-size: 16;
         }
 
-        /* .questions {
-    text-align: left;
-    font-size: 16;
-}
-
-.container{
-    margin-left: 100px;
-    margin-right: 100px;
-} */
-
         body {
             display: flex;
             justify-content: center;
@@ -36,29 +26,12 @@
             color: red;
             text-align: center;
         }
-    </style>
 
-    <!-- <script type="text/javascript">
-    
-    function checkvalueGender(val) {
-        var element=document.getElementById('gender');
-        if(val=="4")
-            element.style.display='inline';
-        else
-            element.style.display='none';
-    }
-    
-    function checkvalue(val, elementName, elementBoxName) {
-        var element=document.getElementById(elementName);
-        var elementbox=document.getElementById(elementBoxName);
-        if(element.checked)
-            elementbox.style.display='inline';
-        else {
-            elementbox.style.display='none';
+        .hidden {
+            display: none;
         }
-    } 
-    
-</script> -->
+
+    </style>
 
 </head>
 
@@ -78,9 +51,11 @@
             <select name="rustExp" id="rustExp">
                 <option value=-1>Select</option>
                 <option value=0>&lt; 1 month</option>
+                <option value=0.5>A few months</option>
                 <option value=1>1 year</option>
                 <option value=2>2 years</option>
                 <option value=3>3 years</option>
+                <option value=3.5>4 years</option>
                 <option value=4>5+ years</option>
             </select>
         </div>
@@ -94,7 +69,37 @@
                 <option value=2>1001 - 10000</option>
                 <option value=3>10001 - 100000</option>
                 <option value=4>More than 100000 lines</option>
-            </select>
+            </select><br><br>
+        </div>
+
+        <div class="questions">
+
+            <label>Have you programmed in a functional language before?</label><br>
+            <input type="radio" name="fp-experience" id="fp-yes" value="yes" onclick="toggleFields(true)"> Yes<br>
+            <input type="radio" name="fp-experience" id="fp-no" value="no" onclick="toggleFields(false)"> No<br><br>
+
+            <div id="fp-languages" class="hidden">
+                <label>If so, which ones?</label><br>
+                <input type="checkbox" id="haskell" name="languages" value="haskell">
+                <label for="haskell">Haskell</label><br>
+                <input type="checkbox" id="scala" name="languages" value="scala">
+                <label for="scala">Scala</label><br>
+                <input type="checkbox" id="ocaml" name="languages" value="ocaml">
+                <label for="ocaml">OCaml</label><br>
+                <input type="checkbox" id="clojure" name="languages" value="clojure">
+                <label for="clojure">Clojure</label><br>
+                <input type="checkbox" id="erlang" name="languages" value="erlang">
+                <label for="erlang">Erlang</label><br>
+                <input type="checkbox" id="common-lisp" name="languages" value="common-lisp">
+                <label for="common-lisp">Common Lisp</label><br>
+                <input type="checkbox" id="other" name="languages" value="other">
+                <label for="other">Other</label><br><br>
+            </div>
+
+            <div id="fp-yoe" class="hidden">
+                <label for="years">If so, how many years of experience do you have in FP?</label><br>
+                <input type="number" id="years" name="years" min="0" max="100" step="1"><br><br>
+            </div>
         </div>
 
         <div class="questions">
@@ -112,6 +117,7 @@
             <input type="radio" name="java" value="expert" id="java-expert">
             <label for="java-expert">Expert</label>
             <br /><br />
+
             <h4>JavaScript</h4>
             <input type="radio" name="javascript" value="none" id="js-none">
             <label for="js-none">None</label>
@@ -125,6 +131,7 @@
             <input type="radio" name="javascript" value="expert" id="js-expert">
             <label for="js-expert">Expert</label>
             <br /><br />
+
             <h4>C</h4>
             <input type="radio" name="clang" value="none" id="c-none">
             <label for="c-none">None</label>
@@ -138,6 +145,21 @@
             <input type="radio" name="clang" value="expert" id="c-expert">
             <label for="c-expert">Expert</label>
             <br /><br />
+
+            <h4>C++</h4>
+            <input type="radio" name="cpp" value="none" id="c-none">
+            <label for="cpp-none">None</label>
+            <br />
+            <input type="radio" name="cpp" value="novice" id="c-novice">
+            <label for="cpp-novice">Novice</label>
+            <br />
+            <input type="radio" name="cpp" value="intermediate" id="c-inter">
+            <label for="cpp-inter">Intermediate</label>
+            <br />
+            <input type="radio" name="cpp" value="expert" id="c-expert">
+            <label for="cpp-expert">Expert</label>
+            <br /><br />
+
             <h4>Python</h4>
             <input type="radio" name="python" value="none" id="python-none">
             <label for="python-none">None</label>
@@ -174,7 +196,7 @@
         <h2>Demographic Questions</h2>
 
         <div class="questions">
-            <p>What industry do you work in?</p>
+            <p>Which field do you work in?</p>
             <select name="industry" id="industry">
                 <option value="">Select</option>
                 <option value="None">None</option>
@@ -233,6 +255,11 @@
     </div>
 
     <script>
+        function toggleFields(show) {
+            document.getElementById('fp-languages').classList.toggle('hidden', !show);
+            document.getElementById('fp-yoe').classList.toggle('hidden', !show);
+        }
+
         document.getElementById('submit').addEventListener("click", () => {
 
             let yearsOfExp = document.getElementById("yearsOfExp").value;
@@ -248,6 +275,10 @@
                 document.getElementById("linesOfCode").focus();
                 return;
             }
+
+            let fp = document.getElementById("fp-yes").checked;
+            let fplanguages = document.getElementsByName("languages");
+            let fpyoe = document.getElementById("fp-yoe").value;
 
             let java = document.querySelectorAll('input[name="java"]');
             let javaExp = '';
@@ -288,6 +319,20 @@
             if (cExp == '') {
                 document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
                 document.getElementById("c").focus();
+                return;
+            }
+
+            let cpp = document.querySelectorAll('input[name="clang"]');
+            let cppExp = '';
+            for (const rb of cpp) {
+                if (rb.checked) {
+                    cppExp = rb.value;
+                    break;
+                }
+            }
+            if (cppExp == '') {
+                document.getElementById("warn").innerHTML = "One or more questions are unanswered.";
+                document.getElementById("cpp").focus();
                 return;
             }
 
@@ -335,60 +380,21 @@
                 return;
             }
 
-            // //checking rustExp - how long they've been programming in Rust
-            // if(document.getElementById("rustExp").value==-1){
-            //     window.alert("Please tell us how long you've been programming in Rust.");
-            // }
-            // //checking java, javascript, clang, and python - what programming languages they have experience in
-            // else if(document.querySelector('input[name="java"]:checked')==null
-            // || document.querySelector('input[name="javascript"]:checked')==null
-            // || document.querySelector('input[name="clang"]:checked')==null
-            // || document.querySelector('input[name="python"]:checked')==null){
-            //     window.alert("Please tell us what programming languages you have experience in.");
-            // }
-            // //checking resources - what resources they used to learn Rust
-            // else if(!(document.getElementById("resources1").checked
-            // ||document.getElementById("resources2").checked
-            // ||document.getElementById("resources3").checked
-            // ||document.getElementById("resources4").checked)) {
-            //     window.alert("Please tell us how you learned Rust.");
-            // }
-            // //checking linesOfCode - how many lines of code they have written
-            // else if(document.getElementById("linesOfCode").value==-1){
-            //     window.alert("Please tell us how many lines of code you've written in Rust.");
-            // }
-            // //checking industry
-            // else if(document.getElementById("industry").value=="Select"){
-            //     window.alert("Please select your industry.");
-            // }
-            // //checking gender
-            // else if(document.getElementById("gender").value==-1){
-            //     window.alert("Please select your gender.");
-            // }
-            // //checking age
-            // else if(document.getElementById("age").value==-1){
-            //     window.alert("Please select your age.");
-            // }
-            // //checking degree
-            // else if(document.getElementById("degree").value==-1){
-            //     window.alert("Please select your level of education.");
-            // }
-            // else{
-            //     //close webview, move onto thank you page
-            //     window.location.replace("thankyoumessage.html");
-            // }
-
 
             let results = {
                 "experience": {
                     "codingExp": yearsOfExp,
                     "rustExp": rustExp,
                     "linesOfCode": linesOfCode,
+                    "fp": fp,
+                    "fpLanguages": fplanguages,
+                    "fpYOE": fpyoe
                 },
                 "languages": {
                     "java": javaExp,
                     "javascript": jsExp,
                     "c": cExp,
+                    "cpp": cppExp,
                     "python": pythonExp,
                 },
                 "resources": {

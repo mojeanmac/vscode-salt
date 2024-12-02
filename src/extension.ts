@@ -8,6 +8,7 @@ import * as path from "path";
 // import { printAllItems } from "./printRust";
 import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
 import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
+import { hashString, logError, countrs, forLoopCount, iterChains} from "./logging";
 
 import { supportedErrorcodes } from "./interventions";
 import * as errorviz from "./interventions/errorviz";
@@ -23,18 +24,6 @@ const SENDINTERVAL = 25;
 const NEWLOGINTERVAL = 1000;
 const TWO_WEEKS = 1209600;
 const YEAR = 31536000;
-const suggestions = [
-  /consider adding a leading/,
-  /consider dereferencing here/,
-  /consider removing deref here/,
-  /consider dereferencing/,
-  /consider borrowing here/,
-  /consider .+borrowing here/,
-  /consider removing the/,
-  /unboxing the value/,
-  /dereferencing the borrow/,
-  /dereferencing the type/,
-];
 
 const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
@@ -330,7 +319,7 @@ export function activate(context: vscode.ExtensionContext) {
         let time = ((Date.now() / 1000) - initialStamp).toFixed(3);
         timeoutHandle = setTimeout(() => {
           //log errors
-          logError(doc, time);
+          logEvent(doc, time);
         }, 2000);
       }
     })
@@ -381,68 +370,25 @@ export function initStudy(context: vscode.ExtensionContext){
  * @param doc contains the current rust document
  * @param time to be subtracted from initial time
  */
-function logError(doc: vscode.TextDocument, time: string){
-  interface ErrorJson {
-    code: string | number,
-      msg: string,
-      source: string | undefined,
-      hint: string,
-      range:{
-        start: number,
-        end: number
-      }
-  }
+function logEvent(doc: vscode.TextDocument, time: string){
 
   let diagnostics = vscode.languages
-            .getDiagnostics(doc.uri)
-            .filter((d) => {
-              return (
-                d.severity === vscode.DiagnosticSeverity.Error &&
-                typeof d.code === "object" &&
-                typeof d.code.value === "string"
-              );
-            });
-
-  //for every error create a JSON object in the errors list
-  let errors: ErrorJson[] = [];
-  for (const diag of diagnostics) {
-    if (diag.code === undefined || typeof diag.code === "number" || typeof diag.code === "string") {
-      log.error("unexpected diag.code type", typeof diag.code);
-      return;
-    }
-    let code = diag.code.value;
-
-    //syntax errors dont follow Rust error code conventions
-    if (typeof code === "string" && code[0] !== 'E'){
-      code = "Syntax";
-    }
-
-    //do any of the hints match our ref/deref patterns?
-    let hint = "";
-    if (diag.relatedInformation !== undefined){
-      diag.relatedInformation.forEach((info) => {
-        suggestions.forEach((suggestion) => {
-          if (suggestion.test(info.message)){
-            hint = info.message;
-          }
-        });
-      });
-    }
-
-    //add error data to list
-    errors.push({
-      code: code,
-      msg: hashString(diag.message),
-      source: diag.source,
-      hint: hint,
-      range:{
-        start: diag.range.start.line,
-        end: diag.range.end.line
-      }
+    .getDiagnostics(doc.uri)
+    .filter((d) => {
+      return (
+        d.severity === vscode.DiagnosticSeverity.Error &&
+        typeof d.code === "object" &&
+        typeof d.code.value === "string"
+      );
     });
-  }
+
+  let errors = logError(diagnostics);
+
   //get linecount of codebase
   countrs().then((count) => {
+    const text = doc.getText();
+    const forLoops = forLoopCount(text);
+    const chains = iterChains(text);
     //write to file
     const entry = JSON.stringify({
       file: hashString(doc.fileName),
@@ -451,6 +397,8 @@ function logError(doc: vscode.TextDocument, time: string){
       revis: visToggled,
       length: doc.lineCount,
       numfiles: count,
+      iterChains: chains,
+      numForLoops: forLoops,
       errors: errors
     }) + '\n';
     stream.write(entry);
@@ -458,23 +406,6 @@ function logError(doc: vscode.TextDocument, time: string){
     linecnt++;
     visToggled = false;
   });
-}
-
-async function countrs(): Promise<number> {
-  //get all Rust files in the workspace
-  const files = await vscode.workspace.findFiles('**/*.rs');
-  return files.length;
-}
-
-/**
- * Hashes + truncates strings to 8 characters
- * @param input string to be hashed
- * @returns hashed string
- */
-function hashString(input: string): string {
-  const hash = crypto.createHash('sha256');
-  hash.update(input);
-  return hash.digest('hex').slice(0,8);
 }
 
 function updateInterventions(editor: vscode.TextEditor) {
