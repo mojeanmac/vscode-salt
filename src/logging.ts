@@ -62,61 +62,6 @@ export async function countrs(): Promise<number> {
     const files = await vscode.workspace.findFiles('**/*.rs');
     return files.length;
 }
-  
-export function forLoopCount(text: string): number {
-    const forLoopRegex = /\bfor\s+\w+\s+in\s+/g;
-    const forLoopMatches = text.match(forLoopRegex);
-    return forLoopMatches ? forLoopMatches.length : 0;
-
-}
-
-export function iterChains(text: string): string[][] {
-  text = text.replace(/\s/g, ''); // remove whitespace
-  const methodsPattern = iteratorMethods.map(method => `\\.${method}\\(`).join("|");
-  const methodsRegex = new RegExp(`${methodsPattern}`, "g");
-  const iterChains: string[][] = [];
-  let currentChain: string[] = [];
-  let depth = 0; // To track parentheses depth
-  let idx = 0;
-
-  while (idx < text.length) {
-    methodsRegex.lastIndex = idx;
-    const match = methodsRegex.exec(text);
-
-    // no more matches, exit loop
-    if (!match) {
-      iterChains.push(currentChain);
-      break;
-    }
-
-    // start a new chain
-    const matchStart = match.index;
-    console.log(idx);
-    console.log("matchStart", matchStart);
-    if (matchStart !== idx) {
-      iterChains.push(currentChain);
-      currentChain = [];
-    }
-    const method = match[0];
-    currentChain.push(method.slice(1, -1));
-
-    // move to the character after the method name and first parenthesis
-    idx = matchStart + method.length;
-    console.log("new idx", idx);
-    depth = 1;
-    while (depth !== 0 && idx < text.length) {
-        const char = text[idx];
-        if (char === "(") {
-          depth++;
-        } else if (char === ")") {
-          depth--;
-        }
-        idx++;
-    }
-  }
-
-  return iterChains.slice(1);
-}
 
 /**
  * Hashes + truncates strings to 8 characters

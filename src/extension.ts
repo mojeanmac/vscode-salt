@@ -5,10 +5,10 @@ import * as crypto from 'crypto';
 import * as fs from "fs";
 import * as path from "path";
 
-// import { printAllItems } from "./printRust";
+import { printExprs } from "./printRust";
 import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
 import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
-import { hashString, logError, countrs, forLoopCount, iterChains} from "./logging";
+import { hashString, logError, countrs} from "./logging";
 
 import { supportedErrorcodes } from "./interventions";
 import * as errorviz from "./interventions/errorviz";
@@ -55,17 +55,17 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   //one time notif for existing participants to do quiz
-  if (context.globalState.get("quiznotif") === undefined //not yet notified
-      && context.globalState.get("quiz") === undefined //not done quiz
-      && context.globalState.get("participation") === true){ //but is a participant
+  // if (context.globalState.get("quiznotif") === undefined //not yet notified
+  //     && context.globalState.get("quiz") === undefined //not done quiz
+  //     && context.globalState.get("participation") === true){ //but is a participant
     
-    vscode.window.showInformationMessage("SALT would like you take a short quiz on Rust topics!", "Take Quiz").then((sel) => {
-      if (sel === "Take Quiz") {
-        renderQuiz(context, logDir!);
-      }
-    });
-    context.globalState.update("quiznotif", true);
-  }
+    // vscode.window.showInformationMessage("Are you a functional or an imperative programmer? Quiz yourself to find out!", "Take Quiz", "Maybe Later").then((sel) => {
+    //   if (sel === "Take Quiz") {
+    //     renderQuiz(context, logDir!);
+    //   }
+    // });
+    // context.globalState.update("quiznotif", true);
+  // }
 
   if (context.globalState.get("participation") === true){
 
@@ -268,15 +268,30 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      // printAllItems(context);
-
       let doc = editor.document;
       if (vscode.workspace.getConfiguration("salt").get("errorLogging") && context.workspaceState.get("enabled") === true
           && context.globalState.get("participation") === true && stream !== undefined){
-        let savedAt = JSON.stringify({file: hashString(doc.fileName), savedAt: ((Date.now() / 1000) - initialStamp).toFixed(3)}) + "\n";
-        stream.write(savedAt);
-        output.append(savedAt);
+
+        const savedMsg = JSON.stringify({
+          file: hashString(doc.fileName),
+          savedAt: ((Date.now() / 1000) - initialStamp).toFixed(3),
+        }) + "\n";
+        stream.write(savedMsg);
+        output.append(savedMsg);
         linecnt++;
+
+        const exprsWrite = async() => {
+          const exprs = await printExprs(context);
+          const exprsMsg = JSON.stringify({
+            file: hashString(doc.fileName),
+            exprs: exprs,
+          }) + "\n";
+        stream.write(exprsMsg);
+        output.append(exprsMsg);
+        linecnt++;
+        };
+        exprsWrite().catch(console.error);
+
         //send telemetry every SENDINTERVAL lines
         if (linecnt % SENDINTERVAL === 0){
           output.append("Sending telemetry...\n");
@@ -291,7 +306,7 @@ export function activate(context: vscode.ExtensionContext) {
             [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
           }
         }
-      }
+      };
     })
   );
 
@@ -386,9 +401,6 @@ function logEvent(doc: vscode.TextDocument, time: string){
 
   //get linecount of codebase
   countrs().then((count) => {
-    const text = doc.getText();
-    const forLoops = forLoopCount(text);
-    const chains = iterChains(text);
     //write to file
     const entry = JSON.stringify({
       file: hashString(doc.fileName),
@@ -397,8 +409,6 @@ function logEvent(doc: vscode.TextDocument, time: string){
       revis: visToggled,
       length: doc.lineCount,
       numfiles: count,
-      iterChains: chains,
-      numForLoops: forLoops,
       errors: errors
     }) + '\n';
     stream.write(entry);

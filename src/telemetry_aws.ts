@@ -119,7 +119,7 @@ function compressData(data: string): Promise<string> {
 
 /**
  * Checks if the current workspace is a public github repo
- * @param workspacePath - path to the workspace
+ * @param workspacePath path to the workspace
  * @returns true if the workspace is verified to be public, false otherwise
  */
 async function isPrivateRepo(workspacePath: string): Promise<boolean> {

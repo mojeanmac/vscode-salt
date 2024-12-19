@@ -4,12 +4,10 @@ import * as cp from "child_process";
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
+import * as _ from "lodash";
 
-// declare const TOOLCHAIN: {
-//   channel: string;
-//   components: string[];
-// };
-const TOOLCHAINCHANNEL = "nightly-2024-01-24";
+const CHANNEL = "nightly-2024-12-01";
+const COMPONENTS = ["clippy", "rust-src", "rustc-dev", "llvm-tools-preview"];
 type Result<T> = { Ok: T } | { Err: String };
 
 /* eslint no-undef: "off" */
@@ -18,16 +16,10 @@ const LIBRARY_PATHS: Partial<Record<NodeJS.Platform, string>> = {
   win32: "LIB",
 };
 
-// from flowistry
-export let cargo_bin = () => {
-  let cargo_home = process.env.CARGO_HOME || path.join(os.homedir(), ".cargo");
-  return path.join(cargo_home, "bin");
-};
-
 export const get_opts = async (cwd: string) => {
   const rustc_path = await exec_notify(
     "rustup",
-    ["which", "--toolchain", TOOLCHAINCHANNEL, "rustc"],
+    ["which", "--toolchain", CHANNEL, "rustc"],
     "Waiting for rustc..."
   );
   const target_info = await exec_notify(
@@ -37,8 +29,6 @@ export const get_opts = async (cwd: string) => {
   );
 
   const [target_libdir, sysroot] = target_info.split("\n");
-  // console.log("Target libdir:", target_libdir);
-  // console.log("Sysroot: ", sysroot);
 
   const library_path = LIBRARY_PATHS[process.platform] || "LD_LIBRARY_PATH";
 
@@ -104,43 +94,117 @@ export let exec_notify = async (
   return text.trimEnd();
 };
 
-export async function printAllItems(context: vscode.ExtensionContext) {
-  // get current project directory
+export let cargo_bin = () => {
+  let cargo_home = process.env.CARGO_HOME || path.join(os.homedir(), ".cargo");
+  return path.join(cargo_home, "bin");
+};
+
+export let cargo_command = (): [string, string[]] => {
+  let cargo = "cargo";
+  let toolchain = `+${CHANNEL}`;
+  return [cargo, [toolchain]];
+};
+
+let findWorkspaceRoot = async (): Promise<string | null> => {
   let folders = vscode.workspace.workspaceFolders;
   if (!folders || folders.length === 0) {
     console.log("No folders exist");
     return null;
   }
 
-  // want to replace with a func like findWorkspaceRoot
-  let projectPath = folders[0].uri.fsPath;
+  let hasCargoToml = async (dir: string) => {
+    let manifestPath = path.join(dir, "Cargo.toml");
+    let manifestUri = vscode.Uri.file(manifestPath);
+    try {
+      await vscode.workspace.fs.stat(manifestUri);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  let folderPath = folders[0].uri.fsPath;
+  if (await hasCargoToml(folderPath)) { return folderPath; }
+
+  let activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor) {
+    console.log("No active editor exists");
+    return null;
+  }
+
+  let activeFilePath = activeEditor.document.fileName;
+  console.log(`Looking for workspace root between ${folderPath} and ${activeFilePath}`);
+
+  let components = path.relative(folderPath, activeFilePath).split(path.sep);
+  let folderSubdirTil = (idx: number) =>
+    path.join(folderPath, ...components.slice(0, idx));
+  let prefixHasToml = await Promise.all(
+    _.range(components.length).map((idx) => ({
+      idx,
+      has: hasCargoToml(folderSubdirTil(idx)),
+    }))
+  );
+  let entry = prefixHasToml.find(({ has }) => has);
+  if (entry === undefined) { return null; }
+
+  return folderSubdirTil(entry.idx);
+};
+
+export async function printExprs(context: vscode.ExtensionContext): Promise<JSON | null>  {
+  let workspace_root = await findWorkspaceRoot();
+  if (!workspace_root) {
+    console.log("Failed to find workspace root!");
+    return null;
+  }
+  console.log("Workspace root", workspace_root);
+
+  let [cargo, cargo_args] = cargo_command();
 
   //check if binary is installed first!
   if(!fs.existsSync(path.join(cargo_bin(), "cargo-salt"))){
     // install binary
-    exec_notify(  // flowistry actually downloads the crate from crates.io!!
-      "cargo",
-      ["install","--path", "./crates/salt"],
-      "Installing crates...");
-  }
-
-  let opts = await get_opts(projectPath);
-
-    let output;
-    try {
-      output = await exec_notify(
-        "cargo",
-        ["salt"],
-        "Printing all items...",
-        opts
+    let components = COMPONENTS.map((c) => ["-c", c]).flat();
+    try{
+      await exec_notify(
+        "rustup",
+        [
+          "toolchain",
+          "install",
+          CHANNEL,
+          "--profile",
+          "minimal",
+          ...components,
+        ],
+        "Installing nightly Rust..."
       );
-      console.log(output);
-      return output;
-    } catch (e: any) {
-      console.log(e);
-      return e;
+      await exec_notify(  // flowistry actually downloads the crate from crates.io!!
+        "cargo",
+        ["install",
+          "--path",
+          "/Users/molly/Documents/GitHub/vscode-errorviz/crates/salt_ide"
+        ],
+        "Installing crates...");
     }
+    catch (e: any) {
+      console.log(e);
+      return null;
+    }
+  }
+  let opts = await get_opts(workspace_root);
+
+  let output;
+  try {
+    output = await exec_notify_binary(
+      cargo,
+      [...cargo_args, "salt"],
+      "Printing all items...", 
+      opts
+    );
+    let output_str = output.toString("utf8");
+    console.log(output_str);
+    return JSON.parse(output_str);
+  } catch (e: any) {
+    console.log(e);
+    return null;
+  }
 }
-//TODO:
-//locate cargo.toml, can't assume it's in project root
-//improve error handling
