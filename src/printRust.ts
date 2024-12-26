@@ -1,3 +1,4 @@
+//!! much of this comes from https://github.com/willcrichton/flowistry/blob/master/ide/src/setup.ts
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as cp from "child_process";
