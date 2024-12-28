@@ -1,17 +1,14 @@
 //! sample print-all-items plugin from rustc_plugin examples
 
 use std::{borrow::Cow, env, process::Command};
-
 use clap::Parser;
-use rustc_hir::intravisit::{self, Visitor};
-use rustc_hir::{Expr, HirId, ItemKind, TyKind, Body, FnSig, PatKind, ExprKind};
-use rustc_utils::TyExt;
-use std::collections::HashMap;
 use rustc_middle::ty::TyCtxt;
 use rustc_plugin::{CrateFilter, RustcPlugin, RustcPluginArgs, Utf8Path};
 use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+
+use crate::plugin::walk_exprs::*;
 
 // This struct is the plugin provided to the rustc_plugin framework,
 // and it must be exported for use by the CLI/driver binaries.
@@ -90,182 +87,40 @@ impl rustc_driver::Callbacks for PrintExprsCallbacks {
   }
 }
 
-// The core of our analysis. It doesn't do much, just access some methods on the `TyCtxt`.
-// I recommend reading the Rustc Development Guide to better understand which compiler APIs
-// are relevant to whatever task you have.
-fn print_exprs(tcx: TyCtxt) {
-  let hir = tcx.hir();
-  let mut visitor = HirVisitor::new(tcx);
-  hir.walk_toplevel_module(&mut visitor);
-  let function_info = function_defs(tcx);
-
-  let result = PrintResult {
-    crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),
-    loop_count: visitor.loop_count,
-    match_count: visitor.match_count,
-    exprs: visitor.exprs
-      .values() // Ignore the id, iterate only over the values (methods)
-      .cloned() // Clone each Vec<String>
-      .collect(),
-    pure_fns: function_info.pure_fns
-      .iter()
-      .map(|hir_id| format!("{:?}", hir_id))
-      .collect(),
-    mut_fns: function_info.mut_fns
-      .iter()
-      .map(|hir_id| format!("{:?}", hir_id))
-      .collect(),
-    recursive_fns: visitor.recursive_fns
-      .iter()
-      .map(|hir_id| format!("{:?}", hir_id))
-      .collect(),
-  };
-  match serde_json::to_string(&result) {
-    Ok(json) => println!("{}", json),
-    Err(e) => eprintln!("Failed to serialize results: {}", e),
-  }
-}
-
 #[derive(Serialize, Deserialize)]
 struct PrintResult {
   crate_id: String,
+  lines_hir: usize,
   loop_count: usize,
   match_count: usize,
   exprs: Vec<Vec<String>>,
-  pure_fns: Vec<String>,
+  immut_fns: Vec<String>,
   mut_fns: Vec<String>,
   recursive_fns: Vec<String>,
 }
 
-struct FnInfo {
-  pure_fns: Vec<HirId>,
-  mut_fns: Vec<HirId>,
-}
-
-fn function_defs(tcx: TyCtxt) -> FnInfo {
+fn print_exprs(tcx: TyCtxt) {
   let hir = tcx.hir();
-  let mut info = FnInfo {
-    pure_fns: Vec::new(),
-    mut_fns: Vec::new(),
+  let mut visitor = HirVisitor::new(tcx);
+  hir.visit_all_item_likes_in_crate(&mut visitor);
+  let function_info = function_defs(tcx);
+
+  let result = PrintResult {
+    crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),
+    lines_hir: 0, //TODO: count lines of hir
+    loop_count: visitor.loop_count,
+    match_count: visitor.match_count,
+    exprs: visitor.exprs
+      .values()
+      .cloned()
+      .collect(),
+    immut_fns: function_info.immut_fns,
+    mut_fns: function_info.mut_fns,
+    recursive_fns: visitor.recursive_fns,
   };
-  for id in hir.items() {
-    let item = hir.item(id);
-    if let ItemKind::Fn(sig, _gen, body_id) = item.kind {
-      let is_pure = is_pure(&sig, hir.body(body_id));
-      if is_pure {
-        info.pure_fns.push(id.hir_id());
-      } else {
-        info.mut_fns.push(id.hir_id());
-      }
-    }
-  }
-  info
-}
-
-fn is_pure(sig: &FnSig, body: &Body) -> bool {
-  let type_immut = sig.decl.inputs.iter()
-  .all(|arg| match arg.kind {
-    TyKind::Ref(_, mut_ty) => mut_ty.mutbl.is_not(),
-    TyKind::Ptr(mut_ty) => mut_ty.mutbl.is_not(),
-    _ => true,
-  });
-  
-  let pattern_immut = body.params.iter()
-  .all(|param| match param.pat.kind {
-    PatKind::Binding(mode, ..) => {
-      mode.1.is_not()
-    },
-    _ => true,
-  });
-
-  //TODO: check for body declarations of mut and unsafe blocks
-
-  type_immut && pattern_immut
-}
-
-struct HirVisitor<'tcx> {
-  tcx: TyCtxt<'tcx>,
-  loop_count: usize,
-  match_count: usize,
-  exprs: HashMap<HirId, Vec<String>>,
-  cur_hir_id: Option<HirId>,
-  recursive_fns: Vec<HirId>,
-}
-
-impl<'tcx> HirVisitor<'tcx> {
-  fn new(tcx: TyCtxt<'tcx>) -> Self {
-      Self {
-          tcx,
-          loop_count: 0,
-          match_count: 0,
-          exprs: HashMap::new(),
-          cur_hir_id: None,
-          recursive_fns: Vec::new(),
-      }
-  }
-
-  fn ty_impls_iter(&self, ty: rustc_middle::ty::Ty<'tcx>, expr: &Expr<'tcx>) -> bool {
-    if let Some(iterator_trait_def_id) = self.tcx.lang_items().iterator_trait() {
-      if ty.does_implement_trait(
-          self.tcx,
-          self.tcx.param_env(expr.hir_id.owner),
-          iterator_trait_def_id) {
-        return true
-      }
-    }
-    false
-  }
-}
-
-impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
-
-  fn visit_expr(&mut self, expr: &'tcx Expr<'tcx>) {
-      let typeck_results = self.tcx.typeck(expr.hir_id.owner);
-      match expr.kind {
-          ExprKind::Loop(..) => {
-              self.loop_count += 1;
-              //check for iter in the params?
-          },
-          ExprKind::Match(..) => {
-            self.match_count += 1;
-          },
-          ExprKind::Call(f, _) => { //check for recursion
-            if f.hir_id == expr.hir_id {
-              self.recursive_fns.push(f.hir_id);
-            }
-          },
-          ExprKind::MethodCall(
-            segment,
-            receiver,
-            _params,
-            _span) => {
-            let method_name = segment.ident.to_string();
-            let receiver_type = typeck_results.expr_ty(receiver);
-
-            // does receiver type implement iter trait?
-            if self.ty_impls_iter(receiver_type, expr) {
-
-              match self.cur_hir_id {
-                Some(hir_id) => {
-                  self.exprs
-                    .entry(hir_id)
-                    .or_default()
-                    .push(method_name);
-                }
-                None => {
-                  self.exprs
-                    .entry(expr.hir_id)
-                    .or_default()
-                    .push(method_name);
-                }
-              }
-            }
-          }
-          _ => {
-            self.cur_hir_id = None;
-          }
-      }
-      intravisit::walk_expr(self, expr);
+  match serde_json::to_string(&result) {
+    Ok(json) => println!("{}", json),
+    Err(e) => eprintln!("Failed to serialize results: {}", e),
   }
 }
 
