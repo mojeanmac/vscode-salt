@@ -1,13 +1,15 @@
-use rustc_middle::{ty::TyCtxt, ty};
+use rustc_middle::ty::{TyCtxt, TyKind};
 use rustc_hir::intravisit::{self, Visitor};
-use rustc_hir::{Expr, HirId, ItemKind, TyKind, BodyId, FnSig, PatKind, ExprKind};
+use rustc_hir::{BodyId, Expr, ExprKind, HirId, ItemKind, PatKind};
 use rustc_utils::TyExt;
 use std::collections::HashMap;
 use rustc_middle::hir::nested_filter;
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize)]
 pub struct FnInfo {
-    pub immut_fns: Vec<String>,
-    pub mut_fns: Vec<String>,
+    immut_fns: Vec<String>,
+    mut_fns: Vec<String>,
 }
 
 // item-wise analysis
@@ -19,53 +21,42 @@ pub fn function_defs(tcx: TyCtxt) -> FnInfo {
     };
     for id in hir.items() {
         let item = hir.item(id);
-        if let ItemKind::Fn(sig, _, body_id) = item.kind {
-        let immut_inputs = immut_inputs(tcx, &sig, body_id);
-        if immut_inputs {
-            info.immut_fns.push(item.ident.to_string());
-        } else {
-            info.mut_fns.push(item.ident.to_string());
-        }
+        if let ItemKind::Fn(.., body_id) = item.kind {
+            let immut_inputs = immut_inputs(tcx, body_id);
+            if immut_inputs {
+                info.immut_fns.push(item.ident.to_string());
+            } else {
+                info.mut_fns.push(item.ident.to_string());
+            }
         }
     }
     info
 }
 
 // ensure both type and pattern immutability of inputs
-fn immut_inputs(tcx: TyCtxt, sig: &FnSig, body_id: BodyId) -> bool {
+fn immut_inputs(tcx: TyCtxt, body_id: BodyId) -> bool {
     let typeck_results = tcx.typeck(body_id.hir_id.owner);
-    // unsafe fns actually can't change mutability of params
-    // but unsafe cells can
-    // if sig.header.safety == rustc_hir::Safety::Unsafe {
-    //     return false;
-    // }
-
-    // first ensure type immutability
-    for input in sig.decl.inputs.iter() {
-        let ty = typeck_results.node_type(input.hir_id);
-        if let ty::Adt(def, _) = ty.kind() {
-            if def.is_unsafe_cell() { //TODO: validate w Cell and RefCell
-                return false;
-            }
-        }
-        match input.kind {
-            TyKind::Ref(_, mut_ty) => {
-                if mut_ty.mutbl.is_mut() {
+    let body = tcx.hir().body(body_id);
+    for param in body.params {
+        let ty = typeck_results.node_type(param.hir_id);
+        match ty.kind() {
+            TyKind::Adt(def, _) => {
+                if def.is_unsafe_cell() {
                     return false;
                 }
             },
-            TyKind::Ptr(mut_ty) => {
-                if mut_ty.mutbl.is_mut() {
+            TyKind::Ref(.., mut_ty) => {
+                if mut_ty.is_mut() {
+                    return false;
+                }
+            },
+            TyKind::RawPtr(.., mut_ty) => {
+                if mut_ty.is_mut() {
                     return false;
                 }
             },
             _ => {},
         }
-    }
-
-    // then ensure pattern immutability
-    let body = tcx.hir().body(body_id);
-    for param in body.params.iter() {
         if let PatKind::Binding(mode, ..) = param.pat.kind {
             if mode.1.is_mut() {
                 return false;
@@ -77,12 +68,20 @@ fn immut_inputs(tcx: TyCtxt, sig: &FnSig, body_id: BodyId) -> bool {
 }
 
 pub struct HirVisitor<'tcx> {
-    pub tcx: TyCtxt<'tcx>,
-    pub loop_count: usize,
-    pub match_count: usize,
-    pub exprs: HashMap<HirId, Vec<String>>,
-    pub cur_hir_id: Option<HirId>,
-    pub recursive_fns: Vec<String>,
+    tcx: TyCtxt<'tcx>,
+    loop_count: usize,
+    match_count: usize,
+    iter_mthds: HashMap<HirId, Vec<String>>,
+    cur_hir_id: Option<HirId>,
+    recursive_fns: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct VisitorJson {
+    loop_count: usize,
+    match_count: usize,
+    iter_mthds: Vec<Vec<String>>,
+    recursive_fns: Vec<String>,
 }
 
 impl<'tcx> HirVisitor<'tcx> {
@@ -91,9 +90,18 @@ impl<'tcx> HirVisitor<'tcx> {
             tcx,
             loop_count: 0,
             match_count: 0,
-            exprs: HashMap::new(),
+            iter_mthds: HashMap::new(),
             cur_hir_id: None,
             recursive_fns: Vec::new(),
+        }
+    }
+
+    pub fn to_json(&self) -> VisitorJson {
+        VisitorJson {
+            loop_count: self.loop_count,
+            match_count: self.match_count,
+            iter_mthds: self.iter_mthds.values().cloned().collect(),
+            recursive_fns: self.recursive_fns.clone(),
         }
     }
 
@@ -122,15 +130,23 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
             ExprKind::Loop(..) => {
                 self.loop_count += 1;
             },
-            ExprKind::Match(..) => {
-                self.match_count += 1; //TODO: why does it collect if statements?
-            },
-            ExprKind::Call(f, _) => { //check for recursion (in progress)
-                if f.hir_id == expr.hir_id {
-                self.recursive_fns.push(expr.hir_id.to_string());
-                self.recursive_fns.push(f.hir_id.to_string());
+            ExprKind::Match(.., src) => {
+                if src == rustc_hir::MatchSource::Normal {
+                    self.match_count += 1;
                 }
             },
+            ExprKind::Call(func, ..) => { //check for recursion
+                if let ExprKind::Path(qpath) = func.kind {
+                    if let Some(def_id) = typeck_results
+                            .qpath_res(&qpath, func.hir_id)
+                            .opt_def_id() {
+                        if expr.hir_id.owner.def_id.to_def_id() == def_id {
+                            self.recursive_fns.push(
+                                self.tcx.def_path_str(def_id));
+                        }
+                    }
+                }
+            }
             ExprKind::MethodCall(
                 segment,
                 receiver,
@@ -139,28 +155,22 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
                 let method_name = segment.ident.to_string();
                 let receiver_type = typeck_results.expr_ty(receiver);
 
-                // if segment.hir_id == expr.hir_id {
-                // self.recursive_fns.push(segment.hir_id);
-                // self.recursive_fns.push(expr.hir_id);
-                // }
-
                 // does receiver type implement iter trait?
                 if self.ty_impls_iter(receiver_type, expr) {
-
-                match self.cur_hir_id {
-                    Some(hir_id) => {
-                    self.exprs
-                        .entry(hir_id)
-                        .or_default()
-                        .push(method_name);
+                    match self.cur_hir_id {
+                        Some(hir_id) => {
+                        self.iter_mthds
+                            .entry(hir_id)
+                            .or_default()
+                            .push(method_name);
+                        }
+                        None => {
+                        self.iter_mthds
+                            .entry(expr.hir_id)
+                            .or_default()
+                            .push(method_name);
+                        }
                     }
-                    None => {
-                    self.exprs
-                        .entry(expr.hir_id)
-                        .or_default()
-                        .push(method_name);
-                    }
-                }
                 }
             }
             _ => {

@@ -91,12 +91,8 @@ impl rustc_driver::Callbacks for PrintExprsCallbacks {
 struct PrintResult {
   crate_id: String,
   lines_hir: usize,
-  loop_count: usize,
-  match_count: usize,
-  exprs: Vec<Vec<String>>,
-  immut_fns: Vec<String>,
-  mut_fns: Vec<String>,
-  recursive_fns: Vec<String>,
+  exprs: serde_json::Value,
+  defs: serde_json::Value,
 }
 
 fn print_exprs(tcx: TyCtxt) {
@@ -108,17 +104,10 @@ fn print_exprs(tcx: TyCtxt) {
   let result = PrintResult {
     crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),
     lines_hir: 0, //TODO: count lines of hir
-    loop_count: visitor.loop_count,
-    match_count: visitor.match_count,
-    exprs: visitor.exprs
-      .values()
-      .cloned()
-      .collect(),
-    immut_fns: function_info.immut_fns,
-    mut_fns: function_info.mut_fns,
-    recursive_fns: visitor.recursive_fns,
+    exprs: serde_json::to_value(visitor.to_json()).unwrap(),
+    defs: serde_json::to_value(function_info).unwrap(),
   };
-  match serde_json::to_string(&result) {
+  match serde_json::to_string_pretty(&result) {
     Ok(json) => println!("{}", json),
     Err(e) => eprintln!("Failed to serialize results: {}", e),
   }
