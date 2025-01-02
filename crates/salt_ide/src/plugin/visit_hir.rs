@@ -1,36 +1,69 @@
 use rustc_middle::ty::{TyCtxt, TyKind};
 use rustc_hir::intravisit::{self, Visitor};
-use rustc_hir::{BodyId, Expr, ExprKind, HirId, ItemKind, PatKind};
+use rustc_hir::{Item, BodyId, Expr, ExprKind, HirId, ItemKind, PatKind, def::DefKind};
 use rustc_utils::TyExt;
-use std::collections::HashMap;
 use rustc_middle::hir::nested_filter;
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
-#[derive(Serialize, Deserialize)]
-pub struct FnInfo {
-    immut_fns: Vec<String>,
-    mut_fns: Vec<String>,
+
+// #[derive(Serialize, Deserialize)]
+enum Block {
+    Loop {
+        id: HirId,
+        span: usize,
+    },
+    Match {
+        id: HirId,
+        span: usize,
+        arms: usize,
+    },
+    Def {
+        id: HirId,
+        span: usize,
+        calls: usize,
+    }
 }
 
-// item-wise analysis
-pub fn function_defs(tcx: TyCtxt) -> FnInfo {
-    let hir = tcx.hir();
-    let mut info = FnInfo {
-        immut_fns: Vec::new(),
-        mut_fns: Vec::new(),
-    };
-    for id in hir.items() {
-        let item = hir.item(id);
-        if let ItemKind::Fn(.., body_id) = item.kind {
-            let immut_inputs = immut_inputs(tcx, body_id);
-            if immut_inputs {
-                info.immut_fns.push(item.ident.to_string());
-            } else {
-                info.mut_fns.push(item.ident.to_string());
-            }
+#[derive(Serialize, Deserialize)]
+enum BlockJson {
+    Loop {
+        id: String,
+        span: usize,
+    },
+    Match {
+        id: String,
+        span: usize,
+        arms: usize,
+    },
+    Def {
+        id: String,
+        span: usize,
+        calls: usize,
+    }
+}
+
+impl Block {
+    fn to_json(&self) -> BlockJson {
+        match self {
+            Block::Loop { id, span } => BlockJson::Loop {
+                id: id.to_string(),
+                span: *span,
+            },
+            Block::Match { id, span, arms } => BlockJson::Match {
+                id: id.to_string(),
+                span: *span,
+                arms: *arms,
+            },
+            Block::Def { id, span, calls } => BlockJson::Def {
+                id: id.to_string(),
+                span: *span,
+                calls: *calls,
+            },
         }
     }
-    info
 }
 
 // ensure both type and pattern immutability of inputs
@@ -69,39 +102,51 @@ fn immut_inputs(tcx: TyCtxt, body_id: BodyId) -> bool {
 
 pub struct HirVisitor<'tcx> {
     tcx: TyCtxt<'tcx>,
-    loop_count: usize,
-    match_count: usize,
+    immut_fns: Vec<Block>,
+    mut_fns: Vec<Block>,
+    closures: Vec<Block>,
+    recursive_fns: HashSet<HirId>,
+    loops: Vec<Block>,
+    matches: Vec<Block>,
     iter_mthds: HashMap<HirId, Vec<String>>,
     cur_hir_id: Option<HirId>,
-    recursive_fns: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct VisitorJson {
-    loop_count: usize,
-    match_count: usize,
-    iter_mthds: Vec<Vec<String>>,
+    immut_fns: Vec<BlockJson>,
+    mut_fns: Vec<BlockJson>,
+    closures: Vec<BlockJson>,
     recursive_fns: Vec<String>,
+    loops: Vec<BlockJson>,
+    matches: Vec<BlockJson>,
+    iter_mthds: Vec<Vec<String>>,
 }
 
 impl<'tcx> HirVisitor<'tcx> {
     pub fn new(tcx: TyCtxt<'tcx>) -> Self {
         Self {
             tcx,
-            loop_count: 0,
-            match_count: 0,
+            immut_fns: Vec::new(),
+            mut_fns: Vec::new(),
+            closures: Vec::new(),
+            recursive_fns: HashSet::new(),
+            loops: Vec::new(),
+            matches: Vec::new(),
             iter_mthds: HashMap::new(),
             cur_hir_id: None,
-            recursive_fns: Vec::new(),
         }
     }
 
     pub fn to_json(&self) -> VisitorJson {
         VisitorJson {
-            loop_count: self.loop_count,
-            match_count: self.match_count,
+            immut_fns: self.immut_fns.iter().map(|b| b.to_json()).collect(),
+            mut_fns: self.mut_fns.iter().map(|b| b.to_json()).collect(),
+            closures: self.closures.iter().map(|b| b.to_json()).collect(),
+            recursive_fns: self.recursive_fns.iter().map(|d| d.to_string()).collect(),
+            loops: self.loops.iter().map(|b| b.to_json()).collect(),
+            matches: self.matches.iter().map(|b| b.to_json()).collect(),
             iter_mthds: self.iter_mthds.values().cloned().collect(),
-            recursive_fns: self.recursive_fns.clone(),
         }
     }
 
@@ -124,15 +169,52 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
         self.tcx.hir()
     }
 
+    fn visit_item(&mut self, item: &'tcx Item<'tcx>) {
+        let def_id = item.owner_id.to_def_id();
+        match self.tcx.def_kind(def_id) {
+            DefKind::Fn => {
+                if let ItemKind::Fn(.., body_id) = item.kind {
+                    let func = Block::Def {
+                        id: item.hir_id(),
+                        span: 0, //TODO: get span
+                        calls: 0,
+                    };
+                    let immut_inputs = immut_inputs(self.tcx, body_id);
+                    if immut_inputs {
+                        self.immut_fns.push(func);
+                    } else {
+                        self.mut_fns.push(func);
+                    }
+                }
+            }
+            DefKind::Closure => {
+                self.closures.push(Block::Def {
+                    id: item.hir_id(),
+                    span: 0, //TODO: get span
+                    calls: 0, //if it has a name
+                });
+            }
+            _ => {},
+        }
+        intravisit::walk_item(self, item);
+    }
+
     fn visit_expr(&mut self, expr: &'tcx Expr<'tcx>) {
         let typeck_results = self.tcx.typeck(expr.hir_id.owner);
         match expr.kind {
             ExprKind::Loop(..) => {
-                self.loop_count += 1;
+                self.loops.push(Block::Loop {
+                    id: expr.hir_id,
+                    span: 0, //TODO: get span
+                });
             },
-            ExprKind::Match(.., src) => {
+            ExprKind::Match(_, arms, src) => {
                 if src == rustc_hir::MatchSource::Normal {
-                    self.match_count += 1;
+                    self.matches.push(Block::Match {
+                        id: expr.hir_id,
+                        span: 0, //TODO: get span
+                        arms: arms.len(),
+                    });
                 }
             },
             ExprKind::Call(func, ..) => { //check for recursion
@@ -141,8 +223,8 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
                             .qpath_res(&qpath, func.hir_id)
                             .opt_def_id() {
                         if expr.hir_id.owner.def_id.to_def_id() == def_id {
-                            self.recursive_fns.push(
-                                self.tcx.def_path_str(def_id));
+                            self.recursive_fns.insert(
+                                expr.hir_id);
                         }
                     }
                 }
@@ -180,3 +262,10 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
         intravisit::walk_expr(self, expr);
     }
 }
+
+pub fn hash_string(input: &str) -> String {
+    let mut hasher = DefaultHasher::new();
+    input.hash(&mut hasher);
+    let hash_value = hasher.finish();
+    format!("{}", hash_value)[..8].to_string()
+  }

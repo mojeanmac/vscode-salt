@@ -5,19 +5,17 @@ use clap::Parser;
 use rustc_middle::ty::TyCtxt;
 use rustc_plugin::{CrateFilter, RustcPlugin, RustcPluginArgs, Utf8Path};
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
 
-use crate::plugin::walk_exprs::*;
+use crate::plugin::visit_hir::*;
 
 // This struct is the plugin provided to the rustc_plugin framework,
 // and it must be exported for use by the CLI/driver binaries.
-pub struct PrintExprsPlugin;
+pub struct SaltPlugin;
 
 // To parse CLI arguments, we use Clap for this example. But that
 // detail is up to you.
 #[derive(Parser, Serialize, Deserialize)]
-pub struct PrintExprsPluginArgs {
+pub struct SaltPluginArgs {
   #[arg(short, long)]
   allcaps: bool,
 
@@ -25,8 +23,8 @@ pub struct PrintExprsPluginArgs {
   cargo_args: Vec<String>,
 }
 
-impl RustcPlugin for PrintExprsPlugin {
-  type Args = PrintExprsPluginArgs;
+impl RustcPlugin for SaltPlugin {
+  type Args = SaltPluginArgs;
 
   fn version(&self) -> Cow<'static, str> {
     env!("CARGO_PKG_VERSION").into()
@@ -40,7 +38,7 @@ impl RustcPlugin for PrintExprsPlugin {
   // If one of the CLI arguments was a specific file to analyze, then you
   // could provide a different filter.
   fn args(&self, _target_dir: &Utf8Path) -> RustcPluginArgs<Self::Args> {
-    let args = PrintExprsPluginArgs::parse_from(env::args().skip(1));
+    let args = SaltPluginArgs::parse_from(env::args().skip(1));
     let filter = CrateFilter::AllCrates;
     RustcPluginArgs { args, filter }
   }
@@ -57,17 +55,17 @@ impl RustcPlugin for PrintExprsPlugin {
     compiler_args: Vec<String>,
     plugin_args: Self::Args,
   ) -> rustc_interface::interface::Result<()> {
-    let mut callbacks = PrintExprsCallbacks { args: plugin_args };
+    let mut callbacks = SaltCallbacks { args: plugin_args };
     let compiler = rustc_driver::RunCompiler::new(&compiler_args, &mut callbacks);
     compiler.run()
   }
 }
 
-struct PrintExprsCallbacks {
-  args: PrintExprsPluginArgs,
+struct SaltCallbacks {
+  args: SaltPluginArgs,
 }
 
-impl rustc_driver::Callbacks for PrintExprsCallbacks {
+impl rustc_driver::Callbacks for SaltCallbacks {
   // At the top-level, the Rustc API uses an event-based interface for
   // accessing the compiler at different stages of compilation. In this callback,
   // all the type-checking has completed.
@@ -77,7 +75,7 @@ impl rustc_driver::Callbacks for PrintExprsCallbacks {
     tcx: TyCtxt<'_>,
   ) -> rustc_driver::Compilation {
     // We call our top-level function with access to the type context `tcx` and the CLI arguments.
-    print_exprs(tcx);
+    print(tcx);
 
     // Note that you should generally allow compilation to continue. If
     // your plugin is being invoked on a dependency, then you need to ensure
@@ -91,31 +89,21 @@ impl rustc_driver::Callbacks for PrintExprsCallbacks {
 struct PrintResult {
   crate_id: String,
   lines_hir: usize,
-  exprs: serde_json::Value,
-  defs: serde_json::Value,
+  visit_res: serde_json::Value,
 }
 
-fn print_exprs(tcx: TyCtxt) {
+fn print(tcx: TyCtxt) {
   let hir = tcx.hir();
   let mut visitor = HirVisitor::new(tcx);
   hir.visit_all_item_likes_in_crate(&mut visitor);
-  let function_info = function_defs(tcx);
 
   let result = PrintResult {
     crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),
     lines_hir: 0, //TODO: count lines of hir
-    exprs: serde_json::to_value(visitor.to_json()).unwrap(),
-    defs: serde_json::to_value(function_info).unwrap(),
+    visit_res: serde_json::to_value(visitor.to_json()).unwrap(),
   };
   match serde_json::to_string_pretty(&result) {
     Ok(json) => println!("{}", json),
     Err(e) => eprintln!("Failed to serialize results: {}", e),
   }
-}
-
-fn hash_string(input: &str) -> String {
-  let mut hasher = DefaultHasher::new();
-  input.hash(&mut hasher);
-  let hash_value = hasher.finish();
-  format!("{}", hash_value)[..8].to_string()
 }
