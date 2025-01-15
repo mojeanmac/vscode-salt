@@ -75,7 +75,7 @@ impl rustc_driver::Callbacks for SaltCallbacks {
     tcx: TyCtxt<'_>,
   ) -> rustc_driver::Compilation {
     // We call our top-level function with access to the type context `tcx` and the CLI arguments.
-    print(tcx);
+    print_inferences(tcx);
 
     // Note that you should generally allow compilation to continue. If
     // your plugin is being invoked on a dependency, then you need to ensure
@@ -88,18 +88,16 @@ impl rustc_driver::Callbacks for SaltCallbacks {
 #[derive(Serialize, Deserialize)]
 struct PrintResult {
   crate_id: String,
-  lines_hir: usize,
   visit_res: serde_json::Value,
 }
 
-fn print(tcx: TyCtxt) {
+fn print_inferences(tcx: TyCtxt) {
   let hir = tcx.hir();
   let mut visitor = HirVisitor::new(tcx);
   hir.visit_all_item_likes_in_crate(&mut visitor);
 
   let result = PrintResult {
     crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),
-    lines_hir: 0, //TODO: count lines of hir
     visit_res: serde_json::to_value(visitor.to_json()).unwrap(),
   };
   match serde_json::to_string_pretty(&result) {

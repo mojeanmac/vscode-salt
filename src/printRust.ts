@@ -166,18 +166,18 @@ export async function printExprs(context: vscode.ExtensionContext): Promise<JSON
     // install binary
     let components = COMPONENTS.map((c) => ["-c", c]).flat();
     try{
-      await exec_notify(
-        "rustup",
-        [
-          "toolchain",
-          "install",
-          CHANNEL,
-          "--profile",
-          "minimal",
-          ...components,
-        ],
-        "Installing nightly Rust..."
-      );
+      // await exec_notify( //separate check
+      //   "rustup",
+      //   [
+      //     "toolchain",
+      //     "install",
+      //     CHANNEL,
+      //     "--profile",
+      //     "minimal",
+      //     ...components,
+      //   ],
+      //   "Installing nightly Rust..."
+      // );
       await exec_notify(  // flowistry actually downloads the crate from crates.io!!
         "cargo",
         ["install",
