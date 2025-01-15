@@ -28,6 +28,9 @@ enum Block {
         lines: usize,
         arms: u32,
     },
+    LetExpr {
+        id: HirId,
+    },
     Def {
         args: Args,
         recursive: bool,
@@ -46,6 +49,9 @@ enum BlockJson {
         id: String,
         lines: usize,
         arms: u32,
+    },
+    LetExpr {
+        id: String,
     },
     Def {
         args: serde_json::Value,
@@ -67,6 +73,9 @@ impl Block {
                 lines: *lines,
                 arms: *arms,
             },
+            Block::LetExpr { id } => BlockJson::LetExpr {
+                id: id.to_string(),
+            },
             Block::Def { args, recursive, lines, calls } => BlockJson::Def {
                 args: serde_json::to_value(args).unwrap(),
                 recursive: *recursive,
@@ -81,18 +90,18 @@ pub struct HirVisitor<'tcx> {
     tcx: TyCtxt<'tcx>,
     source_map: &'tcx SourceMap,
     fns: HashMap<DefId, Block>,
-    closures: HashMap<DefId, Block>,
     loops: Vec<Block>,
     matches: Vec<Block>,
+    let_exprs: Vec<Block>,
     iter_mthds: HashMap<OwnerId, Vec<String>>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct VisitorJson {
     fns: HashMap<String, BlockJson>,
-    closures: Vec<BlockJson>,
     loops: Vec<BlockJson>,
     matches: Vec<BlockJson>,
+    let_exprs: Vec<BlockJson>,
     iter_mthds: Vec<Vec<String>>,
 }
 
@@ -102,9 +111,9 @@ impl<'tcx> HirVisitor<'tcx> {
             tcx,
             source_map: tcx.sess.source_map(),
             fns: HashMap::new(),
-            closures: HashMap::new(),
             loops: Vec::new(),
             matches: Vec::new(),
+            let_exprs: Vec::new(),
             iter_mthds: HashMap::new(),
         }
     }
@@ -112,9 +121,9 @@ impl<'tcx> HirVisitor<'tcx> {
     pub fn to_json(&self) -> VisitorJson {
         VisitorJson {
             fns: self.fns.iter().map(|(k, v)| (format!("{:?}", k), v.to_json()) ).collect(),
-            closures: self.closures.values().map(|b| b.to_json()).collect(),
             loops: self.loops.iter().map(|b| b.to_json()).collect(),
             matches: self.matches.iter().map(|b| b.to_json()).collect(),
+            let_exprs: self.let_exprs.iter().map(|b| b.to_json()).collect(),
             iter_mthds: self.iter_mthds.values().cloned().collect(),
         }
     }
@@ -126,6 +135,7 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
         self.tcx.hir()
     }
 
+    // visit functions, including traits and impls which may have nested fns
     fn visit_item(&mut self, item: &'tcx Item<'tcx>) {
         let def_id = item.owner_id.to_def_id();
         if self.tcx.def_kind(def_id) == DefKind::Fn {
@@ -206,6 +216,11 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
                     });
                 }
             },
+            ExprKind::Let(..) => {
+                self.let_exprs.push(Block::LetExpr {
+                    id: expr.hir_id,
+                });
+            },
             ExprKind::Call(func, ..) => {
                 if let ExprKind::Path(qpath) = func.kind {
                     if let Some(def_id) = typeck_results
@@ -261,7 +276,7 @@ fn visit_args(tcx: TyCtxt, body_id: BodyId) -> Args {
         let ty = typeck_results.node_type(param.hir_id);
         tys.push(ty.to_string());
 
-        if ty_anon_closure(tcx, &ty, body_id.hir_id.owner.to_def_id()) {
+        if is_ty_closure(tcx, &ty, body_id.hir_id.owner.to_def_id()) {
             closure_count += 1;
         }
         match ty.kind() {
@@ -289,10 +304,10 @@ fn visit_args(tcx: TyCtxt, body_id: BodyId) -> Args {
     }
 }
 
-fn ty_anon_closure<'tcx>(tcx: TyCtxt<'tcx>, ty: &Ty<'tcx>, def_id: DefId) -> bool {
+fn is_ty_closure<'tcx>(tcx: TyCtxt<'tcx>, ty: &Ty<'tcx>, def_id: DefId) -> bool {
     let param_env = tcx.param_env(def_id);
     let lang_items = tcx.lang_items();
-
+    
     if let Some(fn_trait) = lang_items.fn_trait() {
         if ty.does_implement_trait(tcx, param_env, fn_trait) {
             return true;
