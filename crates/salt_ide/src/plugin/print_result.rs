@@ -86,9 +86,9 @@ impl rustc_driver::Callbacks for SaltCallbacks {
 }
 
 #[derive(Serialize, Deserialize)]
-struct PrintResult {
+pub struct PrintResult {
   crate_id: String,
-  visit_res: serde_json::Value,
+  pub(crate) visit_res: serde_json::Value,
 }
 
 fn print_inferences(tcx: TyCtxt) {
@@ -100,7 +100,7 @@ fn print_inferences(tcx: TyCtxt) {
     crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),
     visit_res: serde_json::to_value(visitor.to_json()).unwrap(),
   };
-  match serde_json::to_string_pretty(&result) {
+  match serde_json::to_string(&result) {
     Ok(json) => println!("{}", json),
     Err(e) => eprintln!("Failed to serialize results: {}", e),
   }

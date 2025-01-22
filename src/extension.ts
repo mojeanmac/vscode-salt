@@ -6,9 +6,9 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { printExprs } from "./printRust";
-import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry_aws";
+import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry";
 import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
-import { hashString, logError, countrs} from "./logging";
+import { hashString, logError, countrs} from "./logging_utils";
 
 import { supportedErrorcodes } from "./interventions";
 import * as errorviz from "./interventions/errorviz";

@@ -4,6 +4,7 @@ import axios from "axios";
 import { Octokit } from '@octokit/rest';
 import simpleGit from 'simple-git';
 import { deflate } from 'zlib';
+import { copilotStatus } from "./logging_utils";
 
 export { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo};
 
@@ -16,17 +17,17 @@ export { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo};
  */
 function openExistingLog(logDir: string, enableExt: boolean, timeSinceStart: number): [string, number, number, fs.WriteStream]{
     //find how many json files are in folder to determine current log #
-    let fileCount = fs.readdirSync(logDir)
+    let logCount = fs.readdirSync(logDir)
         .filter(f => path.extname(f) === ".json").length;
-    const logPath = path.join(logDir, `log${fileCount}.json`);
+    const logPath = path.join(logDir, `log${logCount}.json`);
 
     //timesincestart = (initialStamp - startDate)
-    fs.writeFileSync(logPath, JSON.stringify({extensionReload: {studyEnabled: enableExt, timeSinceStart: timeSinceStart}}) + '\n', {flag: 'a'});
+    fs.writeFileSync(logPath, JSON.stringify({extensionReload: {studyEnabled: enableExt, timeSinceStart, copilotStatus}}) + '\n', {flag: 'a'});
     let linecnt = fs.readFileSync(logPath, 'utf-8').split('\n').length;
     //create new stream
     const stream = fs.createWriteStream(logPath, {flags: 'a'});
 
-    return [logPath, fileCount, linecnt, stream];
+    return [logPath, logCount, linecnt, stream];
 }
 
 /**
@@ -37,17 +38,17 @@ function openExistingLog(logDir: string, enableExt: boolean, timeSinceStart: num
  * @returns path of current log, line count, and the stream
  */
 function openNewLog(logDir: string, enableExt: boolean, uuid: string): [string, number, number, fs.WriteStream]{
-    let fileCount = fs.readdirSync(logDir)
+    let logCount = fs.readdirSync(logDir)
         .filter(f => path.extname(f) === ".json").length;
 
-    fileCount++; //we are creating a new file, so increment the count
-    const logPath = path.join(logDir, `log${fileCount}.json`);
+    logCount++; //we are creating a new file, so increment the count
+    const logPath = path.join(logDir, `log${logCount}.json`);
 
-    fs.writeFileSync(logPath, JSON.stringify({logCount: fileCount, uuid: uuid, studyEnabled: enableExt}) + '\n', {flag: 'a'});
+    fs.writeFileSync(logPath, JSON.stringify({logCount, uuid, studyEnabled: enableExt}) + '\n', {flag: 'a'});
     let linecnt = 0;
 
     const stream = fs.createWriteStream(logPath, {flags: 'a'});
-    return [logPath, fileCount, linecnt, stream];
+    return [logPath, logCount, linecnt, stream];
 }
 
 /**

@@ -10,87 +10,94 @@ use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-#[derive(Serialize, Deserialize)]
-struct Args {
-    total: u32,
-    mut_count: u32,
-    closure_traits: Vec<String>,
-    tys: Vec<String>,
+#[derive(Serialize, Deserialize, Default)]
+pub(crate) struct Params {
+    pub(crate) total: u32,
+    pub(crate) mut_count: u32,
+    pub(crate) closure_traits: Vec<String>,
+    pub(crate) ty_kinds: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]
-struct Return {
-    mutabl: bool,
-    closure_trait: Option<String>,
-    ty: String,
+pub(crate) struct Return {
+    pub(crate) mutabl: bool,
+    pub(crate) closure_trait: Option<String>,
+    pub(crate) ty_kind: String,
+}
+
+impl Default for Return {
+    fn default() -> Self {
+        Return {
+            mutabl: false,
+            closure_trait: None,
+            ty_kind: "()".to_string()
+        }
+    }
 }
 
 enum Block {
     Loop {
-        id: HirId,
+        def_id: DefId,
         lines: usize,
     },
     Match {
-        id: HirId,
+        def_id: DefId,
         lines: usize,
         arms: u32,
     },
     LetExpr {
-        id: HirId,
+        def_id: DefId,
     },
     Def {
-        args: Args,
+        params: Params,
         ret: Return,
         recursive: bool,
         lines: usize,
-        calls: u32,
     }
 }
 
-#[derive(Serialize, Deserialize)]
-enum BlockJson {
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+pub enum BlockJson {
     Loop {
-        id: String,
+        def_id: String,
         lines: usize,
     },
     Match {
-        id: String,
+        def_id: String,
         lines: usize,
         arms: u32,
     },
     LetExpr {
-        id: String,
+        def_id: String,
     },
     Def {
-        args: serde_json::Value,
+        params: serde_json::Value,
         ret: serde_json::Value,
         recursive: bool,
         lines: usize,
-        calls: u32,
     }
 }
 
 impl Block {
     fn to_json(&self) -> BlockJson {
         match self {
-            Block::Loop { id, lines } => BlockJson::Loop {
-                id: id.to_string(), //hashed later on
+            Block::Loop { def_id, lines } => BlockJson::Loop {
+                def_id: format!("{:?}", def_id),
                 lines: *lines,
             },
-            Block::Match { id, lines, arms } => BlockJson::Match {
-                id: id.to_string(),
+            Block::Match { def_id, lines, arms } => BlockJson::Match {
+                def_id: format!("{:?}", def_id),
                 lines: *lines,
                 arms: *arms,
             },
-            Block::LetExpr { id } => BlockJson::LetExpr {
-                id: id.to_string(),
+            Block::LetExpr { def_id } => BlockJson::LetExpr {
+                def_id: format!("{:?}", def_id),
             },
-            Block::Def { args, ret, recursive, lines, calls } => BlockJson::Def {
-                args: serde_json::to_value(args).unwrap(),
+            Block::Def { params, ret, recursive, lines } => BlockJson::Def {
+                params: serde_json::to_value(params).unwrap(),
                 ret: serde_json::to_value(ret).unwrap(),
                 recursive: *recursive,
                 lines: *lines,
-                calls: *calls,
             }            
         }
     }
@@ -104,15 +111,17 @@ pub struct HirVisitor<'tcx> {
     matches: Vec<Block>,
     let_exprs: Vec<Block>,
     iter_mthds: HashMap<OwnerId, Vec<String>>,
+    calls: HashMap<DefId, u32>
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct VisitorJson {
-    fns: HashMap<String, BlockJson>,
-    loops: Vec<BlockJson>,
-    matches: Vec<BlockJson>,
-    let_exprs: Vec<BlockJson>,
-    iter_mthds: Vec<Vec<String>>,
+    pub(crate) fns: HashMap<String, BlockJson>,
+    pub(crate) loops: Vec<BlockJson>,
+    pub(crate) matches: Vec<BlockJson>,
+    pub(crate) let_exprs: Vec<BlockJson>,
+    pub(crate) iter_mthds: Vec<Vec<String>>,
+    pub(crate) calls: HashMap<String, u32>
 }
 
 impl<'tcx> HirVisitor<'tcx> {
@@ -125,16 +134,18 @@ impl<'tcx> HirVisitor<'tcx> {
             matches: Vec::new(),
             let_exprs: Vec::new(),
             iter_mthds: HashMap::new(),
+            calls: HashMap::new()
         }
     }
 
     pub fn to_json(&self) -> VisitorJson {
         VisitorJson {
-            fns: self.fns.iter().map(|(k, v)| (format!("{:?}", k), v.to_json()) ).collect(),
+            fns: self.fns.iter().map(|(k, v)| (format!("{:?}", k), v.to_json())).collect(),
             loops: self.loops.iter().map(|b| b.to_json()).collect(),
             matches: self.matches.iter().map(|b| b.to_json()).collect(),
             let_exprs: self.let_exprs.iter().map(|b| b.to_json()).collect(),
             iter_mthds: self.iter_mthds.values().cloned().collect(),
+            calls: self.calls.iter().map(|(k, v)| (format!("{:?}", k), *v)).collect()
         }
     }
 }
@@ -151,14 +162,13 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
         if self.tcx.def_kind(def_id) == DefKind::Fn {
             match item.kind {
                 ItemKind::Fn(.., body_id) => { 
-                    let args = visit_args(self.tcx, body_id);
+                    let params = visit_params(self.tcx, body_id);
                     let ret = visit_return(self.tcx, body_id);
                     self.fns.insert(def_id, Block::Def {
-                        args,
+                        params,
                         ret,
                         recursive: false,
                         lines: line_count(self.source_map, item.span),
-                        calls: 0,
                     });
                     let body = self.tcx.hir().body(body_id);
                     for param in body.params {
@@ -185,14 +195,13 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
 
     fn visit_impl_item(&mut self, item: &'tcx rustc_hir::ImplItem<'tcx>) {
         if let rustc_hir::ImplItemKind::Fn(.., body_id) = item.kind {
-            let args = visit_args(self.tcx, body_id);
+            let params = visit_params(self.tcx, body_id);
             let ret = visit_return(self.tcx, body_id);
             self.fns.insert(item.owner_id.to_def_id(), Block::Def {
-                args,
+                params,
                 ret,
                 recursive: false,
                 lines: line_count(self.source_map, item.span),
-                calls: 0,
             });
         }
         intravisit::walk_impl_item(self, item);
@@ -201,14 +210,13 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
     fn visit_trait_item(&mut self, item: &'tcx rustc_hir::TraitItem<'tcx>){ //TODO verify
         if let rustc_hir::TraitItemKind::Fn(..) = item.kind {
             let body_id = BodyId { hir_id: item.hir_id() };
-            let args = visit_args(self.tcx, body_id);
+            let params = visit_params(self.tcx, body_id);
             let ret = visit_return(self.tcx, body_id);
             self.fns.insert(item.owner_id.to_def_id(), Block::Def {
-                args,
+                params,
                 ret,
                 recursive: false,
                 lines: line_count(self.source_map, item.span),
-                calls: 0,
             });
         }
         intravisit::walk_trait_item(self, item)
@@ -219,14 +227,14 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
         match expr.kind {
             ExprKind::Loop(..) => {
                 self.loops.push(Block::Loop {
-                    id: expr.hir_id,
+                    def_id: expr.hir_id.owner.to_def_id(),
                     lines: line_count(self.source_map, expr.span),
                 });
             },
             ExprKind::Match(.., arms, src) => {
                 if src == rustc_hir::MatchSource::Normal {
                     self.matches.push(Block::Match {
-                        id: expr.hir_id,
+                        def_id: expr.hir_id.owner.to_def_id(),
                         lines: line_count(self.source_map, expr.span),
                         arms: arms.len() as u32,
                     });
@@ -234,7 +242,7 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
             },
             ExprKind::Let(..) => {
                 self.let_exprs.push(Block::LetExpr {
-                    id: expr.hir_id,
+                    def_id: expr.hir_id.owner.to_def_id(),
                 });
             },
             ExprKind::Call(func, ..) => {
@@ -250,10 +258,8 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
                             }
                         }
                         // increment local fn calls
-                        if self.fns.contains_key(&def_id) {
-                            if let Block::Def { calls, .. } = self.fns.get_mut(&def_id).unwrap() {
-                                *calls += 1;
-                            }
+                        if def_id.is_local() {
+                            *self.calls.entry(def_id).or_insert(0) += 1;
                         }
                     }
                 }
@@ -281,16 +287,16 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
 }
 
 // count mutable arguments and closure arguments
-fn visit_args(tcx: TyCtxt, body_id: BodyId) -> Args {
+fn visit_params(tcx: TyCtxt, body_id: BodyId) -> Params {
     let mut mut_count = 0;
     let mut closure_traits = Vec::new();
-    let mut tys = Vec::new();
+    let mut ty_kinds = Vec::new();
 
     let typeck_results = tcx.typeck(body_id.hir_id.owner);
     let body = tcx.hir().body(body_id);
     for param in body.params {
         let ty = typeck_results.node_type(param.hir_id);
-        tys.push(ty.to_string());
+        ty_kinds.push(format!("{:?}", ty.kind()));
 
         if let Some(closure_trait) = is_ty_closure(tcx, &ty, body_id.hir_id.owner.to_def_id()) {
             closure_traits.push(closure_trait);
@@ -313,17 +319,18 @@ fn visit_args(tcx: TyCtxt, body_id: BodyId) -> Args {
             if mode.1.is_mut() { mut_count += 1; }
         }
     }
-    Args {
+    Params {
         total: body.params.len() as u32,
         mut_count,
         closure_traits,
-        tys,
+        ty_kinds,
     }
 }
 
 fn visit_return(tcx: TyCtxt, body_id: BodyId) -> Return {
     let body = tcx.hir().body(body_id);
     let ty = tcx.typeck(body_id.hir_id.owner).node_type(body.value.hir_id);
+    let ty_kind = format!("{:?}", ty.kind());
     let mutabl = match ty.kind() {
         TyKind::Adt(def, _) => {
             def.is_unsafe_cell()
@@ -340,7 +347,7 @@ fn visit_return(tcx: TyCtxt, body_id: BodyId) -> Return {
     Return {
         mutabl,
         closure_trait,
-        ty: ty.to_string(),
+        ty_kind,
     }
 }
 
@@ -425,5 +432,5 @@ pub fn hash_string(input: &str) -> String {
     let mut hasher = DefaultHasher::new();
     input.hash(&mut hasher);
     let hash_value = hasher.finish();
-    format!("{}", hash_value)[..8].to_string()
+    format!("{}", hash_value).to_string()
 }

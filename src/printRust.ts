@@ -6,7 +6,9 @@ import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
 import * as _ from "lodash";
+import { cwd } from "process";
 
+const VERSION = "0.1.0";
 const CHANNEL = "nightly-2024-12-01";
 const COMPONENTS = ["clippy", "rust-src", "rustc-dev", "llvm-tools-preview"];
 type Result<T> = { Ok: T } | { Err: String };
@@ -161,28 +163,40 @@ export async function printExprs(context: vscode.ExtensionContext): Promise<JSON
 
   let [cargo, cargo_args] = cargo_command();
 
-  //check if binary is installed first!
-  if(!fs.existsSync(path.join(cargo_bin(), "cargo-salt"))){
-    // install binary
+  // check if salt-ide is installed/up to date
+  let version;
+  try {
+    version = await exec_notify(
+      cargo,
+      [...cargo_args, "salt", "--version"],
+      "Checking version...",
+      { cwd: workspace_root }
+    );
+  } catch (e) {
+    version = "";
+  }
+
+  if (version !== VERSION) {
+    // install latest nightly + binary
     let components = COMPONENTS.map((c) => ["-c", c]).flat();
     try{
-      // await exec_notify( //separate check
-      //   "rustup",
-      //   [
-      //     "toolchain",
-      //     "install",
-      //     CHANNEL,
-      //     "--profile",
-      //     "minimal",
-      //     ...components,
-      //   ],
-      //   "Installing nightly Rust..."
-      // );
+      await exec_notify(
+        "rustup",
+        [
+          "toolchain",
+          "install",
+          CHANNEL,
+          "--profile",
+          "minimal",
+          ...components,
+        ],
+        "Installing nightly Rust..."
+      );
       await exec_notify(  // flowistry actually downloads the crate from crates.io!!
         "cargo",
         ["install",
           "--path",
-          "/Users/molly/Documents/GitHub/vscode-errorviz/crates/salt_ide"
+          "/Users/molly/Documents/GitHub/vscode-errorviz/crates/salt_ide" // CHANGE!!
         ],
         "Installing crates...");
     }
@@ -205,7 +219,7 @@ export async function printExprs(context: vscode.ExtensionContext): Promise<JSON
     console.log(output_str);
     return JSON.parse(output_str);
   } catch (e: any) {
-    console.log(e);
+    console.error(e);
     return null;
   }
 }

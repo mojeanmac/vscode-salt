@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { initStudy } from './extension';
-import { isPrivateRepo } from './telemetry_aws';
+import { isPrivateRepo } from './telemetry';
 export { renderConsentForm, renderpublicOnly, renderSurvey, renderQuiz };
 
 /**

@@ -1,6 +1,6 @@
 [workspace]
 members = ["crates/*"]
-exclude = ["src/tests/mock_project", "crates/salt/test-crate", "test-project"]
+exclude = ["src/tests/mock_project", "test-project",  "crates/salt_ide/src/plugin/tests/unit_tests"]
 resolver = "2"
 
 [workspace.dependencies]
