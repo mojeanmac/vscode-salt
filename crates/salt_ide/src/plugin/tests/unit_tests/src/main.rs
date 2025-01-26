@@ -7,7 +7,7 @@ fn main() {
 
 //basic test
 fn test_1() {
-    loop {
+    while false {
         println!("Hello, world!");
     }
 }
@@ -62,7 +62,7 @@ fn susafe() {
     }
 }
 
-//iterate over 2d vector
+//iterate over 2d vectors
 fn loopception(v: Vec<Vec<u64>>) {
     for i in v.iter() {
         for j in i.iter() {
@@ -82,4 +82,54 @@ fn looperoni(v: Vec<Vec<u64>>) {
             x -= 1;
         }
     }
+}
+
+//match tests
+fn match_test(x: u64) {
+    match x {
+        0 => println!("zero"),
+        1 => println!("one"),
+        _ => println!("other"),
+    }
+}
+
+fn iflet() {
+    let x = Some(5);
+    if let Some(y) = x {
+        println!("{}", y);
+    }
+}
+
+//struct test
+struct Math;
+
+impl Math {
+    fn factorial(n: u32) -> u32 {
+        if n == 0 {
+            1
+        } else {
+            n * Math::factorial(n - 1)
+        }
+    }
+}
+
+fn input_math(math: Math) {
+    return
+}
+
+//iter method tests
+fn equal_vecs() {
+    let vec1 = vec![1, 2, 3, 4, 5, 6];
+    let vec2 = vec![9, 8, 3, 4, 5, 6];
+
+    let result = vec1
+    .iter()
+    .skip(2)
+    .eq(vec2
+        .iter()
+        .skip(2));
+
+    let test: usize = vec2.clone().iter().sum();
+
+    println!("{:?}", result);
 }

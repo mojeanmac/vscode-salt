@@ -75,7 +75,8 @@ pub(crate) fn compare_fn(name: &str, expected: &BlockJson, functions: &HashMap<S
             false
         }
         ,
-        "Incorrect output.\n\nActual: {:?},\n\nExpected: {:?}",
+        "Incorrect output for {:?}.\n\nActual: {:?},\n\nExpected: {:?}",
+        name,
         actual,
         expected
     );

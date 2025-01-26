@@ -1,9 +1,8 @@
-use rustc_middle::mir::StatementKind;
 use rustc_middle::ty::{Ty, TyCtxt, TyKind, ExistentialPredicate};
 use rustc_span::source_map::SourceMap;
 use rustc_span::def_id::DefId;
 use rustc_hir::intravisit::{self, Visitor};
-use rustc_hir::{Item, BodyId, Expr, ExprKind, HirId, ItemKind, PatKind, def::DefKind, OwnerId, MatchSource};
+use rustc_hir::{Item, BodyId, Expr, ExprKind, HirId, ItemKind, PatKind, def::DefKind, OwnerId, MatchSource, Stmt, StmtKind};
 use rustc_utils::TyExt;
 use rustc_middle::hir::nested_filter;
 use serde::{Deserialize, Serialize};
@@ -48,7 +47,6 @@ enum Block {
     },
     LetExpr{
         def_id: DefId,
-        lines: usize,
         depth: usize,
     },
     Unsafe {
@@ -80,7 +78,6 @@ pub enum BlockJson {
     },
     LetExpr {
         def_id: String,
-        lines: usize,
         depth: usize,
     },
     Unsafe {
@@ -111,9 +108,8 @@ impl Block {
                 arms: *arms,
                 depth: *depth,
             },
-            Block::LetExpr {def_id, lines, depth } => BlockJson::LetExpr {
+            Block::LetExpr {def_id, depth } => BlockJson::LetExpr {
                 def_id: format!("{:?}", def_id),
-                lines: *lines,
                 depth: *depth,
             },
             Block::Unsafe { def_id, lines, depth } => BlockJson::Unsafe {
@@ -327,10 +323,9 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
                     });
                 }
             },
-            ExprKind::Let(..) => {
+            ExprKind::Let(_) => {
                 self.let_exprs.push(Block::LetExpr {
                     def_id,
-                    lines: line_count(self.source_map, expr.span),
                     depth: self.depth,
                 });
             },
@@ -396,7 +391,8 @@ fn visit_params(tcx: TyCtxt, body_id: BodyId) -> Params {
         }
         
         let is_mut = is_mut(ty.kind(), &param.pat.kind);
-        ty_kinds.insert((is_mut, format!("{:?}", ty.kind())));
+        let ty_kind = format!("{:?}", ty.kind());
+        ty_kinds.insert((is_mut, ty_kind));
     }
     Params {
         closure_traits,
@@ -532,3 +528,38 @@ pub fn hash_string(input: &str) -> String {
     let hash_value = hasher.finish();
     format!("{}", hash_value).to_string()
 }
+
+/*
+fn get_ty_kind(tykind: &TyKind) -> String {
+    match tykind {
+        TyKind::Bool => "Bool".to_string(),
+        TyKind::Char => "Char".to_string(),
+        TyKind::Int(..) => "Int".to_string(),
+        TyKind::Uint(..) => "Uint".to_string(),
+        TyKind::Float(..) => "Float".to_string(),
+        TyKind::Adt(..) => "Adt".to_string(),
+        TyKind::Foreign(..) => "Foreign".to_string(),
+        TyKind::Str => "Str".to_string(),
+        TyKind::Array(..) => "Array".to_string(),
+        TyKind::Slice(..) => "Slice".to_string(),
+        TyKind::RawPtr(..) => "RawPtr".to_string(),
+        TyKind::Ref(..) => "Ref".to_string(),
+        TyKind::FnDef(..) => "FnDef".to_string(),
+        TyKind::FnPtr(..) => "FnPtr".to_string(),
+        TyKind::Dynamic(..) => "Dynamic".to_string(),
+        TyKind::Closure(..) => "Closure".to_string(),
+        TyKind::CoroutineClosure(..) => "CoroutineClosure".to_string(),
+        TyKind::CoroutineWitness(..) => "CoroutineWitness".to_string(),
+        TyKind::Never => "Never".to_string(),
+        TyKind::Tuple(..) => "Tuple".to_string(),
+        TyKind::Alias(..) => "Alias".to_string(),
+        TyKind::Param(..) => "Param".to_string(),
+        TyKind::Bound(..) => "Bound".to_string(),
+        TyKind::Placeholder(..) => "Placeholder".to_string(),
+        TyKind::Infer(..) => "Infer".to_string(),
+        TyKind::Error(..) => "Error".to_string(),
+
+        _ => "Unknown".to_string(),
+    }
+}
+    */

@@ -228,5 +228,96 @@ const LONGKIND: &str = "std::boxed::Box<dyn [Binder { value: Trait(std::ops::FnO
         assert!(visit.loops.contains(&BlockJson::Loop{ def_id: looperjson.clone(), lines: 3, depth: 2}),
             "Loop block not found in {:?}", visit.loops);
 
+        
+        let match_test = BlockJson::Def {
+            params: serde_json::to_value(Params {
+                closure_traits: HashSet::new(),
+                ty_kinds: HashSet::from([(false, "u64".to_string())])
+            }).unwrap(),
+            ret: serde_json::to_value(Return {
+                mutabl: false,
+                closure_trait: None,
+                ty_kind: "()".to_string()
+            }).unwrap(),
+            unsafety: false,
+            recursive: false,
+            lines: 7,
+        };
+
+        let match_json = compare_fn("match_test", &match_test, &visit.fns);
+        assert!(visit.matches.contains(&BlockJson::Match{ def_id: match_json.clone(), lines: 5, arms: 3, depth: 1}),
+            "Match block not found in {:?}", visit.matches);
+
+
+        let iflet = BlockJson::Def {
+            params: serde_json::to_value(Params {
+                closure_traits: HashSet::new(),
+                ty_kinds: HashSet::new()
+            }).unwrap(),
+            ret: serde_json::to_value(Return {
+                mutabl: false,
+                closure_trait: None,
+                ty_kind: "()".to_string()
+            }).unwrap(),
+            unsafety: false,
+            recursive: false,
+            lines: 6,
+        };
+
+        let iflet_json = compare_fn("iflet", &iflet, &visit.fns);
+        assert!(visit.let_exprs.contains(&BlockJson::LetExpr { def_id: iflet_json.clone(), depth: 1 }),
+            "Match block not found in {:?}", visit.let_exprs);
+
+        let factorial = BlockJson::Def {
+            params: serde_json::to_value(Params {
+                closure_traits: HashSet::new(),
+                ty_kinds: HashSet::from([(false, "u32".to_string())])
+            }).unwrap(),
+            ret: serde_json::to_value(Return {
+                mutabl: false,
+                closure_trait: None,
+                ty_kind: "u32".to_string()
+            }).unwrap(),
+            unsafety: false,
+            recursive: true,
+            lines: 7,
+        };
+
+        compare_fn("factorial", &factorial, &visit.fns);
+
+        let input_math = BlockJson::Def {
+            params: serde_json::to_value(Params {
+                closure_traits: HashSet::new(),
+                ty_kinds: HashSet::from([(false, "Math".to_string())])
+            }).unwrap(),
+            ret: serde_json::to_value(Return {
+                mutabl: false,
+                closure_trait: None,
+                ty_kind: "()".to_string()
+            }).unwrap(),
+            unsafety: false,
+            recursive: false,
+            lines: 3,
+        };
+
+        compare_fn("input_math", &input_math, &visit.fns);
+
+        let equal_vecs = BlockJson::Def {
+            params: serde_json::to_value(Params {
+                closure_traits: HashSet::new(),
+                ty_kinds: HashSet::new()
+            }).unwrap(),
+            ret: serde_json::to_value(Return {
+                mutabl: false,
+                closure_trait: None,
+                ty_kind: "()".to_string()
+            }).unwrap(),
+            unsafety: false,
+            recursive: false,
+            lines: 15,
+        };
+
+        let ev_json = compare_fn("equal_vecs", &equal_vecs, &visit.fns);
+        assert!(visit.iter_mthds[&ev_json] == HashSet::from([vec!["eq".to_string(), "skip".to_string(), "skip".to_string(), "sum".to_string()]]));
     }
 }
