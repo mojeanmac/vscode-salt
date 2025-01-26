@@ -94,7 +94,7 @@ pub struct PrintResult {
 fn print_inferences(tcx: TyCtxt) {
   let hir = tcx.hir();
   let mut visitor = HirVisitor::new(tcx);
-  hir.visit_all_item_likes_in_crate(&mut visitor);
+  hir.walk_toplevel_module(&mut visitor);
 
   let result = PrintResult {
     crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),

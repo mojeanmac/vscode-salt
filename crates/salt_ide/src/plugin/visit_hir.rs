@@ -1,8 +1,9 @@
+use rustc_middle::mir::StatementKind;
 use rustc_middle::ty::{Ty, TyCtxt, TyKind, ExistentialPredicate};
 use rustc_span::source_map::SourceMap;
 use rustc_span::def_id::DefId;
 use rustc_hir::intravisit::{self, Visitor};
-use rustc_hir::{Item, BodyId, Expr, ExprKind, HirId, ItemKind, PatKind, def::DefKind, OwnerId};
+use rustc_hir::{Item, BodyId, Expr, ExprKind, HirId, ItemKind, PatKind, def::DefKind, OwnerId, MatchSource};
 use rustc_utils::TyExt;
 use rustc_middle::hir::nested_filter;
 use serde::{Deserialize, Serialize};
@@ -35,62 +36,98 @@ impl Default for Return {
 
 enum Block {
     Loop {
+        def_id: DefId,
         lines: usize,
+        depth: usize,
     },
     Match {
+        def_id: DefId,
         lines: usize,
         arms: u32,
+        depth: usize,
     },
     LetExpr{
+        def_id: DefId,
         lines: usize,
+        depth: usize,
+    },
+    Unsafe {
+        def_id: DefId,
+        lines: usize,
+        depth: usize,
     },
     Def {
         params: Params,
         ret: Return,
+        unsafety: bool,
         recursive: bool,
         lines: usize,
-    }
+    },
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub enum BlockJson {
     Loop {
+        def_id: String,
         lines: usize,
+        depth: usize,
     },
     Match {
+        def_id: String,
         lines: usize,
         arms: u32,
+        depth: usize,
     },
     LetExpr {
+        def_id: String,
         lines: usize,
+        depth: usize,
+    },
+    Unsafe {
+        def_id: String,
+        lines: usize,
+        depth: usize,
     },
     Def {
         params: serde_json::Value,
         ret: serde_json::Value,
+        unsafety: bool,
         recursive: bool,
         lines: usize,
-    }
+    },
 }
 
 impl Block {
     fn to_json(&self) -> BlockJson {
         match self {
-            Block::Loop { lines } => BlockJson::Loop {
+            Block::Loop { def_id, lines, depth} => BlockJson::Loop {
+                def_id: format!("{:?}", def_id),
                 lines: *lines,
+                depth: *depth,
             },
-            Block::Match { lines, arms } => BlockJson::Match {
+            Block::Match { def_id, lines, arms, depth } => BlockJson::Match {
+                def_id: format!("{:?}", def_id),
                 lines: *lines,
                 arms: *arms,
+                depth: *depth,
             },
-            Block::LetExpr {lines } => BlockJson::LetExpr {
+            Block::LetExpr {def_id, lines, depth } => BlockJson::LetExpr {
+                def_id: format!("{:?}", def_id),
                 lines: *lines,
+                depth: *depth,
             },
-            Block::Def { params, ret, recursive, lines } => BlockJson::Def {
+            Block::Unsafe { def_id, lines, depth } => BlockJson::Unsafe {
+                def_id: format!("{:?}", def_id),
+                lines: *lines,
+                depth: *depth,
+            },
+            Block::Def { params, ret, unsafety, recursive, lines } => BlockJson::Def {
                 params: serde_json::to_value(params).unwrap(),
                 ret: serde_json::to_value(ret).unwrap(),
+                unsafety: *unsafety,
                 recursive: *recursive,
                 lines: *lines,
-            }            
+            },
         }
     }
 }
@@ -98,22 +135,25 @@ impl Block {
 pub struct HirVisitor<'tcx> {
     tcx: TyCtxt<'tcx>,
     source_map: &'tcx SourceMap,
+    depth: usize,
     fns: HashMap<DefId, Block>,
-    loops: HashMap<DefId, Block>,
-    matches: HashMap<DefId, Block>,
-    let_exprs: HashMap<DefId, Block>,
+    loops: Vec<Block>,
+    matches: Vec<Block>,
+    let_exprs: Vec<Block>,
     iter_mthds: HashMap<DefId, HashMap<OwnerId, Vec<String>>>,
-    calls: HashMap<DefId, u32>
+    calls: HashMap<DefId, HashMap<DefId, u32>>,
+    unsafe_blocks: Vec<Block>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct VisitorJson {
     pub(crate) fns: HashMap<String, BlockJson>,
-    pub(crate) loops: HashMap<String, BlockJson>,
-    pub(crate) matches: HashMap<String, BlockJson>,
-    pub(crate) let_exprs: HashMap<String, BlockJson>,
+    pub(crate) loops: Vec<BlockJson>,
+    pub(crate) matches: Vec<BlockJson>,
+    pub(crate) let_exprs: Vec<BlockJson>,
     pub(crate) iter_mthds: HashMap<String, HashSet<Vec<String>>>,
-    pub(crate) calls: HashMap<String, u32>
+    pub(crate) calls: HashMap<String, HashMap<String, u32>>,
+    pub(crate) unsafe_blocks: Vec<BlockJson>,
 }
 
 impl<'tcx> HirVisitor<'tcx> {
@@ -121,52 +161,58 @@ impl<'tcx> HirVisitor<'tcx> {
         Self {
             tcx,
             source_map: tcx.sess.source_map(),
+            depth: 0,
             fns: HashMap::new(),
-            loops: HashMap::new(),
-            matches: HashMap::new(),
-            let_exprs: HashMap::new(),
+            loops: Vec::new(),
+            matches: Vec::new(),
+            let_exprs: Vec::new(),
             iter_mthds: HashMap::new(),
-            calls: HashMap::new()
+            calls: HashMap::new(),
+            unsafe_blocks: Vec::new(),
         }
     }
 
     pub fn to_json(&self) -> VisitorJson {
         VisitorJson {
             fns: self.fns.iter().map(|(k, v)| (format!("{:?}", k), v.to_json())).collect(),
-            loops: self.loops.iter().map(|(k, v)| (format!("{:?}", k), v.to_json())).collect(),
-            matches: self.matches.iter().map(|(k, v)| (format!("{:?}", k), v.to_json())).collect(),
-            let_exprs: self.let_exprs.iter().map(|(k, v)| (format!("{:?}", k), v.to_json())).collect(),
+            loops: self.loops.iter().map(|v| v.to_json()).collect(),
+            matches: self.matches.iter().map(|v| v.to_json()).collect(),
+            let_exprs: self.let_exprs.iter().map(|v| v.to_json()).collect(),
             iter_mthds: self.iter_mthds.iter()
                 .map(|(k, v)| (format!("{:?}", k), v.values().cloned().collect())).collect(),
-            calls: self.calls.iter().map(|(k, v)| (format!("{:?}", k), *v)).collect()
+            calls: self.calls.iter()
+                .map(|(k, v)| (format!("{:?}", k), v.iter()
+                    .map(|(from, cnt)| (format!("{:?}", from), *cnt))
+                    .collect::<HashMap<_, _>>()))
+                    .collect(),
+            unsafe_blocks: self.unsafe_blocks.iter().map(|v| v.to_json()).collect(),
         }
     }
 }
 
 impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
-    type NestedFilter = nested_filter::OnlyBodies;
+    type NestedFilter = nested_filter::All;
     fn nested_visit_map(&mut self) -> Self::Map {
         self.tcx.hir()
     }
 
     // visit functions, including traits and impls which may have nested fns
     fn visit_item(&mut self, item: &'tcx Item<'tcx>) {
+        self.depth = 0;
         let def_id = item.owner_id.to_def_id();
         if self.tcx.def_kind(def_id) == DefKind::Fn {
             match item.kind {
-                ItemKind::Fn(.., body_id) => { 
+                ItemKind::Fn(sig, _, body_id) => { 
+                    let unsafety = sig.header.safety == rustc_hir::Safety::Unsafe;
                     let params = visit_params(self.tcx, body_id);
                     let ret = visit_return(self.tcx, body_id);
                     self.fns.insert(def_id, Block::Def {
                         params,
                         ret,
+                        unsafety,
                         recursive: false,
                         lines: line_count(self.source_map, item.span),
                     });
-                    let body = self.tcx.hir().body(body_id);
-                    for param in body.params {
-                        self.visit_param(param);
-                    }
                 }
                 ItemKind::Impl(impl_item) => {
                     for item_id in impl_item.items {
@@ -187,12 +233,14 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
     }
 
     fn visit_impl_item(&mut self, item: &'tcx rustc_hir::ImplItem<'tcx>) {
-        if let rustc_hir::ImplItemKind::Fn(.., body_id) = item.kind {
+        if let rustc_hir::ImplItemKind::Fn(sig, body_id) = item.kind {
+            let unsafety = sig.header.safety == rustc_hir::Safety::Unsafe;
             let params = visit_params(self.tcx, body_id);
             let ret = visit_return(self.tcx, body_id);
             self.fns.insert(item.owner_id.to_def_id(), Block::Def {
                 params,
                 ret,
+                unsafety,
                 recursive: false,
                 lines: line_count(self.source_map, item.span),
             });
@@ -201,13 +249,15 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
     }
 
     fn visit_trait_item(&mut self, item: &'tcx rustc_hir::TraitItem<'tcx>){ //TODO verify
-        if let rustc_hir::TraitItemKind::Fn(..) = item.kind {
+        if let rustc_hir::TraitItemKind::Fn(sig, _ ) = item.kind {
+            let unsafety = sig.header.safety == rustc_hir::Safety::Unsafe;
             let body_id = BodyId { hir_id: item.hir_id() };
             let params = visit_params(self.tcx, body_id);
             let ret = visit_return(self.tcx, body_id);
             self.fns.insert(item.owner_id.to_def_id(), Block::Def {
                 params,
                 ret,
+                unsafety,
                 recursive: false,
                 lines: line_count(self.source_map, item.span),
             });
@@ -215,43 +265,94 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
         intravisit::walk_trait_item(self, item)
     }
 
+    fn visit_block(&mut self, block: &'tcx rustc_hir::Block<'tcx>) {
+        if let rustc_hir::BlockCheckMode::UnsafeBlock(_) = block.rules {
+            let def_id = block.hir_id.owner.to_def_id();
+            self.unsafe_blocks.push(Block::Unsafe {
+                def_id,
+                lines: line_count(self.source_map, block.span),
+                depth: self.depth,
+            });
+        }
+
+        let mut desugared = false;
+        if !block.stmts.is_empty() {
+            if let rustc_hir::StmtKind::Expr(expr) = block.stmts[0].kind {
+                if let ExprKind::Match(.., src) = expr.kind{
+                    match src {
+                        MatchSource::ForLoopDesugar => {
+                            desugared = true
+                        },
+                        MatchSource::TryDesugar(_) => {
+                            desugared = true
+                        },
+                        MatchSource::AwaitDesugar => {
+                            desugared = true
+                        },
+                        _ => ()
+                    }
+                }
+            }
+        }
+       
+        if desugared {
+            intravisit::walk_block(self, block);
+        }
+        else {
+            self.depth += 1;
+            intravisit::walk_block(self, block);
+            self.depth -= 1;
+        }
+    }
+
     fn visit_expr(&mut self, expr: &'tcx Expr<'tcx>) {
         let typeck_results = self.tcx.typeck(expr.hir_id.owner);
-        let def_id = expr.hir_id.owner.to_def_id();
+        let hir_id = expr.hir_id;
+        let def_id = hir_id.owner.to_def_id();
         match expr.kind {
             ExprKind::Loop(..) => {
-                self.loops.insert(def_id, Block::Loop {
+                self.loops.push(Block::Loop {
+                    def_id,
                     lines: line_count(self.source_map, expr.span),
+                    depth: self.depth,
                 });
             },
             ExprKind::Match(.., arms, src) => {
-                if src == rustc_hir::MatchSource::Normal {
-                    self.matches.insert(def_id,Block::Match {
+                if src == MatchSource::Normal {
+                    self.matches.push(Block::Match {
+                        def_id,
                         lines: line_count(self.source_map, expr.span),
                         arms: arms.len() as u32,
+                        depth: self.depth,
                     });
                 }
             },
             ExprKind::Let(..) => {
-                self.let_exprs.insert(def_id,Block::LetExpr {
+                self.let_exprs.push(Block::LetExpr {
+                    def_id,
                     lines: line_count(self.source_map, expr.span),
+                    depth: self.depth,
                 });
             },
             ExprKind::Call(func, ..) => {
                 if let ExprKind::Path(qpath) = func.kind {
-                    if let Some(def_id) = typeck_results
+                    if let Some(call_def_id) = typeck_results
                         .qpath_res(&qpath, func.hir_id)
                         .opt_def_id()
                     {
                         //check for recursion
-                        if expr.hir_id.owner.def_id.to_def_id() == def_id {
-                            if let Block::Def { recursive, .. } =  self.fns.get_mut(&def_id).unwrap() {
+                        if def_id == call_def_id {
+                            if let Block::Def { recursive, .. } =  self.fns.get_mut(&call_def_id).unwrap() {
                                 *recursive = true;
                             }
                         }
                         // increment local fn calls
-                        if def_id.is_local() {
-                            *self.calls.entry(def_id).or_insert(0) += 1;
+                        if call_def_id.is_local() {
+                            *self.calls
+                                .entry(call_def_id)
+                                .or_default()
+                                .entry(hir_id.owner.to_def_id())
+                                .or_default() += 1;
                         }
                     }
                 }
@@ -294,34 +395,13 @@ fn visit_params(tcx: TyCtxt, body_id: BodyId) -> Params {
             closure_traits.insert(closure_trait);
         }
         
-        let is_mut = is_mut(&ty.kind(), &param.pat.kind);
+        let is_mut = is_mut(ty.kind(), &param.pat.kind);
         ty_kinds.insert((is_mut, format!("{:?}", ty.kind())));
     }
     Params {
         closure_traits,
         ty_kinds,
     }
-}
-
-fn is_mut(ty_kind: &TyKind, pat_kind: &PatKind) -> bool {
-    let mut is_mut = false;
-    match ty_kind {
-        TyKind::Adt(def, _) => {
-            if def.is_unsafe_cell() { is_mut = true; }
-        },
-        TyKind::Ref(.., mut_ty) => {
-            if mut_ty.is_mut() { is_mut = true; }
-
-        },
-        TyKind::RawPtr(.., mut_ty) => {
-            if mut_ty.is_mut() { is_mut = true; }
-        },
-        _ => {},
-    }
-    if let PatKind::Binding(mode, ..) = pat_kind {
-        if mode.1.is_mut() { is_mut = true; }
-    }
-    is_mut
 }
 
 fn visit_return(tcx: TyCtxt, body_id: BodyId) -> Return {
@@ -346,6 +426,27 @@ fn visit_return(tcx: TyCtxt, body_id: BodyId) -> Return {
         closure_trait,
         ty_kind,
     }
+}
+
+fn is_mut(ty_kind: &TyKind, pat_kind: &PatKind) -> bool {
+    let mut is_mut = false;
+    match ty_kind {
+        TyKind::Adt(def, _) => {
+            if def.is_unsafe_cell() { is_mut = true; }
+        },
+        TyKind::Ref(.., mut_ty) => {
+            if mut_ty.is_mut() { is_mut = true; }
+
+        },
+        TyKind::RawPtr(.., mut_ty) => {
+            if mut_ty.is_mut() { is_mut = true; }
+        },
+        _ => {},
+    }
+    if let PatKind::Binding(mode, ..) = pat_kind {
+        if mode.1.is_mut() { is_mut = true; }
+    }
+    is_mut
 }
 
 fn is_ty_closure<'tcx>(tcx: TyCtxt<'tcx>, ty: &Ty<'tcx>, def_id: DefId) -> Option<String> {

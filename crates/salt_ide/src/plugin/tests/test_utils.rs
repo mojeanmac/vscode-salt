@@ -53,9 +53,9 @@ pub(crate) fn compare_fn(name: &str, expected: &BlockJson, functions: &HashMap<S
 
     assert!(
         expected == actual || 
-        // very unfortunate json teardown to determine set equivalencies in tykind
-        if let (BlockJson::Def{ params: p_a, ret: ret_a, recursive: rec_a, lines: l_a },
-                BlockJson::Def{ params: p_e, ret: ret_e, recursive: rec_e, lines: l_e }) = (actual, expected) {
+        // very unfortunate json teardown to determine set equivalencies in param tykinds
+        if let (BlockJson::Def{ params: p_a, ret: ret_a, unsafety: u_a, recursive: rec_a, lines: l_a },
+                BlockJson::Def{ params: p_e, ret: ret_e, unsafety: u_e, recursive: rec_e, lines: l_e }) = (actual, expected) {
             let eq_tykinds = match (p_a.get("ty_kinds").unwrap(), p_e.get("ty_kinds").unwrap()) {
                 (Value::Array(tys_a), Value::Array(tys_e)) => {
                     let set1: HashSet<String> = tys_a.iter()
@@ -70,7 +70,7 @@ pub(crate) fn compare_fn(name: &str, expected: &BlockJson, functions: &HashMap<S
             };
             eq_tykinds
             && p_a.get("closure_traits") == p_e.get("closure_traits")
-            && ret_a == ret_e && rec_a == rec_e && l_a == l_e
+            && u_a == u_e && ret_a == ret_e && rec_a == rec_e && l_a == l_e
         } else {
             false
         }
