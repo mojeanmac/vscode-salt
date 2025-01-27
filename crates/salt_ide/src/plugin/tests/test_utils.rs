@@ -47,7 +47,7 @@ pub(crate) fn compare_fn(name: &str, expected: &BlockJson, functions: &HashMap<S
         .iter()
         .find(|(key, _)| key.contains(name));
 
-    assert!(found_key.is_some(), "Function name not found.");
+    assert!(found_key.is_some(), "Function {:?} not found.", name);
 
     let (def_id, actual) = found_key.unwrap();
 

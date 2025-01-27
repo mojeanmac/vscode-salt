@@ -1,4 +1,4 @@
-//! A Rustc plugin that prints out the name of all items in a crate.
+//! Compiler plugin for the SALT VS Code extension.
 
 #![feature(rustc_private)]
 

@@ -5,6 +5,8 @@ use clap::Parser;
 use rustc_middle::ty::TyCtxt;
 use rustc_plugin::{CrateFilter, RustcPlugin, RustcPluginArgs, Utf8Path};
 use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 use crate::plugin::visit_hir::*;
 
@@ -104,4 +106,11 @@ fn print_inferences(tcx: TyCtxt) {
     Ok(json) => println!("{}", json),
     Err(e) => eprintln!("Failed to serialize results: {}", e),
   }
+}
+
+fn hash_string(input: &str) -> String {
+  let mut hasher = DefaultHasher::new();
+  input.hash(&mut hasher);
+  let hash_value = hasher.finish();
+  format!("{}", hash_value).to_string()
 }

@@ -1,7 +1,10 @@
 #![allow(warnings)]
 use std::cell::UnsafeCell;
 
+mod other;
+
 fn main() {
+    test_1();
     test_1();
 }
 
@@ -66,7 +69,7 @@ fn susafe() {
 fn loopception(v: Vec<Vec<u64>>) {
     for i in v.iter() {
         for j in i.iter() {
-            //
+            test_1();
         }
     }
     loop{loop{loop{}}}
@@ -97,6 +100,17 @@ fn iflet() {
     let x = Some(5);
     if let Some(y) = x {
         println!("{}", y);
+    }
+}
+
+struct Point(bool, u32);
+
+fn match_point(p: Point) {
+    for _ in 0..3 {
+        match p.0 {
+            true => println!("true"),
+            false => println!("false"),
+        }
     }
 }
 
@@ -132,4 +146,34 @@ fn equal_vecs() {
     let test: usize = vec2.clone().iter().sum();
 
     println!("{:?}", result);
+}
+
+fn nested_ifs(one: bool, two: bool) {
+    if one {
+        if two {
+            (0..1).for_each(|_| {
+                println!("Hello, world!");
+            });
+        }
+        else {
+            if let Some(_) = Some(1) {
+                println!("Hello, world!");
+            }
+        }
+    }
+    else {
+        let mut x = 0;
+        loop {
+            x += 1;
+            if x == 10 {
+                break;
+            }
+        }
+    }
+}
+
+//mod test
+
+mod another {
+    fn mod_test() {}
 }

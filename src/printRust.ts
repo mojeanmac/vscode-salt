@@ -163,7 +163,7 @@ export async function printExprs(context: vscode.ExtensionContext): Promise<JSON
 
   let [cargo, cargo_args] = cargo_command();
 
-  // check if salt-ide is installed/up to date
+  // check if salt_ide is installed/up to date
   let version;
   try {
     version = await exec_notify(
