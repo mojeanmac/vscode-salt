@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qualtrics Survey Redirect</title>
+    <script>
+        // Function to generate a unique identifier (UUID v4 example)
+        function generateUniqueId() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = (Math.random() * 16) | 0,
+                    v = c === 'x' ? r : (r & 0x3) | 0x8;
+                return v.toString(16);
+            });
+        }
+
+        // Function to redirect to the survey with a unique user ID
+        function redirectToSurvey() {
+            const baseSurveyUrl = "https://ucsd.co1.qualtrics.com/jfe/form/SV_1UnoJnv038dOr0a";
+            const userId = generateUniqueId();
+            const surveyUrl = `${baseSurveyUrl}?userId=${userId}`;
+            window.location.href = surveyUrl; // Redirect the user
+        }
+    </script>
+</head>
+<body onload="redirectToSurvey()">
+    <p>Redirecting to survey...</p>
+</body>
+</html>
