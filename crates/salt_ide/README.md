@@ -77,6 +77,6 @@ cargo salt
 
 You should see the output:
 
-```text
+```json
 {"crate_id":"11573503235230656294","visit_res":{"calls":{},"fns":{"18270091135093349626":{"Def":{"lines":4,"params":{"closure_traits":[],"ty_kinds":[[true,"Uint"],[false,"Uint"]]},"recursive":false,"ret":{"closure_trait":null,"mutabl":false,"ty_kind":"Uint"},"unsafety":false}}},"iter_mthds":[],"let_exprs":[],"loops":[],"matches":[],"unsafe_blocks":[]}}
 ```

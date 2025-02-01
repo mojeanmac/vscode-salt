@@ -1,6 +1,6 @@
 {
   "name": "salt",
-  "publisher": "kale-lab",
+  "publisher": "SALAD-Lab",
   "displayName": "SALT",
   "icon": "assets/salt.png",
   "galleryBanner.color": "#C8C9DA",
@@ -8,8 +8,8 @@
     "type": "git",
     "url": "https://github.com/mojeanmac/vscode-salt"
   },
-  "description": "Fix Rust ownership errors and participate in academic research",
-  "version": "0.2.11",
+  "description": "Test Rust tools and participate in academic research!",
+  "version": "0.3.0",
   "license": "MIT",
   "engines": {
     "vscode": "^1.73.0"
@@ -37,8 +37,8 @@
         "title": "SALT: View Consent to Participate in Research"
       },
       {
-        "command": "salt.renderSurvey",
-        "title": "SALT: View Survey"
+        "command": "salt.quizLink",
+        "title": "SALT: View Qualtrics Quiz"
       }
     ],
     "keybindings": [

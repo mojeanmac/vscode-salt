@@ -4,9 +4,14 @@ src/**
 node_modules/**
 test-project/
 .gitignore
+Cargo.lock
+Cargo.toml
 .yarnrc
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
+crates/**
+salt-*
+target/**

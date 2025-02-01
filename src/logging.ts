@@ -2,7 +2,7 @@
 import * as vscode from "vscode";
 import { log } from "./utils/log";
 import * as crypto from 'crypto';
-import { suggestions } from "./patterns";
+import { suggestions } from "./utils/patterns";
 
 interface ErrorJson {
     code: string | number,
@@ -59,15 +59,20 @@ export function logError(diagnostics: vscode.Diagnostic[]): ErrorJson[] {
 
 export function copilotStatus(): string {
   const copilotExtension = vscode.extensions.getExtension('github.copilot');
-    if (copilotExtension) {
-        if (copilotExtension.isActive) {
-            return "active";
-        } else {
-            return "inactive";
-        }
+  if (copilotExtension) {
+    if (copilotExtension.isActive) {
+      const config = vscode.workspace.getConfiguration('github.copilot');
+      if (config.get('enable.rust')) {
+          return "enabled";
+      } else {
+        return "disabled";
+      }
     } else {
-        return "not installed";
+        return "inactive";
     }
+  } else {
+      return "not installed";
+  }
 }
 
 export async function countrs(): Promise<number> {

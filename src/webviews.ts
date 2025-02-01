@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { initStudy } from './extension';
-import { isPrivateRepo } from './telemetry';
-export { renderConsentForm, renderpublicOnly, renderSurvey, renderQuiz };
+import { isPrivateRepo } from './remotes';
+export { renderConsentForm, renderpublicOnly };
 
 /**
   * Renders the consent form
@@ -69,15 +69,16 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
       message => {
         if (message.text === "public") {
           vscode.workspace.getConfiguration("salt").update("publicOnly", true, true);
-  
+          
+          //check if workspace is private
           if (vscode.workspace.workspaceFolders) {
             isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
               context.workspaceState.update("enabled", !isPrivate);
           });
           }
         }
-        renderSurvey(context, logDir);
-        panel.dispose();
+        const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'thankyoumessage.html'), 'utf8');
+        panel.webview.html = html;
       }
     );
   }
@@ -85,66 +86,66 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
   /**
    * Renders the survey
    */
-  function renderSurvey(context: vscode.ExtensionContext, logDir: string){
-    const panel = vscode.window.createWebviewPanel(
-      'form',
-      'SALT Survey',
-      vscode.ViewColumn.One,
-      {
-        enableScripts: true
-      }
-    );
+  // function renderSurvey(context: vscode.ExtensionContext, logDir: string){
+  //   const panel = vscode.window.createWebviewPanel(
+  //     'form',
+  //     'SALT Survey',
+  //     vscode.ViewColumn.One,
+  //     {
+  //       enableScripts: true
+  //     }
+  //   );
   
-    const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'survey.html'), 'utf8');
-    panel.webview.html = html;
+  //   const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'survey.html'), 'utf8');
+  //   panel.webview.html = html;
   
-    panel.webview.onDidReceiveMessage(
-      message => {
-        console.log(message.text);
-        context.globalState.update("survey", message.text);
-        renderQuiz(context, logDir);
-        //write to latest log
-        const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
-        const logPath = path.join(logDir, `log${fileCount}.json`);
-        fs.writeFileSync(logPath, JSON.stringify({survey: message.text}) + '\n', {flag: 'a'});
-        panel.dispose();
-      }
-    );
-  }
+  //   panel.webview.onDidReceiveMessage(
+  //     message => {
+  //       console.log(message.text);
+  //       context.globalState.update("survey", message.text);
+  //       renderQuiz(context, logDir);
+  //       //write to latest log
+  //       const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
+  //       const logPath = path.join(logDir, `log${fileCount}.json`);
+  //       fs.writeFileSync(logPath, JSON.stringify({survey: message.text}) + '\n', {flag: 'a'});
+  //       panel.dispose();
+  //     }
+  //   );
+  // }
   
-  /**
-   * Renders the quiz
-   */
-  function renderQuiz(context: vscode.ExtensionContext, logDir: string){
-    const panel = vscode.window.createWebviewPanel(
-      'form',
-      'SALT Quiz',
-      vscode.ViewColumn.One,
-      {
-        enableScripts: true,
-        localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'assets', 'forms'))]
-      }
-    );
-    const scriptPath = vscode.Uri.file(path.join(context.extensionPath, 'assets', 'forms', 'prism.js'));
-    const scriptUri = panel.webview.asWebviewUri(scriptPath);
+  // /**
+  //  * Renders the quiz
+  //  */
+  // function renderQuiz(context: vscode.ExtensionContext, logDir: string){
+  //   const panel = vscode.window.createWebviewPanel(
+  //     'form',
+  //     'SALT Quiz',
+  //     vscode.ViewColumn.One,
+  //     {
+  //       enableScripts: true,
+  //       localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'assets', 'forms'))]
+  //     }
+  //   );
+  //   const scriptPath = vscode.Uri.file(path.join(context.extensionPath, 'assets', 'forms', 'prism.js'));
+  //   const scriptUri = panel.webview.asWebviewUri(scriptPath);
 
-    const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'rustquizform_v6.html'), 'utf8');
-    panel.webview.html = html.replace("${scriptUri}", scriptUri.toString());
+  //   const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'rustquizform_v6.html'), 'utf8');
+  //   panel.webview.html = html.replace("${scriptUri}", scriptUri.toString());
 
-    const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
-    const logPath = path.join(logDir, `log${fileCount}.json`);
-    panel.webview.onDidReceiveMessage(
-      message => {
-        if (message.command === "submitForm"){
-          context.globalState.update("quiz", message.value);
-          //write to latest log
-          fs.writeFileSync(logPath, JSON.stringify({quizComplete: message.value}) + '\n', {flag: 'a'});
-          const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'thankyoumessage.html'), 'utf8');
-          panel.webview.html = html;
-        }
-        else if (message.command === "stateChange") {
-          fs.writeFileSync(logPath, JSON.stringify({quizUpdate: message.value}) + '\n', {flag: 'a'});
-        }
-      }
-    );
-  }
+  //   const fileCount = fs.readdirSync(logDir).filter(f => path.extname(f) === ".json").length;
+  //   const logPath = path.join(logDir, `log${fileCount}.json`);
+  //   panel.webview.onDidReceiveMessage(
+  //     message => {
+  //       if (message.command === "submitForm"){
+  //         context.globalState.update("quiz", message.value);
+  //         //write to latest log
+  //         fs.writeFileSync(logPath, JSON.stringify({quizComplete: message.value}) + '\n', {flag: 'a'});
+  //         const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'thankyoumessage.html'), 'utf8');
+  //         panel.webview.html = html;
+  //       }
+  //       else if (message.command === "stateChange") {
+  //         fs.writeFileSync(logPath, JSON.stringify({quizUpdate: message.value}) + '\n', {flag: 'a'});
+  //       }
+  //     }
+  //   );
+  // }

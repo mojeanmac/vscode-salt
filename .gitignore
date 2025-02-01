@@ -4,6 +4,7 @@ node_modules
 .vscode-test/
 test-project/
 *.vsix
+assets/forms/archive
 
 # macos
 .DS_Store

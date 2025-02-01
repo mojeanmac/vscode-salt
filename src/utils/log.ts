@@ -3,7 +3,7 @@ import { inspect } from "node:util";
 
 export const log = new (class {
   private enabled = true;
-  private readonly output = vscode.window.createOutputChannel("SALT");
+  private readonly output = vscode.window.createOutputChannel("REVIS");
 
   setEnabled(yes: boolean): void {
     log.enabled = yes;

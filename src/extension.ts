@@ -5,10 +5,10 @@ import * as crypto from 'crypto';
 import * as fs from "fs";
 import * as path from "path";
 
-import { printExprs } from "./printRust";
-import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo } from "./telemetry";
-import { renderConsentForm, renderSurvey, renderQuiz } from "./webviews";
-import { hashString, logError, countrs} from "./logging_utils";
+import { printInfers } from "./printRust";
+import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo, lastFetch } from "./remotes";
+import { renderConsentForm } from "./webviews";
+import { hashString, logError, countrs, copilotStatus} from "./logging";
 
 import { supportedErrorcodes } from "./interventions";
 import * as errorviz from "./interventions/errorviz";
@@ -27,10 +27,9 @@ const YEAR = 31536000;
 
 const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
-let enableExt = true;
 let prevline: number | undefined;
 let logDir: string | null = null;
-let logPath: string, logCount: number, linecnt: number,
+let logPath: string, logCount: number, linecnt: number, saveCount: number,
 stream: fs.WriteStream, output: vscode.LogOutputChannel, uuid: string;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -40,49 +39,54 @@ export function activate(context: vscode.ExtensionContext) {
     return;
   }
 
+  //logDir is globalStorage/SALAD-lab
   if (logDir === null) {
     logDir = context.globalStorageUri.fsPath;
 
     if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true });
+
+        //if moving from, kale->SALAD, insert uuid in new folder
+        if (context.globalState.get("participation") === true){
+          fs.writeFileSync(path.join(logDir, "log1.json"), "", {flag: 'a'});
+          fs.writeFileSync(path.join(logDir, "uuid.txt"), context.globalState.get("uuid") + '\n', {flag: 'a'});
+        }
     }
   }
 
   //have they given an answer to the current consent form?
-  //if not, render it!
+  //if not, render it
   if (context.globalState.get("participation") === undefined){
     renderConsentForm(context, logDir);
   }
 
+  //TODO re-enable when quiz is ready
   //one time notif for existing participants to do quiz
   // if (context.globalState.get("quiznotif") === undefined //not yet notified
-  //     && context.globalState.get("quiz") === undefined //not done quiz
   //     && context.globalState.get("participation") === true){ //but is a participant
     
-    // vscode.window.showInformationMessage("Are you a functional or an imperative programmer? Quiz yourself to find out!", "Take Quiz", "Maybe Later").then((sel) => {
-    //   if (sel === "Take Quiz") {
-    //     renderQuiz(context, logDir!);
-    //   }
-    // });
-    // context.globalState.update("quiznotif", true);
+  //   vscode.window.showInformationMessage("Are you a functional or an imperative programmer? Quiz yourself to find out!", "Take Quiz", "Maybe Later").then((sel) => {
+  //     if (sel === "Take Quiz") {
+  //       // qualtrics link
+  //     } else {
+  //       vscode.window.showInformationMessage("You can take the quiz later by running the command 'SALT: View Qualtrics Quiz.'");
+  //     }
+  //   });
+  //   context.globalState.update("quiznotif", true);
   // }
 
+  //for current participants
   if (context.globalState.get("participation") === true){
+
+    saveCount = 0;
 
     //disable logging for this session if publicOnly is true and not a public repo
     if (vscode.workspace.getConfiguration("salt").get("publicOnly") === true){
       isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
           context.workspaceState.update("enabled", !isPrivate);
       });
-    }
-    else {
+    } else {
       context.workspaceState.update("enabled", true);
-    }
-
-    //if global enable is undefined, set it to true
-    if (context.globalState.get("globalEnable") === undefined){
-      vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
-      context.globalState.update("globalEnable", true);
     }
 
     //call to backup existing logs to aws
@@ -103,10 +107,9 @@ export function activate(context: vscode.ExtensionContext) {
       });
     }
     
-    //if logging is enabled, initialize reporter, log file, and line count
+    //if logging is enabled
     if (vscode.workspace.getConfiguration("salt").get("errorLogging") === true
         && context.workspaceState.get("enabled") === true){
-
       //if a year has passed, disable logging
       let startDate = context.globalState.get("startDate") as number;
       if (initialStamp > startDate + YEAR){
@@ -117,26 +120,12 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      //if 2 weeks have passed, re-enable tool
-      //otherwise set enabled = false
-      if (context.globalState.get("enableRevis") === false){
-        if (initialStamp > startDate + TWO_WEEKS){
-          context.globalState.update("enableRevis", true);
-        }
-        else {
-          enableExt = false;
-        }
-      }
-
-      [logPath, logCount, linecnt, stream] = openExistingLog(logDir, enableExt, initialStamp - startDate);
+      //initialize reporter, log file, and line count
+      [logPath, logCount, linecnt, stream] = openExistingLog(logDir, initialStamp - startDate);
+      //create outputchannel
       output = vscode.window.createOutputChannel("SALT-logger", {log:true});
+      //get uuid
       uuid = context.globalState.get("uuid") as string;
-
-      //check if telemetry is enabled globally
-      if (!vscode.env.isTelemetryEnabled){
-        vscode.window.showWarningMessage(
-          "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
-      }
     }
   }
 
@@ -202,21 +191,21 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  context.subscriptions.push(
-    vscode.workspace.onDidChangeTextDocument((e) => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        return;
-      }
-      const changes = e.contentChanges;
-      e.contentChanges.forEach((change) => {
-        let line = change.range.start.line;
-        if (change.text === '*') {
-          ammendInlineViz(editor, change);
-        }
-      });
-    })
-  );
+  // context.subscriptions.push(
+  //   vscode.workspace.onDidChangeTextDocument((e) => {
+  //     const editor = vscode.window.activeTextEditor;
+  //     if (!editor) {
+  //       return;
+  //     }
+  //     const changes = e.contentChanges;
+  //     e.contentChanges.forEach((change) => {
+  //       let line = change.range.start.line;
+  //       if (change.text === '*') {
+  //         ammendInlineViz(editor, change);
+  //       }
+  //     });
+  //   })
+  // );
 
   //command to render consent form
   context.subscriptions.push(
@@ -225,20 +214,6 @@ export function activate(context: vscode.ExtensionContext) {
         renderConsentForm(context, logDir!);
     }));
 
-  //command to render survey
-  context.subscriptions.push(
-    vscode.commands.registerCommand("salt.renderSurvey",
-      () => {
-        if (context.globalState.get("participation") === true){
-          renderSurvey(context, logDir!);
-        }
-        else{
-          vscode.window
-          .showInformationMessage(
-            "You may only view the survey after agreeing to the consent form.",
-          );
-        }
-      }));
 
   context.subscriptions.push(
     vscode.commands.registerTextEditorCommand(
@@ -247,19 +222,11 @@ export function activate(context: vscode.ExtensionContext) {
     )
   );
 
-  // context.subscriptions.push(
-  //   vscode.commands.registerCommand("salt.renderQuiz",
-  //     () => {
-  //       if (context.globalState.get("quiz") !== undefined){
-  //         renderQuiz(context, logDir!);
-  //       }
-  //       else {
-  //         vscode.window
-  //         .showInformationMessage(
-  //           "You've already completed the quiz!",
-  //         );
-  //       }
-  //     }));
+  context.subscriptions.push(
+    vscode.commands.registerCommand("salt.quizLink",
+      () => {
+        //TODO
+      }));
 
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((_: vscode.TextDocument) => {
@@ -275,22 +242,35 @@ export function activate(context: vscode.ExtensionContext) {
         const savedMsg = JSON.stringify({
           file: hashString(doc.fileName),
           savedAt: ((Date.now() / 1000) - initialStamp).toFixed(3),
+          saveCount,
+          copilotStatus: copilotStatus(),
         }) + "\n";
         stream.write(savedMsg);
         output.append(savedMsg);
         linecnt++;
+        saveCount++;
 
-        const exprsWrite = async() => {
-          const exprs = await printExprs(context);
-          const exprsMsg = JSON.stringify({
-            file: hashString(doc.fileName),
-            exprs: exprs,
-          }) + "\n";
-        stream.write(exprsMsg);
-        output.append(exprsMsg);
-        linecnt++;
-        };
-        exprsWrite().catch(console.error);
+        //run salt binary every 5 saves
+        if (saveCount % 5 === 0) {
+          const writeCrate = async() => {
+            const result = await printInfers(context);
+            const lastFetchTime = await lastFetch(vscode.workspace.workspaceFolders![0].uri.fsPath);
+            let lastFetchRel = null;
+            if (lastFetchTime !== null && lastFetchTime > initialStamp) {
+              lastFetchRel = lastFetchTime - initialStamp;
+            }
+            const exprsMsg = JSON.stringify({
+              file: hashString(doc.fileName),
+              lastFetchRel,
+              saveCount,
+              result,
+            }) + "\n";
+          stream.write(exprsMsg);
+          output.append(exprsMsg);
+          linecnt++;
+          };
+          writeCrate().catch(console.error);
+        }
 
         //send telemetry every SENDINTERVAL lines
         if (linecnt % SENDINTERVAL === 0){
@@ -303,7 +283,7 @@ export function activate(context: vscode.ExtensionContext) {
             output.append("Failed to send telemetry.\n" + e);
           }
           if (linecnt >= NEWLOGINTERVAL){
-            [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
+            [logPath, logCount, linecnt, stream] = openNewLog(logDir!, uuid);
           }
         }
       };
@@ -334,7 +314,7 @@ export function activate(context: vscode.ExtensionContext) {
         let time = ((Date.now() / 1000) - initialStamp).toFixed(3);
         timeoutHandle = setTimeout(() => {
           //log errors
-          logEvent(doc, time);
+          logBuild(doc, time);
         }, 2000);
       }
     })
@@ -354,30 +334,25 @@ export function initStudy(context: vscode.ExtensionContext){
   fs.writeFileSync(path.join(logDir!, "uuid.txt"), uuid + '\n', {flag: 'a'});
 
   //generate 50/50 chance of revis being active
-  const rand = Math.random();
-  if (rand < 0.5){
-    //deactivate revis
-    context.globalState.update("enableRevis", false);
-    enableExt = false;
-  }
-  else {
-    context.globalState.update("enableRevis", true);
-    enableExt = true;
-  }
-
+  // const rand = Math.random();
+  // if (rand < 0.5){
+  //   //deactivate revis
+  //   context.globalState.update("enableRevis", false);
+  //   enableExt = false;
+  // }
+  // else {
+  //   context.globalState.update("enableRevis", true);
+  //   enableExt = true;
+  // }
+  
   context.globalState.update("startDate", Math.floor(Date.now() / 1000));
   
   //set config to enable logging
   vscode.workspace.getConfiguration("salt").update("errorLogging", true, true);
-  context.globalState.update("globalEnable", true);
 
   //init log values
-  [logPath, logCount, linecnt, stream] = openNewLog(logDir!, enableExt, uuid);
+  [logPath, logCount, linecnt, stream] = openNewLog(logDir!, uuid);
   output = vscode.window.createOutputChannel("SALT-logger", {log:true});
-  if (!vscode.env.isTelemetryEnabled){
-    vscode.window.showWarningMessage(
-      "Please enable telemetry to participate in the study. Do this by going to Code > Settings > Settings and searching for 'telemetry'.");
-  }
 }
 
 /**
@@ -385,7 +360,7 @@ export function initStudy(context: vscode.ExtensionContext){
  * @param doc contains the current rust document
  * @param time to be subtracted from initial time
  */
-function logEvent(doc: vscode.TextDocument, time: string){
+function logBuild(doc: vscode.TextDocument, time: string){
 
   let diagnostics = vscode.languages
     .getDiagnostics(doc.uri)
@@ -405,7 +380,7 @@ function logEvent(doc: vscode.TextDocument, time: string){
     const entry = JSON.stringify({
       file: hashString(doc.fileName),
       workspace: hashString(vscode.workspace.name!),
-      seconds: time,
+      time,
       revis: visToggled,
       length: doc.lineCount,
       numfiles: count,
@@ -419,9 +394,6 @@ function logEvent(doc: vscode.TextDocument, time: string){
 }
 
 function updateInterventions(editor: vscode.TextEditor) {
-  if (!enableExt){
-    return;
-  }
   const doc = editor.document;
   if (doc.languageId !== "rust") {
     // only supports rust
@@ -441,7 +413,7 @@ function updateInterventions(editor: vscode.TextEditor) {
     });
   
   saveDiagnostics(editor, diagnostics);
-  showInlineSuggestions(editor, diagnostics, );
+  // showInlineSuggestions(editor, diagnostics, );
 }
 
 /**
@@ -509,18 +481,18 @@ function toggleVisualization(editor: vscode.TextEditor) {
   }
 }
 
-function ammendInlineViz(
-  editor: vscode.TextEditor,
-  change: vscode.TextDocumentContentChangeEvent) {
-    const currline = change.range.start.line;
-    const lines = [...errorviz.diags.keys()];
-    const ontheline = lines.filter((i) => parseInt(i) === currline);
-    if (!ontheline) {
-      return;
-    }
-    console.log(ontheline);
+// function ammendInlineViz(
+//   editor: vscode.TextEditor,
+//   change: vscode.TextDocumentContentChangeEvent) {
+//     const currline = change.range.start.line;
+//     const lines = [...errorviz.diags.keys()];
+//     const ontheline = lines.filter((i) => parseInt(i) === currline);
+//     if (!ontheline) {
+//       return;
+//     }
+//     console.log(ontheline);
     
-}
+// }
 
 // function toggleFirstViz(editor: vscode.TextEditor) {
 //   const lines = [...errorviz.diags.keys()];

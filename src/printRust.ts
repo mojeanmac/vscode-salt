@@ -1,14 +1,12 @@
-//!! much of this comes from https://github.com/willcrichton/flowistry/blob/master/ide/src/setup.ts
+//file forked from https://github.com/willcrichton/flowistry/blob/master/ide/src/setup.ts
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as cp from "child_process";
 import * as os from "os";
 import * as path from "path";
-import * as fs from "fs";
 import * as _ from "lodash";
-import { cwd } from "process";
 
-const VERSION = "0.1.0";
+const CRATE_VERSION = "0.1.0";
 const CHANNEL = "nightly-2024-12-01";
 const COMPONENTS = ["clippy", "rust-src", "rustc-dev", "llvm-tools-preview"];
 type Result<T> = { Ok: T } | { Err: String };
@@ -153,7 +151,7 @@ let findWorkspaceRoot = async (): Promise<string | null> => {
   return folderSubdirTil(entry.idx);
 };
 
-export async function printExprs(context: vscode.ExtensionContext): Promise<JSON | null>  {
+export async function printInfers(context: vscode.ExtensionContext): Promise<JSON | null>  {
   let workspace_root = await findWorkspaceRoot();
   if (!workspace_root) {
     console.log("Failed to find workspace root!");
@@ -168,7 +166,7 @@ export async function printExprs(context: vscode.ExtensionContext): Promise<JSON
   try {
     version = await exec_notify(
       cargo,
-      [...cargo_args, "salt", "--version"],
+      [...cargo_args, "salt", "-V"],
       "Checking version...",
       { cwd: workspace_root }
     );
@@ -176,7 +174,7 @@ export async function printExprs(context: vscode.ExtensionContext): Promise<JSON
     version = "";
   }
 
-  if (version !== VERSION) {
+  if (version !== CRATE_VERSION) {
     // install latest nightly + binary
     let components = COMPONENTS.map((c) => ["-c", c]).flat();
     try{
@@ -192,19 +190,19 @@ export async function printExprs(context: vscode.ExtensionContext): Promise<JSON
         ],
         "Installing nightly Rust..."
       );
-      await exec_notify(  // flowistry actually downloads the crate from crates.io!!
-        "cargo",
-        ["install",
-          "--path",
-          "/Users/molly/Documents/GitHub/vscode-errorviz/crates/salt_ide" // CHANGE!!
-        ],
-        "Installing crates...");
-    }
-    catch (e: any) {
-      console.log(e);
+      await exec_notify(
+        cargo,
+        [ "install",
+          "salt_ide",
+          "--version", CRATE_VERSION],
+        "Installing salt_ide..."
+      );
+    } catch (e: any) {
+      console.error(e);
       return null;
     }
   }
+
   let opts = await get_opts(workspace_root);
 
   let output;
