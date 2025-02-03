@@ -31,8 +31,6 @@ As part of an ongoing study of errors, we observe data about the diagnostics rel
     "workspace": (hash of workspace name),
     "time": (time since initialization),
     "revis": (if revis is activated),
-    "length": (linecount of current file),
-    "numfiles": (number of rs files in workspace),
     "errors": {[
         "code": (the rustc error code),
         "msg": (hash of the err msg),
@@ -55,6 +53,7 @@ A more detailed description can be found at [`crates/salt_ide/README.md`](./crat
     "file": (hash of file name),
     "lastFetchRel": (if applicable, relative time of last pull/fetch),
     "saveCount": (number of saves this session),
+    "numfiles": (number of rs files in workspace),
     "result": {
         "fns": (hashmap of relevant function data),
         "loops": (location and depth of loops),
@@ -76,7 +75,8 @@ Save actions can provide intermediate data about activity when there are no diag
     "file": (hash of file name),
     "savedAt": (time since initialization),
     "saveCount": (number of saves this session),
-    "copilotStatus": (if copilot is enabled)
+    "length": (linecount of current file),
+    "copilotStatus": (if copilot is enabled),
 }
 ```
 

@@ -27,9 +27,10 @@ const YEAR = 31536000;
 
 const initialStamp = Math.floor(Date.now() / 1000);
 let visToggled = false;
+let saveCount = 0;
 let prevline: number | undefined;
 let logDir: string | null = null;
-let logPath: string, logCount: number, linecnt: number, saveCount: number,
+let logPath: string, logCount: number, linecnt: number,
 stream: fs.WriteStream, output: vscode.LogOutputChannel, uuid: string;
 
 export function activate(context: vscode.ExtensionContext) {
@@ -77,8 +78,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   //for current participants
   if (context.globalState.get("participation") === true){
-
-    saveCount = 0;
 
     //disable logging for this session if publicOnly is true and not a public repo
     if (vscode.workspace.getConfiguration("salt").get("publicOnly") === true){
@@ -243,6 +242,7 @@ export function activate(context: vscode.ExtensionContext) {
           file: hashString(doc.fileName),
           savedAt: ((Date.now() / 1000) - initialStamp).toFixed(3),
           saveCount,
+          length: doc.lineCount,
           copilotStatus: copilotStatus(),
         }) + "\n";
         stream.write(savedMsg);
@@ -254,7 +254,8 @@ export function activate(context: vscode.ExtensionContext) {
         if (saveCount % 5 === 0) {
           const writeCrate = async() => {
             const result = await printInfers(context);
-            const lastFetchTime = await lastFetch(vscode.workspace.workspaceFolders![0].uri.fsPath);
+            const lastFetchTime = await lastFetch(vscode.workspace.workspaceFolders![0].uri.fsPath); 
+            const count = await countrs();
             let lastFetchRel = null;
             if (lastFetchTime !== null && lastFetchTime > initialStamp) {
               lastFetchRel = lastFetchTime - initialStamp;
@@ -263,11 +264,12 @@ export function activate(context: vscode.ExtensionContext) {
               file: hashString(doc.fileName),
               lastFetchRel,
               saveCount,
+              numfiles: count,
               result,
             }) + "\n";
-          stream.write(exprsMsg);
-          output.append(exprsMsg);
-          linecnt++;
+            stream.write(exprsMsg);
+            output.append(exprsMsg);
+            linecnt++;
           };
           writeCrate().catch(console.error);
         }
@@ -374,23 +376,19 @@ function logBuild(doc: vscode.TextDocument, time: string){
 
   let errors = logError(diagnostics);
 
-  //get linecount of codebase
-  countrs().then((count) => {
-    //write to file
-    const entry = JSON.stringify({
-      file: hashString(doc.fileName),
-      workspace: hashString(vscode.workspace.name!),
-      time,
-      revis: visToggled,
-      length: doc.lineCount,
-      numfiles: count,
-      errors: errors
-    }) + '\n';
-    stream.write(entry);
-    output.append(entry);
-    linecnt++;
-    visToggled = false;
-  });
+  //write to file
+  const entry = JSON.stringify({
+    file: hashString(doc.fileName),
+    workspace: hashString(vscode.workspace.name!),
+    time,
+    revis: visToggled,
+    errors: errors
+  }) + '\n';
+  stream.write(entry);
+  output.append(entry);
+  linecnt++;
+  visToggled = false;
+
 }
 
 function updateInterventions(editor: vscode.TextEditor) {
