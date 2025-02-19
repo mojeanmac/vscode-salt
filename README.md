@@ -25,7 +25,7 @@ There are three types of inferences we gather that are explained below:
 
 As part of an ongoing study of errors, we observe data about the diagnostics related to your compiler errors.
 
-```json
+```
 {
     "file": (hash of file name),
     "workspace": (hash of workspace name),
@@ -48,7 +48,7 @@ As of Februrary 2025, we have begun a study of usable programming paradigms in R
 The output allows us to identify imperative and functional styles of Rust.
 A more detailed description can be found at [`crates/salt_ide/README.md`](./crates/salt_ide/README). Function names are hashed and types are identified by their [`TyKind`](https://doc.rust-lang.org/beta/nightly-rustc/rustc_middle/ty/sty/type.TyKind.html).
 
-```json
+```
 {
     "file": (hash of file name),
     "lastFetchRel": (if applicable, relative time of last pull/fetch),
@@ -70,7 +70,7 @@ A more detailed description can be found at [`crates/salt_ide/README.md`](./crat
 
 Save actions can provide intermediate data about activity when there are no diagnostics or the crate is not active. One of these inferences is whether copilot is installed and enabled in the current workspace.
 
-```json
+```
 {
     "file": (hash of file name),
     "savedAt": (time since initialization),
