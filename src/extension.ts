@@ -7,7 +7,7 @@ import * as path from "path";
 
 import { printInfers } from "./printRust";
 import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo, lastFetch } from "./remotes";
-import { renderConsentForm } from "./webviews";
+import { redirectToSurvey, renderConsentForm } from "./webviews";
 import { hashString, logError, countrs, copilotStatus} from "./logging";
 
 import { supportedErrorcodes } from "./interventions";
@@ -61,18 +61,18 @@ export function activate(context: vscode.ExtensionContext) {
 
   //TODO re-enable when quiz is ready
   //one time notif for existing participants to do quiz
-  // if (context.globalState.get("quiznotif") === undefined //not yet notified
-  //     && context.globalState.get("participation") === true){ //but is a participant
+  if (context.globalState.get("quiznotif") === undefined //not yet notified
+      && context.globalState.get("participation") === true){ //but is a participant
     
-  //   vscode.window.showInformationMessage("Are you a functional or an imperative programmer? Quiz yourself to find out!", "Take Quiz", "Maybe Later").then((sel) => {
-  //     if (sel === "Take Quiz") {
-  //       // qualtrics link
-  //     } else {
-  //       vscode.window.showInformationMessage("You can take the quiz later by running the command 'SALT: View Qualtrics Quiz.'");
-  //     }
-  //   });
-  //   context.globalState.update("quiznotif", true);
-  // }
+    vscode.window.showInformationMessage("Please take our updated survey and Rust knowledge quiz!", "Take Survey", "Maybe Later").then((sel) => {
+      if (sel === "Take Survey") {
+        vscode.env.openExternal(vscode.Uri.parse(redirectToSurvey(uuid)));
+      } else {
+        vscode.window.showInformationMessage("You can complete the survey later by running the command 'SALT: View Survey.'");
+      }
+    });
+    context.globalState.update("quiznotif", true);
+  }
 
   //for current participants
   if (context.globalState.get("participation") === true){
@@ -222,7 +222,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand("salt.quizLink",
       () => {
-        //TODO
+        vscode.env.openExternal(vscode.Uri.parse(redirectToSurvey(uuid)));
       }));
 
   context.subscriptions.push(

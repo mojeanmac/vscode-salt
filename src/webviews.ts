@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { initStudy } from './extension';
 import { isPrivateRepo } from './remotes';
-export { renderConsentForm, renderpublicOnly };
+export { renderConsentForm, renderpublicOnly, redirectToSurvey };
 
 /**
   * Renders the consent form
@@ -28,7 +28,7 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
           if (message.text === "yes"){
             context.globalState.update("participation", true);
             initStudy(context);
-            renderpublicOnly(context, logDir);
+            renderpublicOnly(context);
           }
           else {
             context.globalState.update("participation", false);
@@ -49,39 +49,66 @@ function renderConsentForm(context: vscode.ExtensionContext, logDir: string){
     }
   }
   
-  /**
-   * Renders public repo question
-   */
-  function renderpublicOnly(context: vscode.ExtensionContext, logDir: string){
-    const panel = vscode.window.createWebviewPanel(
-      'form',
-      'All or Public Only',
-      vscode.ViewColumn.One,
-      {
-        enableScripts: true
-      }
-    );
-    
-    const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'allOrPublic.html'), 'utf8');
-    panel.webview.html = html;
+/**
+ * Renders public repo question
+ */
+function renderpublicOnly(context: vscode.ExtensionContext){
+  const panel = vscode.window.createWebviewPanel(
+    'form',
+    'All or Public Only',
+    vscode.ViewColumn.One,
+    {
+      enableScripts: true
+    }
+  );
   
-    panel.webview.onDidReceiveMessage(
-      message => {
-        if (message.text === "public") {
-          vscode.workspace.getConfiguration("salt").update("publicOnly", true, true);
-          
-          //check if workspace is private
-          if (vscode.workspace.workspaceFolders) {
-            isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
-              context.workspaceState.update("enabled", !isPrivate);
-          });
-          }
+  const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'allOrPublic.html'), 'utf8');
+  panel.webview.html = html;
+
+  panel.webview.onDidReceiveMessage(
+    message => {
+      if (message.text === "public") {
+        vscode.workspace.getConfiguration("salt").update("publicOnly", true, true);
+        
+        //check if workspace is private
+        if (vscode.workspace.workspaceFolders) {
+          isPrivateRepo(vscode.workspace.workspaceFolders[0].uri.fsPath).then((isPrivate) => {
+            context.workspaceState.update("enabled", !isPrivate);
+        });
         }
-        const html = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'thankyoumessage.html'), 'utf8');
-        panel.webview.html = html;
       }
-    );
+      renderRedirectPage(context);
+    }
+  );
+}
+
+function renderRedirectPage(context: vscode.ExtensionContext){
+  const panel = vscode.window.createWebviewPanel(
+    'form',
+    'Survey Link',
+    vscode.ViewColumn.One,
+    {
+      enableScripts: true
+    }
+  );
+
+  let uuid: string | undefined = context.globalState.get("uuid");
+  if (uuid === undefined) {
+    uuid = "undefined";
   }
+  
+  context.globalState.update("quiznotif", true);
+  const link = redirectToSurvey(uuid);
+  const htmlTemp = fs.readFileSync(path.join(context.extensionPath, 'assets', 'forms', 'thankyoumessage.html'), 'utf8');
+  const html = htmlTemp.replace(/{{link}}/g, link);
+  panel.webview.html = html;
+
+}
+
+function redirectToSurvey(uuid: string) {
+  const baseSurveyUrl = "https://ucsd.co1.qualtrics.com/jfe/form/SV_1UnoJnv038dOr0a";
+  return `${baseSurveyUrl}?userId=${uuid}`;
+}
   
   /**
    * Renders the survey

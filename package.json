@@ -38,7 +38,7 @@
       },
       {
         "command": "salt.quizLink",
-        "title": "SALT: View Qualtrics Quiz"
+        "title": "SALT: View Survey"
       }
     ],
     "keybindings": [
