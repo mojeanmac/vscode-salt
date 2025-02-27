@@ -9,7 +9,7 @@
     "url": "https://github.com/mojeanmac/vscode-salt"
   },
   "description": "Test Rust tools and participate in academic research!",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "MIT",
   "engines": {
     "vscode": "^1.73.0"
