@@ -78,6 +78,7 @@ function renderpublicOnly(context: vscode.ExtensionContext){
         }
       }
       renderRedirectPage(context);
+      panel.dispose();
     }
   );
 }

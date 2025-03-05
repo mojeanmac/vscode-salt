@@ -45,12 +45,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
-
-      //if moving from, kale->SALAD, insert uuid in new folder
-      if (context.globalState.get("participation") === true){
-        fs.writeFileSync(path.join(logDir, "log1.json"), "", {flag: 'a'});
-        fs.writeFileSync(path.join(logDir, "uuid.txt"), context.globalState.get("uuid") + '\n', {flag: 'a'});
-      }
   }
 
   //have they given an answer to the current consent form?
