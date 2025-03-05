@@ -151,11 +151,11 @@ let findWorkspaceRoot = async (): Promise<string | null> => {
   return folderSubdirTil(entry.idx);
 };
 
-export async function printInfers(context: vscode.ExtensionContext): Promise<JSON | null>  {
+export async function printInfers(context: vscode.ExtensionContext): Promise<object>  {
   let workspace_root = await findWorkspaceRoot();
   if (!workspace_root) {
-    console.log("Failed to find workspace root!");
-    return null;
+    console.log("Failed to find workspace root");
+    return { error: "Failed to find workspace root" };
   }
   console.log("Workspace root", workspace_root);
 
@@ -197,9 +197,16 @@ export async function printInfers(context: vscode.ExtensionContext): Promise<JSO
           "--version", CRATE_VERSION],
         "Installing salt_ide..."
       );
+      // await exec_notify(
+      //   cargo,
+      //   [ "install",
+      //     "--path", "./vscode-errorviz/crates/salt_ide"
+      //   ],
+      //   "Installing salt_ide..."
+      // );
     } catch (e: any) {
       console.error(e);
-      return null;
+      return { error: "Failed to install salt_ide" };
     }
   }
 
@@ -218,6 +225,6 @@ export async function printInfers(context: vscode.ExtensionContext): Promise<JSO
     return JSON.parse(output_str);
   } catch (e: any) {
     console.error(e);
-    return null;
+    return { error: "Failed to run salt_ide"};
   }
 }
