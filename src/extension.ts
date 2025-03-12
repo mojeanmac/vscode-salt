@@ -6,9 +6,9 @@ import * as fs from "fs";
 import * as path from "path";
 
 import { printInfers } from "./printRust";
-import { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo, lastFetch } from "./remotes";
+import { sendPayload, sendBackup, isPrivateRepo, lastFetch } from "./remotes";
 import { redirectToSurvey, renderConsentForm } from "./webviews";
-import { hashString, logError, countrs, copilotStatus} from "./logging";
+import { openNewLog, openExistingLog, hashString, logError, countrs, copilotStatus} from "./logging";
 
 import { supportedErrorcodes } from "./interventions";
 import * as errorviz from "./interventions/errorviz";
@@ -253,6 +253,7 @@ export function activate(context: vscode.ExtensionContext) {
               lastFetchRel = lastFetchTime - initialStamp;
             }
             const exprsMsg = JSON.stringify({
+              uuid,
               file: hashString(doc.fileName),
               lastFetchRel,
               saveCount,

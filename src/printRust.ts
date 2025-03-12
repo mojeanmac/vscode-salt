@@ -190,22 +190,28 @@ export async function printInfers(context: vscode.ExtensionContext): Promise<obj
         ],
         "Installing nightly Rust..."
       );
+    } catch (e: any) {
+      return { error: "Failed to install nightly Rust" };
+    }
+    try {
       await exec_notify(
         cargo,
-        [ "install",
+        [ ...cargo_args,
+          "install",
           "salt_ide",
-          "--version", CRATE_VERSION],
+          "--version", CRATE_VERSION,
+          "--force",
+          "--locked"],
         "Installing salt_ide..."
       );
       // await exec_notify(
       //   cargo,
       //   [ "install",
-      //     "--path", "./vscode-errorviz/crates/salt_ide"
+      //     "--path", "../crates/salt_ide"
       //   ],
       //   "Installing salt_ide..."
       // );
     } catch (e: any) {
-      console.error(e);
       return { error: "Failed to install salt_ide" };
     }
   }
@@ -224,7 +230,6 @@ export async function printInfers(context: vscode.ExtensionContext): Promise<obj
     console.log(output_str);
     return JSON.parse(output_str);
   } catch (e: any) {
-    console.error(e);
     return { error: "Failed to run salt_ide"};
   }
 }

@@ -5,50 +5,7 @@ import { Octokit } from '@octokit/rest';
 import simpleGit from 'simple-git';
 import { deflate } from 'zlib';
 
-export { openNewLog, openExistingLog, sendPayload, sendBackup, isPrivateRepo, lastFetch };
-
-/**
- * Opens an existing log file
- * @param logDir - directory to store logs
- * @param enableExt - whether the extension is enabled
- * @param timeSinceStart - the time since the study began
- * @returns path of current log, line count, and the stream
- */
-function openExistingLog(logDir: string, timeSinceStart: number): [string, number, number, fs.WriteStream]{
-    //find how many json files are in folder to determine current log #
-    let logCount = fs.readdirSync(logDir)
-        .filter(f => path.extname(f) === ".json").length;
-    const logPath = path.join(logDir, `log${logCount}.json`);
-
-    //timesincestart = (initialStamp - startDate)
-    fs.writeFileSync(logPath, JSON.stringify({extensionReload: {timeSinceStart}}) + '\n', {flag: 'a'});
-    let linecnt = fs.readFileSync(logPath, 'utf-8').split('\n').length;
-    //create new stream
-    const stream = fs.createWriteStream(logPath, {flags: 'a'});
-
-    return [logPath, logCount, linecnt, stream];
-}
-
-/**
- * Creates a new log file
- * @param logDir - directory to store logs
- * @param enableExt - whether the extension is enabled
- * @param uuid - the unique identifier for the user
- * @returns path of current log, line count, and the stream
- */
-function openNewLog(logDir: string, uuid: string): [string, number, number, fs.WriteStream]{
-    let logCount = fs.readdirSync(logDir)
-        .filter(f => path.extname(f) === ".json").length;
-
-    logCount++; //we are creating a new file, so increment the count
-    const logPath = path.join(logDir, `log${logCount}.json`);
-
-    fs.writeFileSync(logPath, JSON.stringify({logCount, uuid}) + '\n', {flag: 'a'});
-    let linecnt = 0;
-
-    const stream = fs.createWriteStream(logPath, {flags: 'a'});
-    return [logPath, logCount, linecnt, stream];
-}
+export { sendPayload, sendBackup, isPrivateRepo, lastFetch };
 
 /**
  * Sends the current log to write-only endpoint
