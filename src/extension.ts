@@ -253,7 +253,6 @@ export function activate(context: vscode.ExtensionContext) {
               lastFetchRel = lastFetchTime - initialStamp;
             }
             const exprsMsg = JSON.stringify({
-              uuid,
               file: hashString(doc.fileName),
               lastFetchRel,
               saveCount,
@@ -374,6 +373,7 @@ function logBuild(doc: vscode.TextDocument, time: string){
     file: hashString(doc.fileName),
     workspace: hashString(vscode.workspace.name!),
     time,
+    saveCount,
     revis: visToggled,
     errors: errors
   }) + '\n';

@@ -106,19 +106,17 @@ function logError(diagnostics: vscode.Diagnostic[]): ErrorJson[] {
 
 function copilotStatus(): string {
   const copilotExtension = vscode.extensions.getExtension('github.copilot');
-  if (copilotExtension) {
-    if (copilotExtension.isActive) {
-      const config = vscode.workspace.getConfiguration('github.copilot');
-      if (config.get('enable.rust')) {
-          return "enabled";
-      } else {
-        return "disabled";
-      }
-    } else {
-        return "inactive";
-    }
+  if (!copilotExtension) {
+    return "not installed";
+  }
+  if (!copilotExtension.isActive) {
+    return "inactive";
+  }
+  const config = vscode.workspace.getConfiguration('github.copilot');
+  if (config.get('enable.rust')) {
+      return "enabled";
   } else {
-      return "not installed";
+    return "disabled";
   }
 }
 

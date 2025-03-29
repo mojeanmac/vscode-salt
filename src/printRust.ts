@@ -230,6 +230,6 @@ export async function printInfers(context: vscode.ExtensionContext): Promise<obj
     console.log(output_str);
     return JSON.parse(output_str);
   } catch (e: any) {
-    return { error: "Failed to run salt_ide"};
+    return { error: "Failed to run salt_ide, " + e.toString() };
   }
 }
