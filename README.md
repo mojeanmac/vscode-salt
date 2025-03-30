@@ -6,7 +6,7 @@
 
 [VS Code Extension Marketplace Link](https://marketplace.visualstudio.com/items?itemName=Kale-Lab.salt)
 
-Researchers at the University of California, San Diego are conducting a study on Rust errors, programming paradigmns, and how we can help make it easier to learn Rust. We have developed a free Visual Studio Code extension, SALT, which includes features that may be helpful while you’re learning Rust, such as REVIS, a borrowing and ownership error visualizer. If you grant permission, the extension can also send us data about the programming paradigms you use and the errors you’ve experienced while compiling Rust code; we plan to use that information to evaluate the impact of our extension as well as to give you feedback on your progress.
+Researchers at the University of California, San Diego are conducting a study on Rust errors, programming paradigms, and how we can help make it easier to learn Rust. We have developed a free Visual Studio Code extension, SALT, which includes features that may be helpful while you’re learning Rust, such as REVIS, a borrowing and ownership error visualizer. If you grant permission, the extension can also send us data about code style choices and the errors you’ve experienced while compiling Rust code; we plan to use that information to evaluate the impact of our extension as well as to give you feedback on your progress.
 
 ## How to participate in the study
 
