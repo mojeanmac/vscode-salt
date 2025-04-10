@@ -13,3 +13,7 @@ fn doc_example() {}
 trait Trait {
     fn trait_fn() {/*i have a body and i must scream */}
 }
+
+pub struct TSLanguage {
+    _unused: [u8; 0],
+} 

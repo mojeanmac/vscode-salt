@@ -6,8 +6,8 @@ import * as os from "os";
 import * as path from "path";
 import * as _ from "lodash";
 
-const CRATE_VERSION = "0.1.0";
-const CHANNEL = "nightly-2024-12-01";
+const CRATE_VERSION = "0.1.1";
+const CHANNEL = "nightly-2025-03-03";
 const COMPONENTS = ["clippy", "rust-src", "rustc-dev", "llvm-tools-preview"];
 type Result<T> = { Ok: T } | { Err: String };
 

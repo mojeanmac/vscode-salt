@@ -1,6 +1,7 @@
 use std::process::Command;
 use std::env;
 use std::path::Path;
+use rustc_session::config::parse;
 use serde_json::Value;
 use crate::plugin::visit_hir::*;
 use crate::plugin::print_result::*;
@@ -32,7 +33,7 @@ pub(crate) fn run_salt(path: &str) -> VisitorJson {
         })
         .collect();
 
-    assert!(parsed_jsons.len() == 1, "Expected one JSON object: {:?}", parsed_jsons);
+    assert!(parsed_jsons.len() == 1, "Expected 1 JSON object, got {}: {:?}", parsed_jsons.len(), parsed_jsons);
 
     let print_result: PrintResult = serde_json::from_value(parsed_jsons[0].clone()).unwrap();
     let visit: VisitorJson = serde_json::from_value(print_result.visit_res).unwrap();

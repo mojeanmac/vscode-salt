@@ -4,5 +4,5 @@ exclude = ["test-project",  "crates/salt_ide/src/plugin/tests/unit_tests", "src/
 resolver = "2"
 
 [workspace.dependencies]
-rustc_plugin = "=0.11.0-nightly-2024-12-01"
-rustc_utils = "=0.11.0-nightly-2024-12-01"
+rustc_plugin = "=0.13.0-nightly-2025-03-03"
+rustc_utils = "=0.13.0-nightly-2025-03-03"

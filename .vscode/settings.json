@@ -10,5 +10,5 @@
     "typescript.tsc.autoDetect": "off",
     "liveServer.settings.port": 5501,
     "rust-analyzer.rustc.source": "discover",
-    "rust-analyzer.diagnostics.useRustcErrorCode": true
+    "rust-analyzer.diagnostics.useRustcErrorCode": true,
 }

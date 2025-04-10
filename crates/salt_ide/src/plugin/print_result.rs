@@ -57,14 +57,16 @@ impl RustcPlugin for SaltPlugin {
     compiler_args: Vec<String>,
     plugin_args: Self::Args,
   ) -> rustc_interface::interface::Result<()> {
-    let mut callbacks = SaltCallbacks { args: plugin_args };
-    let compiler = rustc_driver::RunCompiler::new(&compiler_args, &mut callbacks);
-    compiler.run()
+    let mut callbacks = SaltCallbacks {
+      args: Some(plugin_args),
+    };
+    rustc_driver::run_compiler(&compiler_args, &mut callbacks);
+    Ok(())
   }
 }
 
 struct SaltCallbacks {
-  args: SaltPluginArgs,
+  args: Option<SaltPluginArgs>,
 }
 
 impl rustc_driver::Callbacks for SaltCallbacks {
@@ -94,9 +96,8 @@ pub struct PrintResult {
 }
 
 fn print_inferences(tcx: TyCtxt) {
-  let hir = tcx.hir();
   let mut visitor = HirVisitor::new(tcx);
-  hir.walk_toplevel_module(&mut visitor);
+  tcx.hir_walk_toplevel_module(&mut visitor);
 
   let result = PrintResult {
     crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),

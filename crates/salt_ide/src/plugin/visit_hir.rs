@@ -10,7 +10,7 @@ use std::collections::{HashMap, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
 
 // togglable for testing
-const HASH_EN: bool = true;
+const HASH_EN: bool = false;
 
 // function parameters (inputs)
 #[derive(Serialize, Deserialize, Default)]
@@ -72,6 +72,11 @@ enum Block {
         recursive: bool,
         lines: usize,
     },
+    NoType {
+        def_id: DefId,
+        lines: usize,
+        depth: usize,
+    }
 }
 
 // json version of Block used for serialization
@@ -109,6 +114,11 @@ pub enum BlockJson {
         recursive: bool,
         lines: usize,
     },
+    NoType {
+        def_id: String,
+        lines: usize,
+        depth: usize,
+    }
 }
 
 impl Block {
@@ -146,6 +156,11 @@ impl Block {
                 recursive: *recursive,
                 lines: *lines,
             },
+            Block::NoType { def_id, lines , depth} => BlockJson::NoType {
+                def_id: hash_id(def_id),
+                lines: *lines,
+                depth: *depth,
+            }
         }
     }
 }
@@ -161,6 +176,7 @@ pub struct HirVisitor<'tcx> {
     iter_mthds: HashMap<OwnerId, Block>,
     calls: HashMap<DefId, HashMap<DefId, u32>>,
     unsafe_blocks: Vec<Block>,
+    no_type: Vec<Block>,
 }
 
 // json version of visitor for serialization
@@ -173,6 +189,7 @@ pub struct VisitorJson {
     pub(crate) iter_mthds: Vec<BlockJson>,
     pub(crate) calls: HashMap<String, HashMap<String, u32>>,
     pub(crate) unsafe_blocks: Vec<BlockJson>,
+    pub(crate) no_type: Vec<BlockJson>,
 }
 
 impl<'tcx> HirVisitor<'tcx> {
@@ -188,6 +205,7 @@ impl<'tcx> HirVisitor<'tcx> {
             iter_mthds: HashMap::new(),
             calls: HashMap::new(),
             unsafe_blocks: Vec::new(),
+            no_type: Vec::new(),
         }
     }
 
@@ -204,14 +222,16 @@ impl<'tcx> HirVisitor<'tcx> {
                     .collect::<HashMap<_, _>>()))
                     .collect(),
             unsafe_blocks: self.unsafe_blocks.iter().map(|v| v.to_json()).collect(),
+            no_type: self.no_type.iter().map(|v| v.to_json()).collect(),
         }
     }
 }
 
+// - `Visitor::nested_visit_map` becomes `Visitor::maybe_tcx`.
 impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
     type NestedFilter = nested_filter::All;
-    fn nested_visit_map(&mut self) -> Self::Map {
-        self.tcx.hir()
+    fn maybe_tcx(&mut self) -> Self::MaybeTyCtxt {
+        self.tcx
     }
 
     // visit functions, including traits and impls which may have nested fns
@@ -220,10 +240,10 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
         let def_id = item.owner_id.to_def_id();
         if self.tcx.def_kind(def_id) == DefKind::Fn {
             match item.kind {
-                ItemKind::Fn(sig, _, body_id) => { 
-                    let unsafety = sig.header.safety == rustc_hir::Safety::Unsafe;
-                    let params = visit_params(self.tcx, body_id);
-                    let ret = visit_return(self.tcx, body_id);
+                ItemKind::Fn { sig, body, .. } => {  //todo: check for body_id?
+                    let unsafety = sig.header.safety == rustc_hir::HeaderSafety::Normal(rustc_hir::Safety::Unsafe);
+                    let params = visit_params(self.tcx, body);
+                    let ret = visit_return(self.tcx, body);
                     self.fns.insert(def_id, Block::Def {
                         params,
                         ret,
@@ -234,13 +254,13 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
                 }
                 ItemKind::Impl(impl_item) => {
                     for item_id in impl_item.items {
-                        let assoc_item = self.tcx.hir().impl_item(item_id.id);
+                        let assoc_item = self.tcx.hir().expect_impl_item(item_id.id.owner_id.def_id);
                         self.visit_impl_item(assoc_item);
                     }
                 }
                 ItemKind::Trait(.., trait_items) => {
                     for item_id in trait_items {
-                        let assoc_item = self.tcx.hir().trait_item(item_id.id);
+                        let assoc_item = self.tcx.hir().expect_trait_item(item_id.id.owner_id.def_id);
                         self.visit_trait_item(assoc_item);
                     }
                 }
@@ -253,7 +273,7 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
     // for finding the ImplItemKind::Fn
     fn visit_impl_item(&mut self, item: &'tcx rustc_hir::ImplItem<'tcx>) {
         if let rustc_hir::ImplItemKind::Fn(sig, body_id) = item.kind {
-            let unsafety = sig.header.safety == rustc_hir::Safety::Unsafe;
+            let unsafety = sig.header.safety == rustc_hir::HeaderSafety::Normal(rustc_hir::Safety::Unsafe);
             let params = visit_params(self.tcx, body_id);
             let ret = visit_return(self.tcx, body_id);
             self.fns.insert(item.owner_id.to_def_id(), Block::Def {
@@ -270,7 +290,7 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
     // for finding the TraitItemKind::Fn, but only those that have bodies
     fn visit_trait_item(&mut self, item: &'tcx rustc_hir::TraitItem<'tcx>){
         if let rustc_hir::TraitItemKind::Fn(sig, tf) = item.kind {
-            let unsafety = sig.header.safety == rustc_hir::Safety::Unsafe;
+            let unsafety = sig.header.safety == rustc_hir::HeaderSafety::Normal(rustc_hir::Safety::Unsafe);
             if let rustc_hir::TraitFn::Provided(body_id) = tf{
                 let params = visit_params(self.tcx, body_id);
                 let ret = visit_return(self.tcx, body_id);
@@ -323,7 +343,18 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
 
     // analyze loops, matches, let expressions, function calls, and iter method calls
     fn visit_expr(&mut self, expr: &'tcx Expr<'tcx>) {
-        let typeck_results = self.tcx.typeck(expr.hir_id.owner);
+
+        let owner = expr.hir_id.owner;
+        if !self.tcx.has_typeck_results(owner.def_id) {
+            self.no_type.push(Block::NoType {
+                def_id: owner.to_def_id(),
+                lines: line_count(self.source_map, expr.span),
+                depth: self.depth,
+            });
+            return
+        }
+        let typeck_results = self.tcx.typeck(owner);
+
         let hir_id = expr.hir_id;
         let def_id = hir_id.owner.to_def_id();
         match expr.kind {
@@ -411,7 +442,7 @@ fn visit_params(tcx: TyCtxt, body_id: BodyId) -> Params {
     let mut ty_kinds = Vec::new();
 
     let typeck_results = tcx.typeck(body_id.hir_id.owner);
-    let body = tcx.hir().body(body_id);
+    let body = tcx.hir_body(body_id);
     for param in body.params {
         let ty = typeck_results.node_type(param.hir_id);
 
@@ -431,7 +462,7 @@ fn visit_params(tcx: TyCtxt, body_id: BodyId) -> Params {
 
 // analyze return tykind, mutability, and optional closure trait
 fn visit_return(tcx: TyCtxt, body_id: BodyId) -> Return {
-    let body = tcx.hir().body(body_id);
+    let body = tcx.hir_body(body_id);
     let ty = tcx.typeck(body_id.hir_id.owner).node_type(body.value.hir_id);
 
     let ty_kind = if ty.is_unit() {
@@ -486,6 +517,11 @@ fn is_ty_closure<'tcx>(tcx: TyCtxt<'tcx>, ty: &Ty<'tcx>, def_id: DefId) -> Optio
     let param_env = tcx.param_env(def_id);
     let lang_items = tcx.lang_items();
     
+    if let Some(fn_trait) = lang_items.fn_trait() {
+        if ty.does_implement_trait(tcx, param_env, fn_trait) {
+            return Some("Fn".to_string());
+        }
+    }
     if let Some(fn_trait) = lang_items.fn_mut_trait() {
         if ty.does_implement_trait(tcx, param_env, fn_trait) {
             return Some("FnMut".to_string());
@@ -494,11 +530,6 @@ fn is_ty_closure<'tcx>(tcx: TyCtxt<'tcx>, ty: &Ty<'tcx>, def_id: DefId) -> Optio
     if let Some(fn_trait) = lang_items.fn_once_trait() {
         if ty.does_implement_trait(tcx, param_env, fn_trait) {
             return Some("FnOnce".to_string());
-        }
-    }
-    if let Some(fn_trait) = lang_items.fn_trait() {
-        if ty.does_implement_trait(tcx, param_env, fn_trait) {
-            return Some("Fn".to_string());
         }
     }
 
@@ -605,5 +636,6 @@ fn ty_kind_variant(ty_kind: &TyKind) -> String {
         TyKind::Placeholder(..) => "Placeholder".to_string(),
         TyKind::Infer(..) => "Infer".to_string(),
         TyKind::Error(..) => "Error".to_string(),
+        _ => "Unknown".to_string(),
     }
 }

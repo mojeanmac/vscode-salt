@@ -308,9 +308,9 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
 name = "rustc_plugin"
-version = "0.11.0-nightly-2024-12-01"
+version = "0.13.0-nightly-2025-03-03"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "665358b6619ffa05c3fce0900fb6ae0bc661df03cbb959acdc1a59139631c477"
+checksum = "7d90316cfa5f505b7e35e6dbf7baa9255f9016443ed560a35a2b7ca58483c0ca"
 dependencies = [
  "cargo_metadata",
  "log",
@@ -328,9 +328,9 @@ checksum = "b3c5a95edfa0c893236ae4778bb7c4752760e4c0d245e19b5eff33c5aa5eb9dc"
 
 [[package]]
 name = "rustc_utils"
-version = "0.11.0-nightly-2024-12-01"
+version = "0.13.0-nightly-2025-03-03"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81511bc57827cf136f4e008b57b77e2dac1e6e058c2f275901d87cc729631847"
+checksum = "f599f45d4951ad4373ad2f652bf97d2448de5cadece564fc5f9b42670c14afbb"
 dependencies = [
  "anyhow",
  "cfg-if",
@@ -346,7 +346,7 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "salt_ide"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "env_logger",

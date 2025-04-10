@@ -342,5 +342,14 @@ const PATH: &str = "src/plugin/tests/unit_tests";
         };
         
         compare_fn("async_function", &async_fn, &visit.fns);
+
+
+        // let tslang = BlockJson::NoType { 
+        //     def_id: "DefId(0:13 ~ unit_tests[a66e]::other::TSLanguage)".to_string(),
+        //     lines: 1,
+        //     depth: 0,
+        // };
+
+        // compare_fn("TSLanguage", &tslang, &visit.fns);
     }
 }
