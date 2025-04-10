@@ -10,7 +10,7 @@ use std::collections::{HashMap, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
 
 // togglable for testing
-const HASH_EN: bool = false;
+const HASH_EN: bool = true;
 
 // function parameters (inputs)
 #[derive(Serialize, Deserialize, Default)]
