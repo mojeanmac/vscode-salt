@@ -63,6 +63,7 @@ A more detailed description can be found at [`crates/salt_ide/README.md`](./crat
         "iter_mthds": (methods on iterators),
         "calls": (function calls and contexts),
         "unsafe_blocks": (location of unsafe blocks),
+        "no_type": (location of typecheck fails)
     }
 }
 ```

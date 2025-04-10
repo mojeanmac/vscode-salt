@@ -60,6 +60,10 @@ An unsafe block. Functions do not need to be `unsafe` in their function signatur
 
 A collection of `DefIds` each representing a crate-local function call mapped to a collection of callers location `DefIds` and the count for how many times it was called.
 
+### Typecheck Fails
+
+This analysis relies on `typeck` results, so when analysis fails (typically on FFI code), we can still take note of it's size and depth.
+
 ## Installation + Example
 
 Run the example crate like this:
@@ -78,5 +82,5 @@ cargo salt
 You should see the output:
 
 ```json
-{"crate_id":"11573503235230656294","visit_res":{"calls":{},"fns":{"18270091135093349626":{"Def":{"lines":4,"params":{"closure_traits":[],"ty_kinds":[[true,"Uint"],[false,"Uint"]]},"recursive":false,"ret":{"closure_trait":null,"mutabl":false,"ty_kind":"Uint"},"unsafety":false}}},"iter_mthds":[],"let_exprs":[],"loops":[],"matches":[],"unsafe_blocks":[]}}
+{"crate_id":"11573503235230656294","visit_res":{"calls":{},"fns":{"18270091135093349626":{"Def":{"lines":4,"params":{"closure_traits":[],"ty_kinds":[[true,"Uint"],[false,"Uint"]]},"recursive":false,"ret":{"closure_trait":null,"mutabl":false,"ty_kind":"Uint"},"unsafety":false}}},"iter_mthds":[],"let_exprs":[],"loops":[],"matches":[],"unsafe_blocks":[],"no_type":[]}}
 ```
