@@ -11,9 +11,21 @@ fn test_case() {}
 fn doc_example() {}
 
 trait Trait {
-    fn trait_fn() {/*i have a body and i must scream */}
+    fn trait_fn() {}
 }
 
 pub struct TSLanguage {
     _unused: [u8; 0],
 } 
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+enum Direction {
+    North,
+    South,
+    East,
+    West,
+}

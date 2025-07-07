@@ -100,7 +100,7 @@ fn print_inferences(tcx: TyCtxt) {
   tcx.hir_walk_toplevel_module(&mut visitor);
 
   let result = PrintResult {
-    crate_id: hash_string(&tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string()),
+    crate_id: tcx.crate_name(rustc_hir::def_id::LOCAL_CRATE).to_string(),
     visit_res: serde_json::to_value(visitor.to_json()).unwrap(),
   };
   match serde_json::to_string(&result) {

@@ -1,3 +1,4 @@
+use rustc_hir::VariantData;
 use rustc_middle::ty::{Ty, TyCtxt, TyKind, ExistentialPredicate};
 use rustc_span::source_map::SourceMap;
 use rustc_span::def_id::DefId;
@@ -6,16 +7,17 @@ use rustc_hir::{Item, BodyId, Expr, ExprKind, ItemKind, PatKind, def::DefKind, O
 use rustc_utils::TyExt;
 use rustc_middle::hir::nested_filter;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, hash_map::DefaultHasher};
+use std::collections::{HashMap, HashSet, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
 
 // togglable for testing
-const HASH_EN: bool = true;
+const HASH_EN: bool = false;
 
 // function parameters (inputs)
 #[derive(Serialize, Deserialize, Default)]
 pub(crate) struct Params {
     pub(crate) closure_traits: Vec<String>,
+    pub(crate) tys: Vec<String>,
     pub(crate) ty_kinds: Vec<(bool, String)>,
 }
 
@@ -24,6 +26,7 @@ pub(crate) struct Params {
 pub(crate) struct Return {
     pub(crate) mutabl: bool,
     pub(crate) closure_trait: Option<String>,
+    pub(crate) ty: String,
     pub(crate) ty_kind: String,
 }
 
@@ -32,6 +35,7 @@ impl Default for Return {
         Return {
             mutabl: false,
             closure_trait: None,
+            ty: "".to_string(),
             ty_kind: "".to_string()
         }
     }
@@ -71,6 +75,26 @@ enum Block {
         unsafety: bool,
         recursive: bool,
         lines: usize,
+    },
+    Trait {
+        def_id: DefId,
+        lines: usize,
+        fns: Vec<DefId>,
+    },
+    Impl {
+        def_id: DefId,
+        lines: usize,
+        of_trait: Option<DefId>,
+    },
+    Struct {
+        def_id: DefId,
+        lines: usize,
+        fields: usize
+    },
+    Enum {
+        def_id: DefId,
+        lines: usize,
+        variants: usize
     },
     NoType {
         def_id: DefId,
@@ -118,7 +142,27 @@ pub enum BlockJson {
         def_id: String,
         lines: usize,
         depth: usize,
-    }
+    },
+    Trait {
+        def_id: String,
+        lines: usize,
+        fns: Vec<String>,
+    },
+    Impl {
+        def_id: String,
+        lines: usize,
+        of_trait: String,
+    },
+    Struct {
+        def_id: String,
+        lines: usize,
+        fields: usize
+    },
+    Enum {
+        def_id: String,
+        lines: usize,
+        variants: usize
+    },
 }
 
 impl Block {
@@ -160,7 +204,30 @@ impl Block {
                 def_id: hash_id(def_id),
                 lines: *lines,
                 depth: *depth,
-            }
+            },
+            Block::Trait { def_id, lines, fns } => BlockJson::Trait {
+                def_id: hash_id(def_id),
+                lines: *lines,
+                fns: fns.iter().map(hash_id).collect(),
+            },
+            Block::Impl { def_id, lines, of_trait } => BlockJson::Impl {
+                def_id: hash_id(def_id),
+                lines: *lines,
+                of_trait: match of_trait {
+                    Some(trait_def_id) => hash_id(trait_def_id),
+                    None => "None".to_string(),
+                },
+            },
+            Block::Struct { def_id, lines, fields } => BlockJson::Struct {
+                def_id: hash_id(def_id),
+                lines: *lines,
+                fields: *fields,
+            },
+            Block::Enum { def_id, lines, variants } => BlockJson::Enum {
+                def_id: hash_id(def_id),
+                lines: *lines,
+                variants: *variants,
+            },
         }
     }
 }
@@ -177,6 +244,12 @@ pub struct HirVisitor<'tcx> {
     calls: HashMap<DefId, HashMap<DefId, u32>>,
     unsafe_blocks: Vec<Block>,
     no_type: Vec<Block>,
+    traits: Vec<Block>,
+    impls: Vec<Block>,
+    structs: Vec<Block>,
+    enums: Vec<Block>,
+    lines: usize, // total lines of code in the crate
+    modules: Vec<DefId>, // modules in the crate
 }
 
 // json version of visitor for serialization
@@ -190,6 +263,12 @@ pub struct VisitorJson {
     pub(crate) calls: HashMap<String, HashMap<String, u32>>,
     pub(crate) unsafe_blocks: Vec<BlockJson>,
     pub(crate) no_type: Vec<BlockJson>,
+    pub(crate) traits: Vec<BlockJson>,
+    pub(crate) impls: Vec<BlockJson>,
+    pub(crate) structs: Vec<BlockJson>,
+    pub(crate) enums: Vec<BlockJson>,
+    pub (crate) lines: usize,
+    pub(crate) modules: HashSet<String>,
 }
 
 impl<'tcx> HirVisitor<'tcx> {
@@ -206,6 +285,12 @@ impl<'tcx> HirVisitor<'tcx> {
             calls: HashMap::new(),
             unsafe_blocks: Vec::new(),
             no_type: Vec::new(),
+            traits: Vec::new(),
+            impls: Vec::new(),
+            structs: Vec::new(),
+            enums: Vec::new(),
+            lines: 0,
+            modules: Vec::new(),
         }
     }
 
@@ -223,6 +308,12 @@ impl<'tcx> HirVisitor<'tcx> {
                     .collect(),
             unsafe_blocks: self.unsafe_blocks.iter().map(|v| v.to_json()).collect(),
             no_type: self.no_type.iter().map(|v| v.to_json()).collect(),
+            traits: self.traits.iter().map(|v| v.to_json()).collect(),
+            impls: self.impls.iter().map(|v| v.to_json()).collect(),
+            structs: self.structs.iter().map(|v| v.to_json()).collect(),
+            enums: self.enums.iter().map(|v| v.to_json()).collect(),
+            lines: self.lines,
+            modules: self.modules.iter().map(hash_id).collect(),
         }
     }
 }
@@ -238,34 +329,71 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
     fn visit_item(&mut self, item: &'tcx Item<'tcx>) {
         self.depth = 0;
         let def_id = item.owner_id.to_def_id();
-        if self.tcx.def_kind(def_id) == DefKind::Fn {
-            match item.kind {
-                ItemKind::Fn { sig, body, .. } => {  //todo: check for body_id?
-                    let unsafety = sig.header.safety == rustc_hir::HeaderSafety::Normal(rustc_hir::Safety::Unsafe);
-                    let params = visit_params(self.tcx, body);
-                    let ret = visit_return(self.tcx, body);
-                    self.fns.insert(def_id, Block::Def {
-                        params,
-                        ret,
-                        unsafety,
-                        recursive: false,
-                        lines: line_count(self.source_map, item.span),
+        let lines = line_count(self.source_map, item.span);
+        self.lines += lines;
+        match item.kind {
+            ItemKind::Fn { sig, body, .. } => {  //todo: check for body_id?
+                let unsafety = sig.header.safety == rustc_hir::HeaderSafety::Normal(rustc_hir::Safety::Unsafe);
+                let params = visit_params(self.tcx, body);
+                let ret = visit_return(self.tcx, body);
+                self.fns.insert(def_id, Block::Def {
+                    params,
+                    ret,
+                    unsafety,
+                    recursive: false,
+                    lines,
+                });
+            }
+            ItemKind::Impl(impl_item) => {
+                for item_id in impl_item.items {
+                    let assoc_item = self.tcx.hir().expect_impl_item(item_id.id.owner_id.def_id);
+                    self.visit_impl_item(assoc_item);
+                }
+                if let Some(trait_ref) = impl_item.of_trait {
+                    self.impls.push(Block::Impl {
+                        def_id,
+                        lines,
+                        of_trait: trait_ref.trait_def_id(),
                     });
                 }
-                ItemKind::Impl(impl_item) => {
-                    for item_id in impl_item.items {
-                        let assoc_item = self.tcx.hir().expect_impl_item(item_id.id.owner_id.def_id);
-                        self.visit_impl_item(assoc_item);
-                    }
-                }
-                ItemKind::Trait(.., trait_items) => {
-                    for item_id in trait_items {
-                        let assoc_item = self.tcx.hir().expect_trait_item(item_id.id.owner_id.def_id);
-                        self.visit_trait_item(assoc_item);
-                    }
-                }
-                _ => {}
             }
+            ItemKind::Trait(.., trait_items) => {
+                let mut fns = vec![];      
+                for item_id in trait_items {
+                    let assoc_item = self.tcx.hir().expect_trait_item(item_id.id.owner_id.def_id);
+                    fns.push(assoc_item.owner_id.to_def_id());
+                    self.visit_trait_item(assoc_item);
+                }
+                self.traits.push(Block::Trait {
+                    def_id,
+                    lines: line_count(self.source_map, item.span),
+                    fns
+                });
+            }
+            ItemKind::Struct(variant_data, _) => {
+                let fields = match variant_data {
+                    VariantData::Struct { fields, .. } => fields.len(),
+                    VariantData::Tuple(fields, _, _) => fields.len(),
+                    VariantData::Unit(_,_) => 0,
+                };
+
+                self.structs.push(Block::Struct {
+                    def_id,
+                    lines,
+                    fields,
+                });
+            }
+            ItemKind::Enum(enum_def, _) => {
+                self.enums.push(Block::Enum {
+                    def_id,
+                    lines,
+                    variants: enum_def.variants.len(),
+                });
+            }
+            ItemKind::Mod { .. } => {
+                self.modules.push(def_id);
+            }
+            _ => {}
         }
         intravisit::walk_item(self, item);
     }
@@ -440,6 +568,7 @@ impl<'tcx> Visitor<'tcx> for HirVisitor<'tcx> {
 fn visit_params(tcx: TyCtxt, body_id: BodyId) -> Params {
     let mut closure_traits = Vec::new();
     let mut ty_kinds = Vec::new();
+    let mut tys = Vec::new();
 
     let typeck_results = tcx.typeck(body_id.hir_id.owner);
     let body = tcx.hir_body(body_id);
@@ -452,10 +581,12 @@ fn visit_params(tcx: TyCtxt, body_id: BodyId) -> Params {
         
         let is_mut = is_mut(ty.kind(), &param.pat.kind);
         let ty_kind = ty_kind_variant(ty.kind());
+        tys.push(ty.to_string());
         ty_kinds.push((is_mut, ty_kind));
     }
     Params {
         closure_traits,
+        tys,
         ty_kinds,
     }
 }
@@ -487,6 +618,7 @@ fn visit_return(tcx: TyCtxt, body_id: BodyId) -> Return {
     Return {
         mutabl,
         closure_trait,
+        ty: ty.to_string(),
         ty_kind,
     }
 }

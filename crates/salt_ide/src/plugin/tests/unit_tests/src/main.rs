@@ -3,6 +3,18 @@ use std::cell::UnsafeCell;
 
 mod other;
 
+fn first_element(vec: Vec<i32>) -> Option<i32> {
+    vec.get(0).copied()
+}
+
+fn safe_divide(a: i32, b: i32) -> Result<i32, String> {
+    if b == 0 {
+        Err("Cannot divide by zero.".to_string())
+    } else {
+        Ok(a / b)
+    }
+}
+
 fn main() {
     test_1();
     test_1();
@@ -15,106 +27,105 @@ fn test_1() {
     }
 }
 
-//closure input tests
-fn impl_closure(f: impl Fn(u64)) -> impl Fn(u64) {
-    f(42);
-    f
-}
+// //closure input tests
+// fn impl_closure(f: impl Fn(u64)) -> impl Fn(u64) {
+//     f(42);
+//     f
+// }
 
-fn fn_mut(mut f: impl FnMut(u64)) {}
+// fn fn_mut(mut f: impl FnMut(u64)) {}
 
 
-fn dyna_clos(a: i32, f: Box<dyn FnOnce(i32) -> i32>) -> i32 {
-    f(a)
-}
+// fn dyna_clos(a: i32, f: Box<dyn FnOnce(i32) -> i32>) -> i32 {
+//     f(a)
+// }
 
-//mutability tests
-fn mut_ref(x: &mut u64) -> &mut u64 {
-    *x = 42;
-    x
-}
+// //mutability tests
+// fn mut_ref(x: &mut u64) -> &mut u64 {
+//     *x = 42;
+//     x
+// }
 
-fn mut_val_recurse(mut x: u64) {
-    if x < 42 {
-        mut_val_recurse(x + 1);
-    }
-}
+// fn mut_val_recurse(mut x: u64) {
+//     if x < 42 {
+//         mut_val_recurse(x + 1);
+//     }
+// }
 
-fn unsafe_param(x: UnsafeCell<u64>) {
-    unsafe {
-        *x.get() = 42;
-    }
-}
+// fn unsafe_param(x: UnsafeCell<u64>) {
+//     unsafe {
+//         *x.get() = 42;
+//     }
+// }
 
-//unsafe tests
-unsafe fn unsafe_fn(y: u64) {
-    println!("unsafe");
-}
+// //unsafe tests
+// unsafe fn unsafe_fn(y: u64) {
+//     println!("unsafe");
+// }
 
-fn call_unsafe(y: u64) {
-    unsafe {
-        unsafe_fn(42);
-    }
-}
+// fn call_unsafe(y: u64) {
+//     unsafe {
+//         unsafe_fn(42);
+//     }
+// }
 
-fn susafe() {
-    unsafe {
-        unsafe {
+// fn susafe() {
+//     unsafe {
+//         unsafe {
             
-        }
-    }
-}
+//         }
+//     }
+// }
 
-//iterate over 2d vectors
-fn loopception(v: Vec<Vec<u64>>) {
-    for i in v.iter() {
-        for j in i.iter() {
-            test_1();
-        }
-    }
-    loop{loop{loop{}}}
-}
+// //iterate over 2d vectors
+// fn loopception(v: Vec<Vec<u64>>) {
+//     for i in v.iter() {
+//         for j in i.iter() {
+//             test_1();
+//         }
+//     }
+//     loop{loop{loop{}}}
+// }
 
-fn looperoni(v: Vec<Vec<u64>>) {
-    for i in v.iter() {
-        let mut x = 0;
-        for j in i.iter() {
-            x += 1;
-        }
-        for j in i.iter() {
-            x -= 1;
-        }
-    }
-}
+// fn looperoni(v: Vec<Vec<u64>>) {
+//     for i in v.iter() {
+//         let mut x = 0;
+//         for j in i.iter() {
+//             x += 1;
+//         }
+//         for j in i.iter() {
+//             x -= 1;
+//         }
+//     }
+// }
 
-//match tests
-fn match_test(x: u64) {
-    match x {
-        0 => println!("zero"),
-        1 => println!("one"),
-        _ => println!("other"),
-    }
-}
+// //match tests
+// fn match_test(x: u64) {
+//     match x {
+//         0 => println!("zero"),
+//         1 => println!("one"),
+//         _ => println!("other"),
+//     }
+// }
 
-fn iflet() {
-    let x = Some(5);
-    if let Some(y) = x {
-        println!("{}", y);
-    }
-}
+// fn iflet() {
+//     let x = Some(5);
+//     if let Some(y) = x {
+//         println!("{}", y);
+//     }
+// }
 
-struct Point(bool, u32);
+// struct Point(bool, u32);
 
-fn match_point(p: Point) {
-    for _ in 0..3 {
-        match p.0 {
-            true => println!("true"),
-            false => println!("false"),
-        }
-    }
-}
-
-//struct test
+// fn match_point(p: Point) {
+//     for _ in 0..3 {
+//         match p.0 {
+//             true => println!("true"),
+//             false => println!("false"),
+//         }
+//     }
+// }
+ 
 struct Math;
 
 impl Math {
@@ -127,53 +138,54 @@ impl Math {
     }
 }
 
-fn input_math(math: Math) {
-    return
-}
+// fn input_math(math: Math) {
+//     return
+// }
 
-//iter method tests
-fn equal_vecs() {
-    let vec1 = vec![1, 2, 3, 4, 5, 6];
-    let vec2 = vec![9, 8, 3, 4, 5, 6];
+// //iter method tests
+// fn equal_vecs() {
+//     let vec1 = vec![1, 2, 3, 4, 5, 6];
+//     let vec2 = vec![9, 8, 3, 4, 5, 6];
 
-    let result = vec1
-    .iter()
-    .skip(2)
-    .eq(vec2
-        .iter()
-        .skip(2));
+//     let result = vec1
+//     .iter()
+//     .skip(2)
+//     .eq(vec2
+//         .iter()
+//         .skip(2));
 
-    let test: usize = vec2.clone().iter().sum();
+//     let test: usize = vec2.clone().iter().sum();
 
-    println!("{:?}", result);
-}
+//     println!("{:?}", result);
+// }
 
-fn nested_ifs(one: bool, two: bool) {
-    if one {
-        if two {
-            (0..1).for_each(|_| {
-                println!("Hello, world!");
-            });
-        }
-        else {
-            if let Some(_) = Some(1) {
-                println!("Hello, world!");
-            }
-        }
-    }
-    else {
-        let mut x = 0;
-        loop {
-            x += 1;
-            if x == 10 {
-                break;
-            }
-        }
-    }
-}
+// fn nested_ifs(one: bool, two: bool) {
+//     if one {
+//         if two {
+//             (0..1).for_each(|_| {
+//                 println!("Hello, world!");
+//             });
+//         }
+//         else {
+//             if let Some(_) = Some(1) {
+//                 println!("Hello, world!");
+//             }
+//         }
+//     }
+//     else {
+//         let mut x = 0;
+//         loop {
+//             x += 1;
+//             if x == 10 {
+//                 break;
+//             }
+//         }
+//     }
+// }
 
 //mod test
 
-mod another {
-    fn mod_test() {}
-}
+// mod another {
+//     fn mod_test() {}
+// }
+

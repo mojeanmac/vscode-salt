@@ -11,4 +11,6 @@
     "liveServer.settings.port": 5501,
     "rust-analyzer.rustc.source": "discover",
     "rust-analyzer.diagnostics.useRustcErrorCode": true,
+    "workbench.preferredLightColorTheme": "Default Light Modern",
+    "window.autoDetectColorScheme": true,
 }
